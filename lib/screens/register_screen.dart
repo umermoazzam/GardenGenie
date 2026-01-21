@@ -1,0 +1,208 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'login_screen.dart';
+
+// Simple in-memory storage for registered user
+Map<String, String> registeredUser = {};
+
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  bool _agreedToTerms = false;
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _repeatPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _repeatPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _registerUser() {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _repeatPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all fields', style: GoogleFonts.inter())),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _repeatPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match', style: GoogleFonts.inter())),
+      );
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You must agree to terms', style: GoogleFonts.inter())),
+      );
+      return;
+    }
+
+    // Save user info in memory
+    registeredUser = {
+      'name': _nameController.text,
+      'email': _emailController.text,
+      'password': _passwordController.text,
+    };
+
+    // Navigate to Login Screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF5B8E55); // Updated color
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo + Header
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: primaryGreen, width: 2),
+                    ),
+                    child: Icon(Icons.eco, color: primaryGreen, size: 20),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Plantio',
+                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 40),
+              RichText(
+                text: TextSpan(
+                  style: GoogleFonts.inter(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                  children: [
+                    const TextSpan(text: 'Register on '),
+                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Create an Aepod account, We can\'t wait to have you.',
+                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666)),
+              ),
+              const SizedBox(height: 40),
+
+              _buildInputField(Icons.person_outline, 'Name', _nameController, primaryGreen: primaryGreen),
+              const SizedBox(height: 16),
+              _buildInputField(Icons.email_outlined, 'Email', _emailController,
+                  keyboardType: TextInputType.emailAddress, primaryGreen: primaryGreen),
+              const SizedBox(height: 16),
+              _buildInputField(Icons.lock_outline, 'Password', _passwordController,
+                  obscureText: true, primaryGreen: primaryGreen),
+              const SizedBox(height: 16),
+              _buildInputField(Icons.lock_outline, 'Repeat Password', _repeatPasswordController,
+                  obscureText: true, primaryGreen: primaryGreen),
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  Checkbox(
+                    value: _agreedToTerms,
+                    onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
+                    activeColor: primaryGreen,
+                  ),
+                  Text('I Agree to the term and condition',
+                      style: GoogleFonts.inter(fontSize: 14)),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _registerUser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    shape: const RoundedRectangleBorder(), // square button
+                  ),
+                  child: Text(
+                    'REGISTER',
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 16), // slightly bigger text
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Already have an account?', style: GoogleFonts.inter()),
+                  const SizedBox(width: 5),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()));
+                    },
+                    child: Text('Login',
+                        style: GoogleFonts.inter(
+                            color: primaryGreen, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(IconData icon, String hint, TextEditingController controller,
+      {bool obscureText = false, TextInputType? keyboardType, Color primaryGreen = Colors.green}) {
+    return Container(
+      decoration:
+          BoxDecoration(color: const Color(0xFFF5F5F5)), // square (no borderRadius)
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: GoogleFonts.inter(),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
+          prefixIcon: Icon(icon, color: primaryGreen),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
+}
