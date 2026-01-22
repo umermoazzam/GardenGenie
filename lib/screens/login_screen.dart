@@ -1,6 +1,9 @@
+// login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'forgot_screen.dart'; // <- added import for ForgotPasswordScreen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -12,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
   bool _obscurePassword = true;
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -38,6 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF5B8E55); // Updated color (#5B8E55)
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -46,60 +52,60 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Logo + Header
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF2D5F3F), width: 2.5),
+                      border: Border.all(color: primaryGreen, width: 2),
                     ),
-                    child: const Icon(Icons.eco, color: Color(0xFF2D5F3F), size: 24),
+                    child: Icon(Icons.eco, color: primaryGreen, size: 20),
                   ),
-                  const SizedBox(width: 10),
-                  const Text('Plantio', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Plantio',
+                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
               const SizedBox(height: 50),
               RichText(
-                text: const TextSpan(
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A), height: 1.2),
+                text: TextSpan(
+                  style: GoogleFonts.inter(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                   children: [
-                    TextSpan(text: 'Login on '),
-                    TextSpan(text: 'Plantio', style: TextStyle(color: Color(0xFF4A9D6F))),
+                    const TextSpan(text: 'Login on '),
+                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Create an Aepod account, We can\'t wait to have you.', style: TextStyle(fontSize: 15, color: Color(0xFF666666), height: 1.5)),
+              Text(
+                'Login to your account to continue.',
+                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666)),
+              ),
               const SizedBox(height: 40),
 
-              _buildFieldContainer(
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: _inputDecoration('Email', Icons.email_outlined),
-                ),
-              ),
+              // Email field
+              _buildInputField(Icons.email_outlined, 'Email', _emailController, primaryGreen: primaryGreen,
+                  keyboardType: TextInputType.emailAddress),
               const SizedBox(height: 16),
 
-              _buildFieldContainer(
-                TextField(
-                  controller: _passwordController,
+              // Password field with eye icon
+              _buildInputField(Icons.lock_outline, 'Password', _passwordController,
                   obscureText: _obscurePassword,
-                  decoration: _inputDecoration('Password', Icons.lock_outline).copyWith(
-                    suffixIcon: GestureDetector(
-                      onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16.0, top: 15),
-                        child: Text(_obscurePassword ? 'show' : 'hide', style: const TextStyle(color: Color(0xFF4A9D6F), fontWeight: FontWeight.w500)),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+                  isPasswordField: true,
+                  toggleObscure: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                  primaryGreen: primaryGreen),
               const SizedBox(height: 16),
 
               Row(
@@ -110,42 +116,62 @@ class _LoginScreenState extends State<LoginScreen> {
                       Checkbox(
                         value: _rememberMe,
                         onChanged: (value) => setState(() => _rememberMe = value ?? false),
-                        activeColor: const Color(0xFF4A9D6F),
+                        activeColor: primaryGreen,
                       ),
-                      const Text('Remember Me', style: TextStyle(color: Color(0xFF666666))),
+                      Text('Remember Me', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
                     ],
                   ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF4A9D6F), fontWeight: FontWeight.w500)),
+                  // Forgot Password? with pointer cursor and navigation
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                        );
+                      },
+                      child: Text('Forgot Password?',
+                          style: GoogleFonts.inter(
+                              fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 32),
 
+              // LOGIN Button (square)
               SizedBox(
                 width: double.infinity,
-                height: 54,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: _loginUser,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A9D6F),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    backgroundColor: primaryGreen,
+                    shape: const RoundedRectangleBorder(), // square button
                   ),
-                  child: const Text('LOGIN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 20),
 
+              // Sign up link with pointer cursor
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Don\'t have an account? ', style: TextStyle(color: Color(0xFF666666))),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
-                    },
-                    child: const Text('Sign up', style: TextStyle(color: Color(0xFF4A9D6F), fontWeight: FontWeight.w600)),
+                  Text('Don\'t have an account? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        );
+                      },
+                      child: Text('Sign up',
+                          style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w600, fontSize: 14)),
+                    ),
                   ),
                 ],
               ),
@@ -156,19 +182,38 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildFieldContainer(Widget child) {
+  // Reusable input field
+  Widget _buildInputField(
+    IconData icon,
+    String hint,
+    TextEditingController controller, {
+    bool obscureText = false,
+    bool isPasswordField = false,
+    VoidCallback? toggleObscure,
+    TextInputType? keyboardType,
+    Color primaryGreen = Colors.green,
+  }) {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
-      child: child,
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF4A9D6F), size: 22),
-      border: InputBorder.none,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)), // square field
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: GoogleFonts.inter(),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
+          prefixIcon: Icon(icon, color: primaryGreen),
+          suffixIcon: isPasswordField
+              ? IconButton(
+                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility, color: primaryGreen),
+                  onPressed: toggleObscure,
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
     );
   }
 }

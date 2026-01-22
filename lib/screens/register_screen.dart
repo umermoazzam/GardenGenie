@@ -14,10 +14,15 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
+
+  // Toggle variables for eye icon
+  bool _obscurePassword = true;
+  bool _obscureRepeatPassword = true;
 
   @override
   void dispose() {
@@ -69,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5B8E55); // Updated color
+    const primaryGreen = Color(0xFF5B8E55);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -115,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Create an Aepod account, We can\'t wait to have you.',
+                'Create an account, We can\'t wait to have you.',
                 style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666)),
               ),
               const SizedBox(height: 40),
@@ -125,11 +130,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _buildInputField(Icons.email_outlined, 'Email', _emailController,
                   keyboardType: TextInputType.emailAddress, primaryGreen: primaryGreen),
               const SizedBox(height: 16),
-              _buildInputField(Icons.lock_outline, 'Password', _passwordController,
-                  obscureText: true, primaryGreen: primaryGreen),
+              _buildInputField(
+                Icons.lock_outline,
+                'Password',
+                _passwordController,
+                obscureText: _obscurePassword,
+                isPasswordField: true,
+                toggleObscure: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+                primaryGreen: primaryGreen,
+              ),
               const SizedBox(height: 16),
-              _buildInputField(Icons.lock_outline, 'Repeat Password', _repeatPasswordController,
-                  obscureText: true, primaryGreen: primaryGreen),
+              _buildInputField(
+                Icons.lock_outline,
+                'Repeat Password',
+                _repeatPasswordController,
+                obscureText: _obscureRepeatPassword,
+                isPasswordField: true,
+                toggleObscure: () {
+                  setState(() {
+                    _obscureRepeatPassword = !_obscureRepeatPassword;
+                  });
+                },
+                primaryGreen: primaryGreen,
+              ),
               const SizedBox(height: 24),
 
               Row(
@@ -139,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
                     activeColor: primaryGreen,
                   ),
-                  Text('I Agree to the term and condition',
+                  Text('I Agree to the terms and conditions',
                       style: GoogleFonts.inter(fontSize: 14)),
                 ],
               ),
@@ -156,7 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: Text(
                     'REGISTER',
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 16), // slightly bigger text
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),
@@ -167,14 +194,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text('Already have an account?', style: GoogleFonts.inter()),
                   const SizedBox(width: 5),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()));
-                    },
-                    child: Text('Login',
-                        style: GoogleFonts.inter(
-                            color: primaryGreen, fontWeight: FontWeight.bold)),
+                  // Login link with pointer cursor
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      },
+                      child: Text('Login',
+                          style: GoogleFonts.inter(
+                              color: primaryGreen, fontWeight: FontWeight.bold)),
+                    ),
                   ),
                 ],
               ),
@@ -185,11 +218,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildInputField(IconData icon, String hint, TextEditingController controller,
-      {bool obscureText = false, TextInputType? keyboardType, Color primaryGreen = Colors.green}) {
+  Widget _buildInputField(
+    IconData icon,
+    String hint,
+    TextEditingController controller, {
+    bool obscureText = false,
+    bool isPasswordField = false,
+    VoidCallback? toggleObscure,
+    TextInputType? keyboardType,
+    Color primaryGreen = Colors.green,
+  }) {
     return Container(
-      decoration:
-          BoxDecoration(color: const Color(0xFFF5F5F5)), // square (no borderRadius)
+      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)), // square (no borderRadius)
       child: TextField(
         controller: controller,
         obscureText: obscureText,
@@ -199,6 +239,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hintText: hint,
           hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
           prefixIcon: Icon(icon, color: primaryGreen),
+          suffixIcon: isPasswordField
+              ? IconButton(
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: primaryGreen,
+                  ),
+                  onPressed: toggleObscure,
+                )
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
