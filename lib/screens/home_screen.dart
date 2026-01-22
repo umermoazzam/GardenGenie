@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Added for Inter font
-import 'search_filter_screen.dart';
-import 'detection_screen.dart'; // <- Import your detection screen
+import 'package:google_fonts/google_fonts.dart';
+import 'chat_screen.dart'; 
+import 'detection_screen.dart';
+import 'blogs_videos_screen.dart'; // <-- Ensure this import is here
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,7 +19,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _currentIndex = index);
 
     if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => PlantShopApp()));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Search Filter Screen is currently disabled')),
+      );
     } else if (index == 2) {
       Navigator.pushNamed(context, '/rentals');
     } else if (index == 3) {
@@ -37,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with Title and Profile
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -68,8 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
-
-                // Quick Action Buttons
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -90,9 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.search,
                         label: 'Search',
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => PlantShopApp()),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Search functionality disabled')),
                           );
                         },
                       ),
@@ -100,8 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-
-                // Featured Card - AI Options
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: Container(
@@ -162,14 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Featured Products Grid
                 Row(
                   children: [
                     Expanded(
                       child: _buildProductCard(
-                        imageUrl:
-                            'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400',
+                        imageUrl: 'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400',
                         title: 'Cactus',
                         showNewBadge: true,
                         onTap: () => Navigator.pushNamed(context, '/product-detail'),
@@ -178,8 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildProductCard(
-                        imageUrl:
-                            'https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400',
+                        imageUrl: 'https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400',
                         title: 'Cactus Red',
                         showNewBadge: false,
                         onTap: () => Navigator.pushNamed(context, '/product-detail'),
@@ -192,8 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Expanded(
                       child: _buildProductCard(
-                        imageUrl:
-                            'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400',
+                        imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400',
                         title: 'Dark Leaves',
                         showNewBadge: false,
                         onTap: () => Navigator.pushNamed(context, '/product-detail'),
@@ -202,8 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildProductCard(
-                        imageUrl:
-                            'https://images.unsplash.com/photo-1614594737564-e5fc321c3f13?w=400',
+                        imageUrl: 'https://images.unsplash.com/photo-1614594737564-e5fc321c3f13?w=400',
                         title: 'Green Plant',
                         showNewBadge: true,
                         onTap: () => Navigator.pushNamed(context, '/product-detail'),
@@ -217,8 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
-      // SCAN BUTTON NAVIGATING SMOOTHLY
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 15),
@@ -226,17 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             onTap: () {
-              // Smooth navigation to DetectionScreen
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const OnboardingScreen(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
+              // Placeholder for onboarding or detection
             },
             child: Container(
               width: 58,
@@ -257,11 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
       bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          hoverColor: Colors.transparent,
-        ),
+        data: Theme.of(context).copyWith(hoverColor: Colors.transparent),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onNavBarTapped,
@@ -273,196 +249,156 @@ class _HomeScreenState extends State<HomeScreen> {
           showUnselectedLabels: false,
           elevation: 0,
           items: const [
-            BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 28),
-                activeIcon: Icon(Icons.home, size: 28),
-                label: 'Home'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.map_outlined, size: 28),
-                activeIcon: Icon(Icons.map, size: 28),
-                label: 'Categories'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.people_outline, size: 28),
-                activeIcon: Icon(Icons.people, size: 28),
-                label: 'Rentals'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.shopping_bag_outlined, size: 28),
-                activeIcon: Icon(Icons.shopping_bag, size: 28),
-                label: 'Cart'),
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+            BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActionButton(
-      {required IconData icon, required String label, required VoidCallback onTap}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration:
-                  const BoxDecoration(color: Color(0xFF5B8E55), shape: BoxShape.circle),
-              child: Icon(icon, color: Colors.white, size: 28),
-            ),
-            const SizedBox(height: 10),
-            Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 14, color: const Color(0xFF5B8E55), fontWeight: FontWeight.w500)),
-          ],
-        ),
+  // Quick Action Buttons Builder
+  Widget _buildQuickActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(color: Color(0xFF5B8E55), shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 10),
+          Text(label, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5B8E55), fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
 
-  Widget _buildProductCard(
-      {required String imageUrl,
-      required String title,
-      required bool showNewBadge,
-      required VoidCallback onTap}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: const Color(0xFFF0F0F0),
-                    image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
+  // Product Card Builder
+  Widget _buildProductCard({required String imageUrl, required String title, required bool showNewBadge, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              Container(
+                height: 140,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF0F0F0),
+                  image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
+                ),
+              ),
+              if (showNewBadge)
+                Positioned(
+                  top: 10, right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(12)),
+                    child: Text('New', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                   ),
                 ),
-                if (showNewBadge)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(12)),
-                      child: Text('New',
-                          style: GoogleFonts.inter(
-                              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(title,
-                style: GoogleFonts.inter(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
+        ],
       ),
     );
   }
 
+  // AI Options Modal - UPDATED NAVIGATION
   void _showAIOptionsDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 24),
-            Text('AI Features',
-                style: GoogleFonts.inter(
-                    fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A))),
-            const SizedBox(height: 24),
-            _buildAIOption(
-              icon: Icons.chat_bubble_outline,
-              title: 'AI Chatbot',
-              description: 'Get instant gardening assistance',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/ai-chatbot');
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildAIOption(
-              icon: Icons.camera_alt_outlined,
-              title: 'Plant Disease Detector',
-              description: 'Scan and identify plant diseases',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/plant-disease-detector');
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildAIOption(
-              icon: Icons.article_outlined,
-              title: 'Blogs & Videos',
-              description: 'Learn from educational content',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/blogs');
-              },
-            ),
-          ],
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Container(
+          decoration: const BoxDecoration(
+              color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 24),
+              Text('AI Features', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              _buildAIOption(
+                icon: Icons.chat_bubble_outline,
+                title: 'AI Chatbot',
+                description: 'Get instant gardening assistance',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildAIOption(
+                icon: Icons.camera_alt_outlined,
+                title: 'Plant Disease Detector',
+                description: 'Scan and identify plant diseases',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/plant-disease-detector');
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // --- TARGET UPDATE HERE ---
+              _buildAIOption(
+                icon: Icons.article_outlined,
+                title: 'Blogs & Videos',
+                description: 'Learn from educational content',
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet first
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BlogsVideosScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildAIOption(
-      {required IconData icon,
-      required String title,
-      required String description,
-      required VoidCallback onTap}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                    color: const Color(0xFF5B8E55).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: const Color(0xFF5B8E55), size: 28),
+  Widget _buildAIOption({required IconData icon, required String title, required String description, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
+        child: Row(
+          children: [
+            Container(
+              width: 50, height: 50,
+              decoration: BoxDecoration(color: const Color(0xFF5B8E55).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: const Color(0xFF5B8E55), size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(description, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666))),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: GoogleFonts.inter(
-                            fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
-                    const SizedBox(height: 4),
-                    Text(description,
-                        style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666))),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, size: 18, color: Color(0xFF999999)),
-            ],
-          ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 18, color: Color(0xFF999999)),
+          ],
         ),
       ),
     );
