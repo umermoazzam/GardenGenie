@@ -1,321 +1,214 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 
-void main() {
-  runApp(const PlantioApp());
-}
-
-class PlantioApp extends StatelessWidget {
-  const PlantioApp({Key? key}) : super(key: key);
+class PlantDetectionScreen extends StatefulWidget {
+  const PlantDetectionScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const OnboardingScreen(),
-    );
+  State<PlantDetectionScreen> createState() => _PlantDetectionScreenState();
+}
+
+class _PlantDetectionScreenState extends State<PlantDetectionScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  bool _isScanning = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Laser Animation Controller (Laser up and down move karega)
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
   }
-}
-
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  final List<OnboardingData> _onboardingPages = [
-    OnboardingData(
-      image: 'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=800&h=1200&fit=crop',
-      title: 'Myarden',
-      description: 'Create an Acgod account\nWe can\'t wait to have you',
-    ),
-    OnboardingData(
-      image: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=800&h=1200&fit=crop',
-      title: 'Explore',
-      description: 'Discover amazing plants\nfor your home',
-    ),
-    OnboardingData(
-      image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&h=1200&fit=crop',
-      title: 'Grow',
-      description: 'Learn how to care\nfor your plants',
-    ),
-  ];
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemCount: _onboardingPages.length,
-            itemBuilder: (context, index) {
-              return OnboardingPage(
-                data: _onboardingPages[index],
-              );
-            },
+          // 1. Exact Background Image matching Design 12
+          Positioned.fill(
+            child: Container(
+              color: Colors.black,
+              child: Image.network(
+                'https://images.unsplash.com/photo-1545241047-6083a3684587?w=1200', // Rubber Plant matching Design 12
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
 
-          // Back Button
+          // 2. Translucent Overlay
+          Positioned.fill(
+            child: Container(color: Colors.black.withOpacity(0.1)),
+          ),
+
+          // 3. Back Button (Custom Circle style)
           Positioned(
             top: 50,
             left: 20,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+            child: CircleAvatar(
+              backgroundColor: Colors.white.withOpacity(0.3),
               child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Color(0xFF2E7D32),
-                  size: 20,
-                ),
-                onPressed: () {
-                  if (_currentPage > 0) {
-                    _pageController.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
           ),
 
-          // Next Button
+          // 4. Scanning Frame & Laser Animation (Screen 12 Design)
+          Center(
+            child: Stack(
+              children: [
+                // The Square Frame
+                Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                // Moving Laser Line
+                if (_isScanning)
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return Positioned(
+                        top: _animationController.value * 280,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF5B8E55).withOpacity(0.8),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              )
+                            ],
+                            color: const Color(0xFF5B8E55),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                // Corner Borders
+                _buildCorner(top: -2, left: -2, isTop: true, isLeft: true),
+                _buildCorner(top: -2, right: -2, isTop: true, isLeft: false),
+                _buildCorner(bottom: -2, left: -2, isTop: false, isLeft: true),
+                _buildCorner(bottom: -2, right: -2, isTop: false, isLeft: false),
+              ],
+            ),
+          ),
+
+          // 5. Result Card (Glassmorphism Effect)
           Positioned(
-            bottom: 140,
+            bottom: 40,
+            left: 20,
             right: 20,
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
                   ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Color(0xFF2E7D32),
-                  size: 24,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: const DecorationImage(
+                            image: NetworkImage('https://images.unsplash.com/photo-1459156212016-c812468e2115?w=200'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Detected: Healthy",
+                              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            Text(
+                              "Plant is doing great! Keep it up.",
+                              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      CircleAvatar(
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                        child: const Icon(Icons.arrow_forward_ios, color: Colors.black, size: 16),
+                      ),
+                    ],
+                  ),
                 ),
-                onPressed: () {
-                  if (_currentPage < _onboardingPages.length - 1) {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
               ),
             ),
           ),
-
-          // Page Indicators
+          
+          // 6. Camera Controls
           Positioned(
-            bottom: 180,
+            bottom: 160,
             left: 0,
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _onboardingPages.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
+              children: [
+                _buildCameraButton(Icons.photo_library, () {}),
+                const SizedBox(width: 30),
+                _buildCameraButton(Icons.camera_alt, () {
+                  setState(() => _isScanning = !_isScanning); // Toggle scanning for demo
+                }, isLarge: true),
+                const SizedBox(width: 30),
+                _buildCameraButton(Icons.flash_on, () {}),
+              ],
             ),
-          ),
+          )
         ],
       ),
     );
   }
-}
 
-class OnboardingPage extends StatelessWidget {
-  final OnboardingData data;
-
-  const OnboardingPage({Key? key, required this.data}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.network(
-            data.image,
-            fit: BoxFit.cover,
-          ),
+  Widget _buildCameraButton(IconData icon, VoidCallback onTap, {bool isLarge = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(isLarge ? 20 : 12),
+        decoration: BoxDecoration(
+          color: isLarge ? const Color(0xFF5B8E55) : Colors.white.withOpacity(0.2),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.5)),
         ),
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.2),
-                  Colors.black.withOpacity(0.6),
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
-        ),
-
-        // Scanning frame
-        Center(
-          child: Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.white.withOpacity(0.5),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Stack(
-              children: [
-                _buildCorner(top: -3, left: -3, isTop: true, isLeft: true),
-                _buildCorner(top: -3, right: -3, isTop: true, isLeft: false),
-                _buildCorner(bottom: -3, left: -3, isTop: false, isLeft: true),
-                _buildCorner(bottom: -3, right: -3, isTop: false, isLeft: false),
-              ],
-            ),
-          ),
-        ),
-
-        // Fixed Glassmorphism Bottom Card
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(32),
-              topRight: Radius.circular(32),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=100&h=100&fit=crop',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                data.title,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                data.description,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 60),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+        child: Icon(icon, color: Colors.white, size: isLarge ? 30 : 24),
+      ),
     );
   }
 
   Widget _buildCorner({double? top, double? bottom, double? left, double? right, required bool isTop, required bool isLeft}) {
     return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
+      top: top, bottom: bottom, left: left, right: right,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 35, height: 35,
         decoration: BoxDecoration(
           border: Border(
             top: isTop && top != null ? const BorderSide(color: Colors.white, width: 4) : BorderSide.none,
@@ -327,16 +220,4 @@ class OnboardingPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class OnboardingData {
-  final String image;
-  final String title;
-  final String description;
-
-  OnboardingData({
-    required this.image,
-    required this.title,
-    required this.description,
-  });
 }

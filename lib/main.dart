@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
+import 'screens/detection_screen.dart'; // Ensure correct path
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         fontFamily: 'Roboto',
       ),
-      home: const SplashScreen(), // First screen
+      home: const SplashScreen(),
+      // Adding routes for cleaner navigation
+      routes: {
+        '/plant-disease-detector': (context) => const PlantDetectionScreen(),
+      },
     );
   }
 }

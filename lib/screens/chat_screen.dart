@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart';
-import 'detection_screen.dart';
 
 void main() {
   runApp(const PlantChatApp());
@@ -34,36 +33,36 @@ class IndividualChatScreen extends StatefulWidget {
 }
 
 class _IndividualChatScreenState extends State<IndividualChatScreen> {
-  int _currentIndex = 0; // Same as HomeScreen
-
-  void _onNavBarTapped(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Search Filter Screen is currently disabled')),
-      );
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/rentals');
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/cart');
-    }
-  }
+  final Color darkTextColor = const Color(0xFF1B1E28);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8EDE2),
+      backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey.withOpacity(0.1),
+            height: 1.0,
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8F5E9),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: darkTextColor, size: 18),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
         title: Row(
           children: [
             const CircleAvatar(
@@ -78,7 +77,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
                 Text(
                   'Plantio AI',
                   style: GoogleFonts.inter(
-                    color: Colors.black,
+                    color: darkTextColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -95,16 +94,18 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF5B8C51)),
-            onPressed: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+          Padding(
+            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(Icons.more_vert, color: darkTextColor, size: 18),
+                onPressed: () {},
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
           ),
         ],
       ),
@@ -139,81 +140,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
           _buildMessageInput(),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const OnboardingScreen(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
-            },
-            child: Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B8E55),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5B8E55).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          hoverColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onNavBarTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF5B8E55),
-          unselectedItemColor: const Color(0xFF999999),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 28),
-              activeIcon: Icon(Icons.home, size: 28),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined, size: 28),
-              activeIcon: Icon(Icons.map, size: 28),
-              label: 'Categories',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline, size: 28),
-              activeIcon: Icon(Icons.people, size: 28),
-              label: 'Rentals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined, size: 28),
-              activeIcon: Icon(Icons.shopping_bag, size: 28),
-              label: 'Cart',
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -233,13 +159,13 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF7F7F9),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: Colors.black87)),
+                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: darkTextColor)),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -267,11 +193,14 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFFD4E7C5), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFFEA),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: Colors.black87)),
+                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: darkTextColor)),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -291,39 +220,56 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   }
 
   Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(24)),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Ask Plantio AI...',
-                  border: InputBorder.none,
-                  hintStyle: GoogleFonts.inter(color: const Color(0xFFBDBDBD), fontSize: 14),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 35, left: 16, right: 16, top: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5), 
+                  borderRadius: BorderRadius.circular(30)
+                ),
+                child: TextField(
+                  style: GoogleFonts.inter(color: darkTextColor),
+                  decoration: InputDecoration(
+                    hintText: 'Type you message',
+                    border: InputBorder.none,
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFFBDBDBD), fontSize: 14),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.attach_file, color: Color(0xFF5B8C51)), onPressed: () {}),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(color: Color(0xFF5B8C51), shape: BoxShape.circle),
-            child: const Icon(Icons.mic, color: Colors.white),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF5F5F5),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.attach_file, color: Color(0xFF5B8C51), size: 22),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: Color(0xFF5B8C51), 
+                shape: BoxShape.circle
+              ),
+              child: const Icon(Icons.mic, color: Colors.white, size: 24),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// Screen 2: Chat List Screen
+// Screen 2: Chat List Screen (Your Messages!)
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
 
@@ -333,26 +279,7 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   int _currentIndex = 0;
-
-  void _onNavBarTapped(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Search Filter Screen is currently disabled')),
-      );
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/rentals');
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/cart');
-    }
-  }
+  final Color darkTextColor = const Color(0xFF1B1E28);
 
   @override
   Widget build(BuildContext context) {
@@ -361,485 +288,135 @@ class _ChatListScreenState extends State<ChatListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        toolbarHeight: 140,
+        toolbarHeight: 120,
         automaticallyImplyLeading: false,
         title: Padding(
-          padding: const EdgeInsets.only(top: 40, left: 32),
-          child: RichText(
-            text: TextSpan(
-              style: GoogleFonts.inter(color: Colors.black, fontSize: 25, height: 1.1),
-              children: [
-                const TextSpan(text: 'Your\n'),
-                TextSpan(text: 'Messages!', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 25)),
-              ],
-            ),
+          padding: const EdgeInsets.only(left: 24), // Moved RIGHT slightly
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your',
+                style: GoogleFonts.inter(
+                  color: darkTextColor,
+                  fontSize: 22, // Reduced size
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              Text(
+                'Messages!',
+                style: GoogleFonts.inter(
+                  color: darkTextColor,
+                  fontSize: 24, // Reduced size
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
+          // Circular Back Button
           Padding(
-            padding: const EdgeInsets.only(top: 10, right: 24),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-              },
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF7F7F9),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.chevron_left, color: darkTextColor, size: 28),
+                  onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Circular Search Button
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Center(
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFECFFEA),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.search, color: darkTextColor, size: 22),
+                  onPressed: () {},
+                ),
+              ),
             ),
           ),
         ],
       ),
       body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-            child: GestureDetector(
-              onTap: () => Navigator.push(
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const IndividualChatScreen()),
-              ),
-              child: _buildChatItem(
-                name: 'Plantio AI',
-                message: 'How can I help you today?',
-                time: 'Now',
-                status: 'online',
-                isAI: true,
-                unread: true,
-              ),
+              );
+            },
+            child: _buildChatItem(
+              name: 'Plantio AI',
+              message: 'How can I help you today?',
+              time: 'Now',
+              isAI: true,
             ),
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const OnboardingScreen(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
-            },
-            child: Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B8E55),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5B8E55).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          hoverColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onNavBarTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF5B8E55),
-          unselectedItemColor: const Color(0xFF999999),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 28),
-              activeIcon: Icon(Icons.home, size: 28),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined, size: 28),
-              activeIcon: Icon(Icons.map, size: 28),
-              label: 'Categories',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline, size: 28),
-              activeIcon: Icon(Icons.people, size: 28),
-              label: 'Rentals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined, size: 28),
-              activeIcon: Icon(Icons.shopping_bag, size: 28),
-              label: 'Cart',
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: const Color(0xFF5B8E55),
+        unselectedItemColor: const Color(0xFF999999),
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: ''),
+        ],
       ),
     );
   }
 
-  Widget _buildChatItem({
-    required String name,
-    required String message,
-    required String time,
-    required String status,
-    String? imageUrl,
-    required bool unread,
-    bool isAI = false,
-  }) {
+  Widget _buildChatItem({required String name, required String message, required String time, bool isAI = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: isAI ? const Color(0xFF5B8C51) : Colors.grey[200],
-            backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
-            child: isAI ? const Icon(Icons.psychology, color: Colors.white, size: 30) : null,
+            backgroundColor: const Color(0xFF5B8C51),
+            child: Icon(isAI ? Icons.psychology : Icons.person, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: darkTextColor)),
                 const SizedBox(height: 4),
-                Text(message,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                        fontSize: 14, color: status == 'typing' ? const Color(0xFF5B8C51) : const Color(0xFF757575))),
+                Text(message, style: GoogleFonts.inter(color: Colors.grey, fontSize: 14), overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(time, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9E9E9E))),
-              if (unread)
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(color: Color(0xFF5B8C51), shape: BoxShape.circle),
-                  child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Screen 3: Group Chat Screen
-class GroupChatScreen extends StatefulWidget {
-  const GroupChatScreen({Key? key}) : super(key: key);
-
-  @override
-  State<GroupChatScreen> createState() => _GroupChatScreenState();
-}
-
-class _GroupChatScreenState extends State<GroupChatScreen> {
-  int _currentIndex = 0;
-
-  void _onNavBarTapped(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Search Filter Screen is currently disabled')),
-      );
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/rentals');
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/cart');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8EDE2),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Stack(
-              children: const [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=6'),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: CircleAvatar(
-                    radius: 8,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=7'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Plant group 2',
-                  style: GoogleFonts.inter(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                Text('+60 members', style: GoogleFonts.inter(color: const Color(0xFF5B8C51), fontSize: 12)),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF5B8C51)),
-            onPressed: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Center(child: Text('Today', style: GoogleFonts.inter(color: const Color(0xFF9E9E9E), fontSize: 12))),
-                const SizedBox(height: 16),
-                _buildReceivedMessage(
-                  'Has anyone tried the new organic fertilizer?',
-                  '9:37',
-                  'https://i.pravatar.cc/150?img=8',
-                ),
-                _buildSentMessage('Yes, it works great for indoor plants!', '9:40'),
-                _buildReceivedMessageWithImage(
-                  'Check out the results on my Fern',
-                  '9:42',
-                  'https://i.pravatar.cc/150?img=10',
-                  'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=300&fit=crop',
-                ),
-              ],
-            ),
-          ),
-          _buildMessageInput(),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const OnboardingScreen(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
-            },
-            child: Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B8E55),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5B8E55).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          hoverColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onNavBarTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF5B8E55),
-          unselectedItemColor: const Color(0xFF999999),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 28),
-              activeIcon: Icon(Icons.home, size: 28),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined, size: 28),
-              activeIcon: Icon(Icons.map, size: 28),
-              label: 'Categories',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline, size: 28),
-              activeIcon: Icon(Icons.people, size: 28),
-              label: 'Rentals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined, size: 28),
-              activeIcon: Icon(Icons.shopping_bag, size: 28),
-              label: 'Cart',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReceivedMessage(String message, String time, String avatarUrl) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(radius: 16, backgroundImage: NetworkImage(avatarUrl)),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: Colors.black87)),
-                  const SizedBox(height: 4),
-                  Text(time, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9E9E9E))),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReceivedMessageWithImage(String message, String time, String avatarUrl, String imageUrl) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(radius: 16, backgroundImage: NetworkImage(avatarUrl)),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(message, style: GoogleFonts.inter(fontSize: 14, color: Colors.black87)),
-                  ),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
-                    child: Image.network(imageUrl, width: 200, height: 150, fit: BoxFit.cover),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(time, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9E9E9E))),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSentMessage(String message, String time) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFFD4E7C5), borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: Colors.black87)),
-                  const SizedBox(height: 4),
-                  Text(time, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5B8C51))),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(24)),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Type your message',
-                  border: InputBorder.none,
-                  hintStyle: GoogleFonts.inter(color: const Color(0xFFBDBDBD), fontSize: 14),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.attach_file, color: Color(0xFF5B8C51)), onPressed: () {}),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(color: Color(0xFF5B8C51), shape: BoxShape.circle),
-            child: const Icon(Icons.mic, color: Colors.white),
-          ),
+          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),
     );

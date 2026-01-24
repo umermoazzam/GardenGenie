@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'chat_screen.dart'; 
 import 'detection_screen.dart';
-import 'blogs_videos_screen.dart'; // <-- Ensure this import is here
+import 'blogs_videos_screen.dart';
+import 'rental_services_screen.dart';
+import 'cart_screen.dart'; // Added import for Cart Screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,13 +21,21 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _currentIndex = index);
 
     if (index == 1) {
+      // Marketplace navigation can be added here when screen is ready
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Search Filter Screen is currently disabled')),
+        const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
       );
     } else if (index == 2) {
-      Navigator.pushNamed(context, '/rentals');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const RentalServicesScreen()),
+      );
     } else if (index == 3) {
-      Navigator.pushNamed(context, '/cart');
+      // Navigating to Cart Screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CartScreen()),
+      );
     }
   }
 
@@ -166,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         imageUrl: 'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400',
                         title: 'Cactus',
                         showNewBadge: true,
-                        onTap: () => Navigator.pushNamed(context, '/product-detail'),
+                        onTap: () {}, 
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -175,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         imageUrl: 'https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400',
                         title: 'Cactus Red',
                         showNewBadge: false,
-                        onTap: () => Navigator.pushNamed(context, '/product-detail'),
+                        onTap: () {}, 
                       ),
                     ),
                   ],
@@ -188,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400',
                         title: 'Dark Leaves',
                         showNewBadge: false,
-                        onTap: () => Navigator.pushNamed(context, '/product-detail'),
+                        onTap: () {}, 
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -197,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         imageUrl: 'https://images.unsplash.com/photo-1614594737564-e5fc321c3f13?w=400',
                         title: 'Green Plant',
                         showNewBadge: true,
-                        onTap: () => Navigator.pushNamed(context, '/product-detail'),
+                        onTap: () {}, 
                       ),
                     ),
                   ],
@@ -215,7 +225,10 @@ class _HomeScreenState extends State<HomeScreen> {
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             onTap: () {
-              // Placeholder for onboarding or detection
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PlantDetectionScreen()),
+              );
             },
             child: Container(
               width: 58,
@@ -259,7 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Quick Action Buttons Builder
   Widget _buildQuickActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -278,7 +290,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Product Card Builder
   Widget _buildProductCard({required String imageUrl, required String title, required bool showNewBadge, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -313,7 +324,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // AI Options Modal - UPDATED NAVIGATION
   void _showAIOptionsDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -347,18 +357,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 description: 'Scan and identify plant diseases',
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, '/plant-disease-detector');
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PlantDetectionScreen()));
                 },
               ),
               const SizedBox(height: 16),
               
-              // --- TARGET UPDATE HERE ---
               _buildAIOption(
                 icon: Icons.article_outlined,
                 title: 'Blogs & Videos',
                 description: 'Learn from educational content',
                 onTap: () {
-                  Navigator.pop(context); // Close the bottom sheet first
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const BlogsVideosScreen()),
