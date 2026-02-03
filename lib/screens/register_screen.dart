@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
-
-// Simple in-memory storage for registered user
-Map<String, String> registeredUser = {};
+import 'api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -14,13 +12,13 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
+  bool _isLoading = false;
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
 
-  // Toggle variables for eye icon
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
 
@@ -33,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _registerUser() {
+  void _registerUser() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
@@ -58,18 +56,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // Save user info in memory
-    registeredUser = {
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'password': _passwordController.text,
-    };
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Navigate to Login Screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    final result = await ApiService.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
     );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful! Please login.')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+      );
+    }
   }
 
   @override
@@ -176,15 +189,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _registerUser,
+                  onPressed: _isLoading ? null : _registerUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
-                    shape: const RoundedRectangleBorder(), // square button
+                    shape: const RoundedRectangleBorder(),
                   ),
-                  child: Text(
-                    'REGISTER',
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'REGISTER',
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
+                        ),
                 ),
               ),
 
@@ -194,7 +216,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text('Already have an account?', style: GoogleFonts.inter()),
                   const SizedBox(width: 5),
-                  // Login link with pointer cursor
                   MouseRegion(
                     cursor: SystemMouseCursors.click,
                     child: GestureDetector(
@@ -229,7 +250,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)), // square (no borderRadius)
+      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,

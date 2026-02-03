@@ -1,11 +1,7 @@
-// chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart';
-
-void main() {
-  runApp(const PlantChatApp());
-}
+import 'api_service.dart'; // ✅ Import ApiService
 
 class PlantChatApp extends StatelessWidget {
   const PlantChatApp({Key? key}) : super(key: key);
@@ -34,6 +30,64 @@ class IndividualChatScreen extends StatefulWidget {
 
 class _IndividualChatScreenState extends State<IndividualChatScreen> {
   final Color darkTextColor = const Color(0xFF1B1E28);
+  
+  // Logic Variables
+  final TextEditingController _messageController = TextEditingController();
+  final List<Map<String, String>> _messages = []; 
+  bool _isLoading = false;
+
+  // ❌ backendUrl variable removed as requested
+
+  @override
+  void initState() {
+    super.initState();
+    // Welcome Message
+    _messages.add({
+      'role': 'ai',
+      'message': 'Hello! I am Plantio AI. How can I help you with your garden today?',
+      'time': 'Just now'
+    });
+  }
+
+  // ✅ UPDATED: Handle Send Message using ApiService
+  Future<void> _handleSend() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    final userMessage = _messageController.text;
+    final currentTime = "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}";
+
+    setState(() {
+      _messages.add({'role': 'user', 'message': userMessage, 'time': currentTime});
+      _isLoading = true;
+    });
+    _messageController.clear();
+
+    try {
+      // ✅ Send user message via ApiService
+      final data = await ApiService.sendMessage(message: userMessage);
+      
+      // Get reply or default message
+      String aiMessage = data['reply'] ?? "No response from AI.";
+
+      setState(() {
+        _messages.add({
+          'role': 'ai',
+          'message': aiMessage.trim(),
+          'time': currentTime
+        });
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add({
+          'role': 'ai',
+          'message': "Sorry, I'm having trouble connecting to the server. Please check if your Python backend is running.",
+          'time': "Error"
+        });
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,30 +166,22 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 32, bottom: 16),
-              children: [
-                Center(
-                  child: Text(
-                    'Today',
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF9E9E9E),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                _buildReceivedMessage(
-                  'Hello! I am Plantio AI. How can I help you with your garden today?',
-                  '8:37',
-                ),
-                _buildSentMessage('My Monstera leaves are turning yellow.', '9:24'),
-                _buildReceivedMessage(
-                  'Yellow leaves can be caused by overwatering or lack of light. Are the stems feeling soft or firm?',
-                  '9:25',
-                ),
-              ],
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final chat = _messages[index];
+                if (chat['role'] == 'ai') {
+                  return _buildReceivedMessage(chat['message']!, chat['time']!);
+                } else {
+                  return _buildSentMessage(chat['message']!, chat['time']!);
+                }
+              },
             ),
+          ),
+          if (_isLoading) const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: LinearProgressIndicator(color: Color(0xFF5B8C51), minHeight: 2),
           ),
           _buildMessageInput(),
         ],
@@ -233,9 +279,11 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
                   borderRadius: BorderRadius.circular(30)
                 ),
                 child: TextField(
+                  controller: _messageController,
                   style: GoogleFonts.inter(color: darkTextColor),
+                  onSubmitted: (_) => _handleSend(),
                   decoration: InputDecoration(
-                    hintText: 'Type you message',
+                    hintText: 'Type your message',
                     border: InputBorder.none,
                     hintStyle: GoogleFonts.inter(color: const Color(0xFFBDBDBD), fontSize: 14),
                   ),
@@ -243,24 +291,17 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF5F5F5),
-                shape: BoxShape.circle,
+            GestureDetector(
+              onTap: _handleSend,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF5B8C51), 
+                  shape: BoxShape.circle
+                ),
+                child: const Icon(Icons.send, color: Colors.white, size: 22),
               ),
-              child: const Icon(Icons.attach_file, color: Color(0xFF5B8C51), size: 22),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: Color(0xFF5B8C51), 
-                shape: BoxShape.circle
-              ),
-              child: const Icon(Icons.mic, color: Colors.white, size: 24),
             ),
           ],
         ),
@@ -269,7 +310,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   }
 }
 
-// Screen 2: Chat List Screen (Your Messages!)
+// Screen 2: Chat List Screen (Unchanged)
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
 
@@ -291,66 +332,36 @@ class _ChatListScreenState extends State<ChatListScreen> {
         toolbarHeight: 120,
         automaticallyImplyLeading: false,
         title: Padding(
-          padding: const EdgeInsets.only(left: 24), // Moved RIGHT slightly
+          padding: const EdgeInsets.only(left: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Your',
-                style: GoogleFonts.inter(
-                  color: darkTextColor,
-                  fontSize: 22, // Reduced size
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              Text(
-                'Messages!',
-                style: GoogleFonts.inter(
-                  color: darkTextColor,
-                  fontSize: 24, // Reduced size
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Your', style: GoogleFonts.inter(color: darkTextColor, fontSize: 22, fontWeight: FontWeight.w400)),
+              Text('Messages!', style: GoogleFonts.inter(color: darkTextColor, fontSize: 24, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
         actions: [
-          // Circular Back Button
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Center(
               child: Container(
-                width: 45,
-                height: 45,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF7F7F9),
-                  shape: BoxShape.circle,
-                ),
+                width: 45, height: 45,
+                decoration: const BoxDecoration(color: Color(0xFFF7F7F9), shape: BoxShape.circle),
                 child: IconButton(
                   icon: Icon(Icons.chevron_left, color: darkTextColor, size: 28),
-                  onPressed: () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  ),
+                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen())),
                 ),
               ),
             ),
           ),
-          // Circular Search Button
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: Center(
               child: Container(
-                width: 45,
-                height: 45,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFECFFEA),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.search, color: darkTextColor, size: 22),
-                  onPressed: () {},
-                ),
+                width: 45, height: 45,
+                decoration: const BoxDecoration(color: Color(0xFFECFFEA), shape: BoxShape.circle),
+                child: IconButton(icon: Icon(Icons.search, color: darkTextColor, size: 22), onPressed: () {}),
               ),
             ),
           ),
@@ -362,17 +373,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const IndividualChatScreen()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const IndividualChatScreen()));
             },
-            child: _buildChatItem(
-              name: 'Plantio AI',
-              message: 'How can I help you today?',
-              time: 'Now',
-              isAI: true,
-            ),
+            child: _buildChatItem(name: 'Plantio AI', message: 'How can I help you today?', time: 'Now', isAI: true),
           ),
         ],
       ),
@@ -386,10 +389,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), label: ''),
         ],
       ),
     );
@@ -400,11 +403,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xFF5B8C51),
-            child: Icon(isAI ? Icons.psychology : Icons.person, color: Colors.white, size: 30),
-          ),
+          CircleAvatar(radius: 28, backgroundColor: const Color(0xFF5B8C51), child: Icon(isAI ? Icons.psychology : Icons.person, color: Colors.white, size: 30)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

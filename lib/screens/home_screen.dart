@@ -4,7 +4,8 @@ import 'chat_screen.dart';
 import 'detection_screen.dart';
 import 'blogs_videos_screen.dart';
 import 'rental_services_screen.dart';
-import 'cart_screen.dart'; // Added import for Cart Screen
+import 'cart_screen.dart'; 
+import 'profile_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -21,7 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _currentIndex = index);
 
     if (index == 1) {
-      // Marketplace navigation can be added here when screen is ready
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
       );
@@ -31,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (context) => const RentalServicesScreen()),
       );
     } else if (index == 3) {
-      // Navigating to Cart Screen
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const CartScreen()),
@@ -50,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- HEADER SECTION START ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -66,19 +66,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    
+                    // ✅ UPDATED: Image removed, Default Icon added
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/profile'),
-                        child: const CircleAvatar(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                          );
+                        },
+                        child: CircleAvatar(
                           radius: 22,
-                          backgroundImage: NetworkImage(
-                              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'),
+                          backgroundColor: Colors.grey.shade200, // Light grey background
+                          child: const Icon(Icons.person, color: Colors.grey), // Default Person Icon
                         ),
                       ),
                     ),
                   ],
                 ),
+                // --- HEADER SECTION END ---
+
                 const SizedBox(height: 30),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,

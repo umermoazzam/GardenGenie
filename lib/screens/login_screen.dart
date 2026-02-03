@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
-import 'forgot_screen.dart'; // <- added import for ForgotPasswordScreen
+import 'forgot_screen.dart';
+import 'api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// 🔹 Firebase Google Auth
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -15,9 +20,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // 🔹 Google Auth Service
+  final AuthService _authService = AuthService();
 
   @override
   void dispose() {
@@ -26,23 +35,67 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _loginUser() {
-    if (_emailController.text == registeredUser['email'] &&
-        _passwordController.text == registeredUser['password']) {
+  // ================= EMAIL / PASSWORD LOGIN (UNCHANGED) =================
+  void _loginUser() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await ApiService.login(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (result['success'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userName', result['user']['name']);
+      await prefs.setString('userEmail', result['user']['email']);
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Incorrect email or password')),
+        SnackBar(content: Text(result['message'] ?? 'Login failed')),
       );
+    }
+  }
+
+  // ================= GOOGLE LOGIN (FROM FRIEND CODE) =================
+  Future<void> _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.signInWithGoogle();
+
+      if (user != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5B8E55); // Updated color (#5B8E55)
+    const primaryGreen = Color(0xFF5B8E55);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -52,14 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo + Header
               Row(
                 children: [
                   Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(color: primaryGreen, width: 2),
                     ),
@@ -93,12 +144,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Email field
-              _buildInputField(Icons.email_outlined, 'Email', _emailController, primaryGreen: primaryGreen,
-                  keyboardType: TextInputType.emailAddress),
+              _buildInputField(Icons.email_outlined, 'Email', _emailController,
+                  primaryGreen: primaryGreen, keyboardType: TextInputType.emailAddress),
               const SizedBox(height: 16),
-
-              // Password field with eye icon
               _buildInputField(Icons.lock_outline, 'Password', _passwordController,
                   obscureText: _obscurePassword,
                   isPasswordField: true,
@@ -106,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     setState(() => _obscurePassword = !_obscurePassword);
                   },
                   primaryGreen: primaryGreen),
+
               const SizedBox(height: 16),
 
               Row(
@@ -118,60 +167,76 @@ class _LoginScreenState extends State<LoginScreen> {
                         onChanged: (value) => setState(() => _rememberMe = value ?? false),
                         activeColor: primaryGreen,
                       ),
-                      Text('Remember Me', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
+                      Text('Remember Me',
+                          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
                     ],
                   ),
-                  // Forgot Password? with pointer cursor and navigation
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                        );
-                      },
-                      child: Text('Forgot Password?',
-                          style: GoogleFonts.inter(
-                              fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
-                    ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                      );
+                    },
+                    child: Text('Forgot Password?',
+                        style: GoogleFonts.inter(
+                            fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
                   ),
                 ],
               ),
+
               const SizedBox(height: 32),
 
-              // LOGIN Button (square)
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _loginUser,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
-                    shape: const RoundedRectangleBorder(), // square button
-                  ),
-                  child: Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
+                  onPressed: _isLoading ? null : _loginUser,
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      : Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
                 ),
               ),
+
               const SizedBox(height: 20),
 
-              // Sign up link with pointer cursor
+              // ================= GOOGLE BUTTON =================
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _loginWithGoogle,
+                  icon: Image.asset(
+                    'assets/google_logo.png',
+                    height: 22,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.g_mobiledata, size: 26),
+                  ),
+                  label: Text(
+                    'Continue with Google',
+                    style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Don\'t have an account? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                        );
-                      },
-                      child: Text('Sign up',
-                          style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w600, fontSize: 14)),
-                    ),
+                  Text('Don\'t have an account? ',
+                      style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      );
+                    },
+                    child: Text('Sign up',
+                        style: GoogleFonts.inter(
+                            color: primaryGreen, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -182,7 +247,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Reusable input field
   Widget _buildInputField(
     IconData icon,
     String hint,
@@ -194,19 +258,17 @@ class _LoginScreenState extends State<LoginScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)), // square field
+      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.inter(),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
           prefixIcon: Icon(icon, color: primaryGreen),
           suffixIcon: isPasswordField
               ? IconButton(
-                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility, color: primaryGreen),
+                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
                   onPressed: toggleObscure,
                 )
               : null,

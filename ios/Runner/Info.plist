@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Added Permissions for Camera & Gallery -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Profile picture ke liye gallery access chahiye</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Profile picture ke liye camera access chahiye</string>
+
 </dict>
 </plist>

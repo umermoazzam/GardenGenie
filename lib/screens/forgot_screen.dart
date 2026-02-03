@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
+import 'api_service.dart'; // Import added
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -18,9 +20,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  void _handleSendResetLink() async {
+    String email = _emailController.text.trim();
+    
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your registered email')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Call the Backend API
+    final result = await ApiService.forgotPassword(email: email);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      _showSuccessDialog(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Error occurred')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5B8E55); // same as Login/Register
+    const primaryGreen = Color(0xFF5B8E55);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,7 +70,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo section
               Row(
                 children: [
                   Container(
@@ -49,15 +80,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: primaryGreen, width: 2),
                     ),
-                    child: Icon(Icons.eco, color: primaryGreen, size: 20),
+                    child: const Icon(Icons.eco, color: primaryGreen, size: 20),
                   ),
                   const SizedBox(width: 8),
                   Text('Plantio', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 40),
-
-              // Titles
               Text(
                 'Forgot Password?',
                 style: GoogleFonts.inter(
@@ -76,8 +105,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-
-              // Email Input
               _buildInputField(
                 Icons.email_outlined,
                 'Email Address',
@@ -86,31 +113,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 32),
-
-              // SEND RESET LINK Button (square like LOGIN button)
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    _showSuccessDialog(context);
-                  },
+                  onPressed: _isLoading ? null : _handleSendResetLink,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
-                    shape: const RoundedRectangleBorder(), // square button
+                    shape: const RoundedRectangleBorder(),
                     elevation: 0,
                   ),
-                  child: Text(
-                    'SEND RESET LINK',
-                    style: GoogleFonts.inter(
-                        fontSize: 16, color: Colors.white), // simple text, no bold
-                  ),
+                  child: _isLoading 
+                    ? const SizedBox(
+                        height: 20, 
+                        width: 20, 
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      )
+                    : Text(
+                        'SEND RESET LINK',
+                        style: GoogleFonts.inter(fontSize: 16, color: Colors.white),
+                      ),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // Back to Login
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -140,7 +165,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // Square input field builder
   Widget _buildInputField(
     IconData icon,
     String hint,
@@ -151,7 +175,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5), // square field
+        color: Color(0xFFF5F5F5),
       ),
       child: TextField(
         controller: controller,
@@ -169,21 +193,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // Reset link sent confirmation
   void _showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 60),
         content: Text(
-          'Check your email! We have sent a password recovery link to your inbox.',
+          'Check your email! We have sent a password recovery link to your Gmail inbox.',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(fontSize: 16),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+            },
             child: Text('OK', style: GoogleFonts.inter(color: const Color(0xFF5B8E55))),
           ),
         ],
