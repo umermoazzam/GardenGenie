@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pod_player/pod_player.dart'; 
 
+// --- MAIN SCREEN (BlogsVideosScreen) ---
 class BlogsVideosScreen extends StatefulWidget {
   const BlogsVideosScreen({Key? key}) : super(key: key);
 
@@ -16,8 +19,6 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
-    // Title update karne ke liye listener
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});
@@ -33,47 +34,7 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    // Dynamic Title Logic
     String titlePrefix = _tabController.index == 0 ? "Articles on " : "Videos on ";
-
-    final List<Map<String, dynamic>> blogItems = [
-      {
-        "title": "Curing Tomato Blight (AI Recommendation)",
-        "author": "Plantio Expert",
-        "date": "2024.03.20",
-        "tag": "AI RECOMMENDED",
-        "image": "https://images.unsplash.com/photo-1592419044706-39796d40f98c?w=600",
-        "isVideo": false,
-        "isAI": true,
-        "relatedProduct": "Organic Fungicide",
-        "price": "Rs. 850"
-      },
-      {
-        "title": "David Austin, Who Breathed Life Into the Rose",
-        "author": "Shyla Monic",
-        "date": "2023.01.01",
-        "tag": "ARTICLE",
-        "image": "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=600",
-        "isVideo": false,
-        "isAI": false,
-        "relatedProduct": "Rose Fertilizer",
-        "price": "Rs. 450"
-      },
-    ];
-
-    final List<Map<String, dynamic>> videoItems = [
-      {
-        "title": "Even on Urban Excursions, Finding Nature",
-        "author": "Shyla Monic",
-        "date": "2023.01.01",
-        "tag": "TUTORIAL",
-        "image": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600",
-        "isVideo": true,
-        "isAI": false,
-        "relatedProduct": "Gardening Tools Set",
-        "price": "Rs. 2500"
-      },
-    ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -106,27 +67,44 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildContentList(blogItems),
-          _buildContentList(videoItems),
+          _buildFirestoreContent(isVideoType: false),
+          _buildFirestoreContent(isVideoType: true),
         ],
       ),
     );
   }
 
-  Widget _buildContentList(List<Map<String, dynamic>> items) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BlogsDetailScreen(data: item)),
+  Widget _buildFirestoreContent({required bool isVideoType}) {
+    String collectionName = isVideoType ? 'videos' : 'blogs';
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection(collectionName).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const Center(child: Text("Something went wrong"));
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8E55)));
+        }
+
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return Center(child: Text("No content available yet.", style: GoogleFonts.inter(color: Colors.grey)));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(20),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data() as Map<String, dynamic>;
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BlogsDetailScreen(data: data)),
+                );
+              },
+              child: _buildFigmaCard(data),
             );
           },
-          child: _buildFigmaCard(item),
         );
       },
     );
@@ -147,21 +125,20 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Image.network(data['image'], height: 200, width: double.infinity, fit: BoxFit.cover),
-              ),
-              if (data['isVideo'])
-                const Positioned.fill(child: Center(child: Icon(Icons.play_circle_fill, color: Colors.white70, size: 50))),
-              Positioned(
-                top: 15, left: 15,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: data['isAI'] ? Colors.orange : primaryGreen,
-                    borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  data['image'] ?? 'https://via.placeholder.com/600x400',
+                  height: 200, 
+                  width: double.infinity, 
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 200,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
                   ),
-                  child: Text(data['tag'], style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ),
+              if (data['isVideo'] == true)
+                const Positioned.fill(child: Center(child: Icon(Icons.play_circle_fill, color: Colors.white70, size: 50))),
             ],
           ),
           Padding(
@@ -169,17 +146,9 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data['title'], style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, height: 1.3, color: Colors.black)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const CircleAvatar(radius: 12, backgroundColor: Colors.orange, child: Icon(Icons.person, size: 12, color: Colors.white)),
-                    const SizedBox(width: 8),
-                    Text(data['author'], style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700])),
-                    const Spacer(),
-                    Text(data['date'], style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[400])),
-                  ],
-                ),
+                Text(data['title'] ?? 'No Title', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                const SizedBox(height: 8),
+                Text(data['author'] ?? 'Admin', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[600])),
               ],
             ),
           ),
@@ -189,22 +158,75 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
   }
 }
 
-class BlogsDetailScreen extends StatelessWidget {
+// --- DETAIL SCREEN (BlogsDetailScreen) ---
+class BlogsDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
   const BlogsDetailScreen({Key? key, required this.data}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    const Color primaryGreen = Color(0xFF5B8E55);
+  State<BlogsDetailScreen> createState() => _BlogsDetailScreenState();
+}
 
+class _BlogsDetailScreenState extends State<BlogsDetailScreen> {
+  late final PodPlayerController _podController;
+  bool isVideo = false;
+  bool isFollowing = false;
+  bool isControllerInitialized = false; // Track initialization
+  final Color primaryGreen = const Color(0xFF5B8E55);
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if it's a video and initialize PodPlayer
+    if (widget.data['isVideo'] == true && widget.data['videoUrl'] != null) {
+      isVideo = true;
+      _podController = PodPlayerController(
+        playVideoFrom: PlayVideoFrom.youtube(widget.data['videoUrl']),
+        podPlayerConfig: const PodPlayerConfig(
+          autoPlay: true,
+          isLooping: false,
+        ),
+      )..initialise().then((_) {
+          if (mounted) {
+            setState(() {
+              isControllerInitialized = true;
+            });
+          }
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (isVideo) _podController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Header Section: PodPlayer or Image
           Positioned(
             top: 0, left: 0, right: 0,
-            child: Image.network(data['image'], height: 450, fit: BoxFit.cover),
+            child: Container(
+              height: 450,
+              color: Colors.black,
+              child: isVideo
+                  ? (isControllerInitialized 
+                      ? PodVideoPlayer(controller: _podController)
+                      : const Center(child: CircularProgressIndicator(color: Colors.white)))
+                  : Image.network(
+                      widget.data['image'] ?? 'https://via.placeholder.com/600x400',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, color: Colors.white, size: 50)),
+                    ),
+            ),
           ),
+
+          // Back Button
           Positioned(
             top: 50, left: 20,
             child: CircleAvatar(
@@ -215,6 +237,8 @@ class BlogsDetailScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // Bottom Content Sheet
           Positioned.fill(
             child: DraggableScrollableSheet(
               initialChildSize: 0.6,
@@ -234,8 +258,10 @@ class BlogsDetailScreen extends StatelessWidget {
                       children: [
                         Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
                         const SizedBox(height: 25),
-                        Text(data['title'], style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, height: 1.2, color: Colors.black)),
+                        Text(widget.data['title'] ?? 'No Title', style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
                         const SizedBox(height: 15),
+                        
+                        // Author & Follow Row
                         Row(
                           children: [
                             const CircleAvatar(radius: 15, backgroundColor: Colors.orange, child: Icon(Icons.person, size: 15, color: Colors.white)),
@@ -243,53 +269,30 @@ class BlogsDetailScreen extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(data['author'], style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                                Text(data['date'], style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+                                Text(widget.data['author'] ?? 'Admin', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                                Text(widget.data['date'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
                               ],
                             ),
                             const Spacer(),
                             ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-                              child: Text("+ Follow", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+                              onPressed: () => setState(() => isFollowing = !isFollowing),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isFollowing ? Colors.grey : primaryGreen,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              ),
+                              child: Text(isFollowing ? "Following" : "+ Follow", style: const TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 30),
-                        Text("RECOMMENDED FOR YOU", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.1)),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(border: Border.all(color: Colors.grey[200]!), borderRadius: BorderRadius.circular(15)),
-                          child: Row(
-                            children: [
-                              Container(width: 50, height: 50, decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.shopping_cart_outlined, color: primaryGreen)),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(data['relatedProduct'], style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
-                                    Text(data['price'], style: GoogleFonts.inter(color: primaryGreen, fontSize: 13, fontWeight: FontWeight.w500)),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, elevation: 0),
-                                child: Text("BUY", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
-                              )
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        Text("Description", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                        Text("Description", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 10),
                         Text(
-                          "This tutorial is designed to help you understand plant care better. Follow these steps to ensure healthy growth. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tortor sed tellus fusce laoreet facilisi urna imperdiet.",
+                          widget.data['description'] ?? "No description available.",
                           style: GoogleFonts.inter(fontSize: 15, height: 1.6, color: Colors.grey[700]),
                         ),
-                        const SizedBox(height: 100), 
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),

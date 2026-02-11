@@ -1,10 +1,25 @@
+// cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'checkout_screen.dart';
 import 'home_screen.dart';
+import 'rental_services_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
+
+  // ✅ STATIC LIST: Initially empty, real products will be added from ProductDetailsScreen
+  static List<Map<String, dynamic>> cartItems = [];
+
+  // ✅ STATIC METHOD: Add new products to cart
+  static void addToCart(Map<String, dynamic> item) {
+    int index = cartItems.indexWhere((element) => element['name'] == item['name']);
+    if (index != -1) {
+      cartItems[index]['qty']++;
+    } else {
+      cartItems.add(item);
+    }
+  }
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -14,19 +29,15 @@ class _CartScreenState extends State<CartScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color lightGreenBg = const Color(0xFFE8F5E9);
   
-  int selectedItemIndex = 0; // Figma mein pehla item selected hai
+  int selectedItemIndex = 0; 
 
-  List<Map<String, dynamic>> cartItems = [
-    {"name": "Cactus Red", "price": 200, "qty": 1, "image": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=200"},
-    {"name": "Cactus Red", "price": 200, "qty": 1, "image": "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=200"},
-    {"name": "Cactus Red", "price": 200, "qty": 1, "image": "https://images.unsplash.com/photo-1507290439931-a861b5a38200?w=200"},
-    {"name": "Cactus Red", "price": 200, "qty": 1, "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=200"},
-  ];
+  // Helper to access cart items
+  List<Map<String, dynamic>> get items => CartScreen.cartItems;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFCFB), // Very light greyish green background
+      backgroundColor: const Color(0xFFFBFCFB),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -58,57 +69,65 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(width: 10),
         ],
       ),
-      body: Column(
-        children: [
-          // 1. Items List (Scrollable Area)
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                return _buildFigmaCartItem(index);
-              },
-            ),
-          ),
-
-          // 2. Checkout Button (Positioned at bottom right with limited size)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CheckoutScreen()));
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: primaryGreen,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryGreen.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      )
-                    ],
+      body: items.isEmpty 
+          ? Center(
+              child: Text(
+                "Your cart is empty",
+                style: GoogleFonts.inter(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      return _buildFigmaCartItem(index);
+                    },
                   ),
-                  child: Text(
-                    'Checkout',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () {
+                        // ✅ Pass the selected index to CheckoutScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CheckoutScreen(selectedIndex: selectedItemIndex),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: primaryGreen,
+                          borderRadius: BorderRadius.circular(0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryGreen.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            )
+                          ],
+                        ),
+                        child: Text(
+                          'Checkout',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
-
-      // Bottom Navigation Bar matching Home Screen (White background)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 15),
@@ -117,7 +136,13 @@ class _CartScreenState extends State<CartScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF5B8E55),
             shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: const Color(0xFF5B8E55).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6))],
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF5B8E55).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
         ),
@@ -125,7 +150,7 @@ class _CartScreenState extends State<CartScreen> {
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(canvasColor: Colors.white),
         child: BottomNavigationBar(
-          currentIndex: 3, // Cart is at index 3
+          currentIndex: 3, 
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           elevation: 0,
@@ -134,7 +159,18 @@ class _CartScreenState extends State<CartScreen> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           onTap: (index) {
-            if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (index) => const HomeScreen()));
+            if (index == 0) {
+              Navigator.pushAndRemoveUntil(
+                context, 
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            } else if (index == 2) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RentalServicesScreen()),
+              );
+            }
           },
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), label: 'Home'),
@@ -148,7 +184,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildFigmaCartItem(int index) {
-    var item = cartItems[index];
+    var item = items[index];
     bool isSelected = selectedItemIndex == index;
 
     return GestureDetector(
@@ -165,14 +201,12 @@ class _CartScreenState extends State<CartScreen> {
         ),
         child: Row(
           children: [
-            // Image with rounded corners
             ClipRRect(
               borderRadius: BorderRadius.circular(18),
               child: Image.network(item['image'], width: 85, height: 85, fit: BoxFit.cover),
             ),
             const SizedBox(width: 16),
             
-            // Details Area
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,23 +218,59 @@ class _CartScreenState extends State<CartScreen> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      // Price Tag style from Figma
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF4EB), // Light orange bg for price
+                          color: const Color(0xFFFFF4EB),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '\$${item['price']}',
+                          'Rs. ${item['price']}',
                           style: GoogleFonts.inter(color: Colors.orange[700], fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Quantity Selector (+ 1 -)
-                      Text(
-                        '+ ${item['qty']} -',
-                        style: GoogleFonts.inter(color: Colors.grey[400], fontSize: 14, fontWeight: FontWeight.w500),
+                      
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (item['qty'] > 1) item['qty']--;
+                              });
+                            },
+                            child: Text(
+                              '-',
+                              style: GoogleFonts.inter(
+                                  color: Colors.grey[500],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${item['qty']}',
+                            style: GoogleFonts.inter(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                item['qty']++;
+                              });
+                            },
+                            child: Text(
+                              '+',
+                              style: GoogleFonts.inter(
+                                  color: Colors.grey[500],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -208,7 +278,6 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
 
-            // Radio-style selection circle from Figma
             Container(
               width: 26,
               height: 26,
@@ -220,8 +289,8 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               child: isSelected 
-                ? Center(child: Container(width: 14, height: 14, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle)))
-                : null,
+                  ? Center(child: Container(width: 14, height: 14, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle)))
+                  : null,
             ),
             const SizedBox(width: 8),
           ],

@@ -1,8 +1,13 @@
+// checkout_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'cart_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({Key? key}) : super(key: key);
+  final int selectedIndex; // ✅ Accept index from CartScreen
+  const CheckoutScreen({Key? key, required this.selectedIndex}) : super(key: key);
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -12,12 +17,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color lightGreenBg = const Color(0xFFE8F5E9);
   
-  int selectedPayment = 0; // Default selected as per Figma (My Wallet)
+  int selectedPayment = 0; 
+  bool isLoading = false;
+
+  String _getPaymentMethodName(int index) {
+    switch (index) {
+      case 0: return 'My Wallet';
+      case 1: return 'PayPal';
+      case 3: return 'Apple Pay';
+      case 4: return 'Cash on Delivery';
+      default: return 'Other';
+    }
+  }
+
+  // ✅ PROCESS SELECTIVE ORDER: Remove only the checked-out item
+  Future<void> _placeOrder() async {
+    // Check if the item still exists in cart
+    if (CartScreen.cartItems.isEmpty || widget.selectedIndex >= CartScreen.cartItems.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error: Item not found in cart!")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      
+      // ✅ Pick ONLY the selected product
+      final selectedProduct = CartScreen.cartItems[widget.selectedIndex];
+      
+      Map<String, dynamic> orderData = {
+        'userId': user?.uid ?? 'anonymous',
+        'userEmail': user?.email ?? 'no-email',
+        'items': [selectedProduct], // ✅ Only this specific product goes to DB
+        'paymentMethod': _getPaymentMethodName(selectedPayment),
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': 'Pending',
+      };
+
+      // Save to Firebase
+      await FirebaseFirestore.instance.collection('orders').add(orderData);
+
+      // ✅ REMOVE ONLY THIS ITEM FROM STATIC CART
+      CartScreen.cartItems.removeAt(widget.selectedIndex);
+
+      setState(() => isLoading = false);
+      
+      if (mounted) _showSuccessDialog(context);
+
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error placing order: $e")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFCFB), // Exact light background from Figma
+      backgroundColor: const Color(0xFFFBFCFB),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -40,7 +101,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         title: Text(
-          'Payment Method', // Matching Figma title
+          'Payment Method',
           style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
@@ -54,7 +115,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Payment Options based on Screen 25
             _buildFigmaPaymentCard(0, 'My Wallet', Icons.account_balance_wallet_outlined),
             _buildFigmaPaymentCard(1, 'PayPal', Icons.payment_outlined),
             _buildFigmaPaymentCard(3, 'Apple Pay', Icons.apple),
@@ -62,22 +122,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             
             const SizedBox(height: 40),
 
-            // Place Order Button (Matching the style of previous screens)
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () => _showSuccessDialog(context),
+                onPressed: isLoading ? null : _placeOrder,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryGreen, 
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                   elevation: 5,
                   shadowColor: primaryGreen.withOpacity(0.4),
                 ),
-                child: Text(
-                  'Confirm Payment', 
-                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)
-                ),
+                child: isLoading 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text(
+                      'Confirm Payment', 
+                      style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)
+                    ),
               ),
             ),
           ],
@@ -86,7 +147,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // Exact Card UI from Figma Screen 25
   Widget _buildFigmaPaymentCard(int index, String title, IconData icon) {
     bool isSelected = selectedPayment == index;
     return GestureDetector(
@@ -96,7 +156,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03), 
@@ -107,7 +167,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         child: Row(
           children: [
-            // Method Name
             Expanded(
               child: Text(
                 title, 
@@ -118,8 +177,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 )
               ),
             ),
-            
-            // Selection Circle from Figma
             Container(
               width: 26,
               height: 26,
@@ -152,26 +209,59 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 80),
-            const SizedBox(height: 20),
-            Text('Order Placed Successfully!', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text('Your kitchen gardening journey starts now.', textAlign: TextAlign.center, style: GoogleFonts.inter(color: Colors.grey)),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/done.png',
+                height: 35,
+                width: 35,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.check_circle_outline,
+                  size: 80,
+                  color: Color(0xFF5B8E55),
+                ),
               ),
-              child: const Text('Back to Home', style: TextStyle(color: Colors.white)),
-            )
-          ],
+              const SizedBox(height: 20),
+              Text(
+                'Order Placed Successfully!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Your kitchen gardening journey starts now.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(
+                        color: const Color(0xFF5B8E55),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

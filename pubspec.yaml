@@ -1,8 +1,11 @@
 name: garden_genie
+
 description: "A new Flutter project."
+
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -18,8 +21,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
+
 environment:
   sdk: ^3.10.7
+
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -30,12 +35,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   google_fonts: ^7.1.0
   google_sign_in: ^6.2.1
   firebase_core: ^4.4.0
   firebase_auth: ^6.1.4
   http: ^1.6.0
+  pod_player: ^0.2.2
   shared_preferences: ^2.5.4
+  flutter_launcher_icons: ^0.14.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -43,7 +51,11 @@ dependencies:
   google_generative_ai: ^0.4.7
   image_picker: ^1.2.1
   cloud_firestore: ^6.1.2
+  firebase_storage: ^13.0.6
+  youtube_player_flutter: ^9.1.3
+  flutter_markdown: ^0.7.7+1
   
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -55,8 +67,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -68,8 +82,27 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-  - assets/images/welcome.png
-  - assets/icons/back.png
+    - assets/icons/back.png
+    - assets/google_logo.png
+    - assets/sent_mail.png
+    - assets/images/splash.png
+    - assets/images/welcome.png
+    - assets/images/plantio.png
+    - assets/images/gardening_app.png
+    - assets/images/welcome_plantio.png
+    - assets/images/welcome_to_plantio.png
+    - assets/images/feel_fresh.png
+    - assets/images/register.png
+    - assets/images/login.png
+    - assets/images/fill_fields.png
+    - assets/images/registered_email.png
+    - assets/images/not_registered.png
+    - assets/images/profile.png
+    - assets/images/my_garden.png
+    - assets/images/my_plants.png
+    - assets/images/done.png
+    - assets/icons/launcher_icon.png
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

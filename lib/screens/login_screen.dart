@@ -1,13 +1,11 @@
-// login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_screen.dart';
 import 'api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// 🔹 Firebase Google Auth
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,11 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isHovering = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // 🔹 Google Auth Service
   final AuthService _authService = AuthService();
 
   @override
@@ -35,12 +33,64 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ================= EMAIL / PASSWORD LOGIN (UNCHANGED) =================
+  void _showValidationDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/fill_fields.png',
+                height: 40,
+                width: 40,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.info_outline,
+                  size: 60,
+                  color: Color(0xFF5B8E55),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(
+                        color: const Color(0xFF5B8E55),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _loginUser() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
+      _showValidationDialog('Please fill all fields!');
       return;
     }
 
@@ -58,18 +108,18 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('userName', result['user']['name']);
       await prefs.setString('userEmail', result['user']['email']);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Login failed')),
-      );
+      _showValidationDialog(result['message'] ?? 'Login failed');
     }
   }
 
-  // ================= GOOGLE LOGIN (FROM FRIEND CODE) =================
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
 
@@ -77,17 +127,18 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = await _authService.signInWithGoogle();
 
       if (user != null && mounted) {
-        Navigator.pushReplacement(
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userName', user.displayName ?? "User");
+        await prefs.setString('userEmail', user.email ?? "");
+
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) _showValidationDialog(e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -114,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: primaryGreen, width: 2),
                     ),
-                    child: Icon(Icons.eco, color: primaryGreen, size: 20),
+                    child: const Icon(Icons.eco, color: primaryGreen, size: 20),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -150,13 +201,10 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildInputField(Icons.lock_outline, 'Password', _passwordController,
                   obscureText: _obscurePassword,
                   isPasswordField: true,
-                  toggleObscure: () {
-                    setState(() => _obscurePassword = !_obscurePassword);
-                  },
+                  toggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
                   primaryGreen: primaryGreen),
 
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -184,7 +232,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 32),
 
               SizedBox(
@@ -192,36 +239,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _loginUser,
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
                       : Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              // ================= GOOGLE BUTTON =================
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: _isLoading ? null : _loginWithGoogle,
-                  icon: Image.asset(
-                    'assets/google_logo.png',
-                    height: 22,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.g_mobiledata, size: 26),
+              MouseRegion(
+                onEnter: (_) => setState(() => _isHovering = true),
+                onExit: (_) => setState(() => _isHovering = false),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(_isHovering ? 24 : 0),
                   ),
-                  label: Text(
-                    'Continue with Google',
-                    style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+                  child: OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _loginWithGoogle,
+                    icon: Image.asset(
+                      'assets/google_logo.png',
+                      height: 22,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.g_mobiledata, size: 26),
+                    ),
+                    label: Text(
+                      'Continue with Google',
+                      style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_isHovering ? 24 : 0),
+                      ),
+                      side: const BorderSide(color: Colors.black26),
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 20),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -258,18 +324,27 @@ class _LoginScreenState extends State<LoginScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)),
+      decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
+        style: GoogleFonts.inter(),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
           prefixIcon: Icon(icon, color: primaryGreen),
           suffixIcon: isPasswordField
-              ? IconButton(
-                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
-                  onPressed: toggleObscure,
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: primaryGreen,
+                      size: 18,
+                    ),
+                    onPressed: toggleObscure,
+                  ),
                 )
               : null,
           border: InputBorder.none,

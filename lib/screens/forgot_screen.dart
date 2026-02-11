@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
-import 'api_service.dart'; // Import added
+import 'api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -20,13 +20,68 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  void _showValidationDialog(String message) {
+    String iconPath = message.toLowerCase().contains('not registered') 
+        ? 'assets/images/not_registered.png' 
+        : 'assets/images/registered_email.png';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                iconPath,
+                width: 40,
+                height: 40,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF5B8E55),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _handleSendResetLink() async {
     String email = _emailController.text.trim();
-    
+
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your registered email')),
-      );
+      _showValidationDialog('Please enter your registered email!');
       return;
     }
 
@@ -34,7 +89,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Call the Backend API
     final result = await ApiService.forgotPassword(email: email);
 
     setState(() {
@@ -44,9 +98,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (result['success'] == true) {
       _showSuccessDialog(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Error occurred')),
-      );
+      _showValidationDialog(result['message'] ?? 'Error occurred');
     }
   }
 
@@ -66,7 +118,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -123,36 +175,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     shape: const RoundedRectangleBorder(),
                     elevation: 0,
                   ),
-                  child: _isLoading 
-                    ? const SizedBox(
-                        height: 20, 
-                        width: 20, 
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      )
-                    : Text(
-                        'SEND RESET LINK',
-                        style: GoogleFonts.inter(fontSize: 16, color: Colors.white),
-                      ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : Text(
+                          'SEND RESET LINK',
+                          style: GoogleFonts.inter(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Remember password?', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
                   const SizedBox(width: 5),
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginScreen()));
-                      },
-                      child: Text(
-                        'Login',
-                        style: GoogleFonts.inter(
-                            color: primaryGreen, fontWeight: FontWeight.w600, fontSize: 14),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    },
+                    child: Text(
+                      'Login',
+                      style: GoogleFonts.inter(
+                        color: primaryGreen,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -184,7 +237,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         style: GoogleFonts.inter(fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(color: const Color(0xFFAAAAAA)),
+          hintStyle: GoogleFonts.inter(color: const Color(0xFF666666)),
           prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -198,22 +251,66 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 60),
-        content: Text(
-          'Check your email! We have sent a password recovery link to your Gmail inbox.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-            },
-            child: Text('OK', style: GoogleFonts.inter(color: const Color(0xFF5B8E55))),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/sent_mail.png',
+                width: 50,
+                height: 50,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Check your Email!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Password recovery link sent to your email.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: const Color(0xFF666666),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF5B8E55),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

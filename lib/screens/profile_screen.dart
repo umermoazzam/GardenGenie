@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart'; // kIsWeb ke liye
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -34,16 +35,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _userName = prefs.getString('userName') ?? "Gardener";
-      _userEmail = prefs.getString('userEmail') ?? "gardener@example.com";
+      _userName = prefs.getString('userName') ?? "";
+      _userEmail = prefs.getString('userEmail') ?? "";
       _profileImagePath = prefs.getString('profile_image_path');
+
       if (_profileImagePath != null && !File(_profileImagePath!).existsSync()) {
         _profileImagePath = null;
       }
     });
   }
 
-  // --- Updated Logout with HomeScreen style popup ---
   Future<void> _logout() async {
     bool confirm = await showDialog(
       context: context,
@@ -76,8 +77,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ) ?? false;
 
     if (confirm) {
+      await FirebaseAuth.instance.signOut();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
+
       if (!mounted) return;
 
       Navigator.pushAndRemoveUntil(
@@ -88,7 +91,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // --- Image Handling ---
   Future<void> _pickImage(ImageSource source) async {
     try {
       if (kIsWeb || !Platform.isAndroid && !Platform.isIOS) {
@@ -237,28 +239,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileOption(Icons.help_outline, "Help & Support", () {}),
             const SizedBox(height: 30),
 
-            // --- Logout Button ---
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen, // PrimaryGreen background
+                  backgroundColor: primaryGreen,
                   elevation: 0,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Square button
+                    borderRadius: BorderRadius.zero, 
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.logout, color: Colors.white), // White icon
+                    const Icon(Icons.logout, color: Colors.white),
                     const SizedBox(width: 10),
                     Text(
                       'Log Out',
                       style: GoogleFonts.inter(
-                        color: Colors.white, // White text
+                        color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

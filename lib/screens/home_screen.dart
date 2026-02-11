@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'chat_screen.dart'; 
-import 'detection_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'chat_screen.dart';
 import 'blogs_videos_screen.dart';
 import 'rental_services_screen.dart';
-import 'cart_screen.dart'; 
-import 'profile_screen.dart'; 
+import 'cart_screen.dart';
+import 'profile_screen.dart';
+import 'product_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,11 +16,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 0; 
 
   void _onNavBarTapped(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
+    if (index == 0) return;
 
     if (index == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -38,6 +38,39 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _navigateToDetails(String title, String imageUrl, String price, String description, String subtitle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailsScreen(
+          title: title,
+          imageUrl: imageUrl,
+          price: price,
+          description: description,
+          subtitle: subtitle,
+        ),
+      ),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Text(message, style: GoogleFonts.inter(fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK", style: GoogleFonts.inter(color: const Color(0xFF5B8E55))),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER SECTION START ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -66,29 +98,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    
-                    // ✅ UPDATED: Image removed, Default Icon added
-                    MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                          );
-                        },
-                        child: CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Colors.grey.shade200, // Light grey background
-                          child: const Icon(Icons.person, color: Colors.grey), // Default Person Icon
-                        ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.grey.shade200,
+                        child: const Icon(Icons.person, color: Colors.grey),
                       ),
                     ),
                   ],
                 ),
-                // --- HEADER SECTION END ---
 
                 const SizedBox(height: 30),
+
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -109,174 +136,153 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.search,
                         label: 'Search',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Search functionality disabled')),
-                          );
+                          _showInfoDialog(context, "Search", "Search functionality is currently disabled.");
                         },
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 30),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
+
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   child: Container(
-                    height: 200,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                            'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'),
-                        fit: BoxFit.cover,
+                      borderRadius: BorderRadius.circular(13),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)],
                       ),
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showAIOptionsDialog(context),
                         borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.3),
-                            Colors.black.withOpacity(0.6)
-                          ],
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showAIOptionsDialog(context),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'New in',
-                                  style: GoogleFonts.inter(
-                                      color: Colors.white70, fontSize: 14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text('New in', style: GoogleFonts.inter(color: Colors.white70, fontSize: 14)),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Create plans\nwith AI Assistant',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.2,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Create plans\nwith AI Assistant',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildProductCard(
-                        imageUrl: 'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400',
-                        title: 'Cactus',
-                        showNewBadge: true,
-                        onTap: () {}, 
+
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance.collection('products').snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) return const Text('Something went wrong');
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8E55)));
+                    }
+
+                    final productDocs = snapshot.data!.docs;
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: productDocs.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.85,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildProductCard(
-                        imageUrl: 'https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400',
-                        title: 'Cactus Red',
-                        showNewBadge: false,
-                        onTap: () {}, 
-                      ),
-                    ),
-                  ],
+                      itemBuilder: (context, index) {
+                        var data = productDocs[index].data() as Map<String, dynamic>;
+
+                        String title = data['title'] ?? 'No Title';
+                        String imageUrl = data['image'] ?? '';
+                        String price = (data['price'] ?? '0').toString();
+                        String description = data['description'] ?? 'No description available for this plant.';
+                        bool isNew = data['isNew'] ?? false;
+                        String subtitle = data['subtitle'] ?? 'Garden Genie Specialist';
+
+                        return _buildProductCard(
+                          imageUrl: imageUrl,
+                          title: title,
+                          showNewBadge: isNew,
+                          onTap: () => _navigateToDetails(title, imageUrl, price, description, subtitle),
+                        );
+                      },
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildProductCard(
-                        imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400',
-                        title: 'Dark Leaves',
-                        showNewBadge: false,
-                        onTap: () {}, 
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildProductCard(
-                        imageUrl: 'https://images.unsplash.com/photo-1614594737564-e5fc321c3f13?w=400',
-                        title: 'Green Plant',
-                        showNewBadge: true,
-                        onTap: () {}, 
-                      ),
-                    ),
-                  ],
-                ),
+
                 const SizedBox(height: 100),
               ],
             ),
           ),
         ),
       ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 15),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PlantDetectionScreen()),
-              );
-            },
-            child: Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B8E55),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5B8E55).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
+        child: GestureDetector(
+          onTap: () {
+            _showInfoDialog(
+              context,
+              "AI Scanner",
+              "AI Scanner feature is coming soon in the next update.",
+            );
+          },
+          child: Container(
+            width: 58, height: 58,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5B8E55),
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: const Color(0xFF5B8E55).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6))],
             ),
+            child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
           ),
         ),
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(hoverColor: Colors.transparent),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onNavBarTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF5B8E55),
-          unselectedItemColor: const Color(0xFF999999),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
-            BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
-          ],
-        ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavBarTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B8E55),
+        unselectedItemColor: const Color(0xFF999999),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        elevation: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+        ],
       ),
     );
   }
@@ -287,8 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 64, height: 58,
             decoration: const BoxDecoration(color: Color(0xFF5B8E55), shape: BoxShape.circle),
             child: Icon(icon, color: Colors.white, size: 28),
           ),
@@ -310,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 height: 140,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(5),
                   color: const Color(0xFFF0F0F0),
                   image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
                 ),
@@ -320,14 +325,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   top: 10, right: 10,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(6)),
                     child: Text('New', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))
+          ),
         ],
       ),
     );
@@ -340,8 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       builder: (context) => SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -366,21 +375,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 description: 'Scan and identify plant diseases',
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PlantDetectionScreen()));
+                  _showInfoDialog(
+                    context,
+                    "Plant Disease Detection",
+                    "Detection feature is currently disabled. It will be available in future updates.",
+                  );
                 },
               ),
               const SizedBox(height: 16),
-              
               _buildAIOption(
                 icon: Icons.article_outlined,
                 title: 'Blogs & Videos',
                 description: 'Learn from educational content',
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const BlogsVideosScreen()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const BlogsVideosScreen()));
                 },
               ),
             ],

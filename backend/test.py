@@ -91,16 +91,6 @@ def get_chat_history(user_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-# ✅ NEW: Delete chat history for a user (MongoDB se data saaf karne ke liye)
-@app.route('/api/chat-history/<user_id>', methods=['DELETE'])
-def clear_chat_history(user_id):
-    try:
-        # Delete all messages for this specific user
-        chat_history_collection.delete_many({"user_id": user_id})
-        return jsonify({"success": True, "message": "History cleared permanently"}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     if request.method == 'OPTIONS': return jsonify({"status": "ok"}), 200

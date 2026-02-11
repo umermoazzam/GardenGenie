@@ -31,28 +31,81 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _showValidationDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/fill_fields.png',
+                height: 40,
+                width: 40,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.info_outline,
+                  size: 40,
+                  color: Color(0xFF5B8E55),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF5B8E55),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _registerUser() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _repeatPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all fields', style: GoogleFonts.inter())),
-      );
+      _showValidationDialog('Please fill all fields!');
       return;
     }
 
     if (_passwordController.text != _repeatPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match', style: GoogleFonts.inter())),
-      );
+      _showValidationDialog('Passwords do not match');
       return;
     }
 
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You must agree to terms', style: GoogleFonts.inter())),
-      );
+      _showValidationDialog('You must agree to terms');
       return;
     }
 
@@ -71,17 +124,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful! Please login.')),
-      );
+      _showValidationDialog('Registration successful! Please login.');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Registration failed')),
-      );
+      _showValidationDialog(result['message'] ?? 'Registration failed');
     }
   }
 
@@ -97,7 +146,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo + Header
               Row(
                 children: [
                   Container(
@@ -108,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: primaryGreen, width: 2),
                     ),
-                    child: Icon(Icons.eco, color: primaryGreen, size: 20),
+                    child: const Icon(Icons.eco, color: primaryGreen, size: 20),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -193,6 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
                     shape: const RoundedRectangleBorder(),
+                    elevation: 0,
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -214,7 +263,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account?', style: GoogleFonts.inter()),
+                  Text(
+                    'Already have an account?',
+                    style: GoogleFonts.inter(color: const Color(0xFF666666)),
+                  ),
                   const SizedBox(width: 5),
                   MouseRegion(
                     cursor: SystemMouseCursors.click,
@@ -250,7 +302,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5)),
+      decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
@@ -261,12 +313,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
           prefixIcon: Icon(icon, color: primaryGreen),
           suffixIcon: isPasswordField
-              ? IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: primaryGreen,
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: primaryGreen,
+                      size: 18,
+                    ),
+                    onPressed: toggleObscure,
                   ),
-                  onPressed: toggleObscure,
                 )
               : null,
           border: InputBorder.none,
