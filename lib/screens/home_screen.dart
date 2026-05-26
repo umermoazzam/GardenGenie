@@ -1,12 +1,17 @@
+// home_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // REQUIRED CHANGE 1: For lifecycle tracking
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'chat_screen.dart';
 import 'blogs_videos_screen.dart';
 import 'rental_services_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_details_screen.dart';
+import 'detection_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,6 +22,39 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0; 
+  String? _profileImagePath; 
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage(); 
+
+    // REQUIRED CHANGE 2: System channel observer for background to foreground refresh
+    SystemChannels.lifecycle.setMessageHandler((msg) async {
+      if (msg == AppLifecycleState.resumed.toString()) {
+        _loadProfileImage(); // Jab app minimize ho kar wapas khule toh refresh
+      }
+      return null;
+    });
+  }
+
+  // REQUIRED CHANGE 3: Lifecycle dependency check
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadProfileImage(); // Screen focus mein aate hi image reload karein
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _profileImagePath = prefs.getString('profile_image_path');
+      if (_profileImagePath != null && !File(_profileImagePath!).existsSync()) {
+        _profileImagePath = null;
+      }
+    });
+  }
 
   void _onNavBarTapped(int index) {
     if (index == 0) return;
@@ -103,12 +141,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                        );
+                        ).then((_) => _loadProfileImage());
                       },
                       child: CircleAvatar(
                         radius: 22,
                         backgroundColor: Colors.grey.shade200,
-                        child: const Icon(Icons.person, color: Colors.grey),
+                        backgroundImage: (_profileImagePath != null) 
+                            ? FileImage(File(_profileImagePath!)) 
+                            : null,
+                        child: (_profileImagePath == null)
+                            ? const Icon(Icons.person, color: Colors.grey)
+                            : null,
                       ),
                     ),
                   ],
@@ -249,11 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.only(bottom: 15),
         child: GestureDetector(
           onTap: () {
-            _showInfoDialog(
-              context,
-              "AI Scanner",
-              "AI Scanner feature is coming soon in the next update.",
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen()));
           },
           child: Container(
             width: 58, height: 58,
@@ -375,11 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 description: 'Scan and identify plant diseases',
                 onTap: () {
                   Navigator.pop(context);
-                  _showInfoDialog(
-                    context,
-                    "Plant Disease Detection",
-                    "Detection feature is currently disabled. It will be available in future updates.",
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen()));
                 },
               ),
               const SizedBox(height: 16),

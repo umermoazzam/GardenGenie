@@ -24,7 +24,7 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UILaunchStoryboardName</key>
+	<key>UILenauchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
@@ -46,11 +46,13 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
-	<!-- Added Permissions for Camera & Gallery -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Profile picture ke liye gallery access chahiye</string>
+	<!-- Permissions for Camera & Gallery -->
 	<key>NSCameraUsageDescription</key>
-	<string>Profile picture ke liye camera access chahiye</string>
+	<string>We need camera access to detect plant diseases and capture photos for your garden.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your gallery to pick plant photos and update your profile picture.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need microphone access if you record videos of your plants.</string>
 
 </dict>
 </plist>

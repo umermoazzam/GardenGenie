@@ -1,3 +1,4 @@
+// profile_screen.dart
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -91,29 +92,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // REQUIRED CHANGE: Updated _pickImage logic as per your tip
   Future<void> _pickImage(ImageSource source) async {
     try {
-      if (kIsWeb || !Platform.isAndroid && !Platform.isIOS) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera unavailable on this device.')),
-        );
-        return;
-      }
-
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 50,
       );
 
-      if (pickedFile != null && File(pickedFile.path).existsSync()) {
+      if (pickedFile != null) {
         final prefs = await SharedPreferences.getInstance();
+        // Ensuring the path is saved with the correct key
         await prefs.setString('profile_image_path', pickedFile.path);
 
         setState(() {
           _profileImagePath = pickedFile.path;
         });
+        
+        // UI feedback for the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated!')),
+        );
       }
     } catch (e) {
+      print("Error picking image: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to pick image: $e')),
       );
