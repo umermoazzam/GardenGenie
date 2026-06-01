@@ -62,6 +62,12 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
+      // Clear any cached Google session to force account picker on every sign-in
+      await _googleSignIn.disconnect();
+      
+      // Also sign out from Firebase to ensure a fresh authentication flow
+      await _auth.signOut();
+      
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {

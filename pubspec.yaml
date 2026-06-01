@@ -107,6 +107,9 @@ flutter:
     - assets/icons/launcher_icon.png
     - assets/model.tflite
     - assets/labels.txt
+    - assets/cactus red.jpg
+    - assets/marigold.jpg
+    - assets/mint.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
