@@ -1,7 +1,7 @@
 // home_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // REQUIRED CHANGE 1: For lifecycle tracking
+import 'package:flutter/services.dart'; 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
@@ -24,25 +24,28 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0; 
   String? _profileImagePath; 
 
+  // ✅ SEARCH STATE VARIABLES
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+  bool _isSearching = false;
+
   @override
   void initState() {
     super.initState();
     _loadProfileImage(); 
 
-    // REQUIRED CHANGE 2: System channel observer for background to foreground refresh
     SystemChannels.lifecycle.setMessageHandler((msg) async {
       if (msg == AppLifecycleState.resumed.toString()) {
-        _loadProfileImage(); // Jab app minimize ho kar wapas khule toh refresh
+        _loadProfileImage(); 
       }
       return null;
     });
   }
 
-  // REQUIRED CHANGE 3: Lifecycle dependency check
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadProfileImage(); // Screen focus mein aate hi image reload karein
+    _loadProfileImage(); 
   }
 
   Future<void> _loadProfileImage() async {
@@ -91,24 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showInfoDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Text(message, style: GoogleFonts.inter(fontSize: 14)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK", style: GoogleFonts.inter(color: const Color(0xFF5B8E55))),
-          )
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,41 +105,92 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.inter(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.5,
+                // ✅ UPDATED HEADER: Animated Switcher for smooth search transition
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, -0.2),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _isSearching 
+                    ? Container(
+                        key: const ValueKey('searchBar'),
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        children: const [
-                          TextSpan(text: 'New on ', style: TextStyle(color: Color(0xFF1A1A1A))),
-                          TextSpan(text: 'Plantio', style: TextStyle(color: Color(0xFF5B8E55))),
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value.toLowerCase();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search plants...',
+                            prefixIcon: const Icon(Icons.search, color: Color(0xFF5B8E55)),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                setState(() {
+                                  _isSearching = false;
+                                  _searchQuery = "";
+                                  _searchController.clear();
+                                });
+                              },
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      )
+                    : Row(
+                        key: const ValueKey('titleBar'),
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.inter(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                              ),
+                              children: const [
+                                TextSpan(text: 'New on ', style: TextStyle(color: Color(0xFF1A1A1A))),
+                                TextSpan(text: 'Plantio', style: TextStyle(color: Color(0xFF5B8E55))),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                              ).then((_) => _loadProfileImage());
+                            },
+                            child: CircleAvatar(
+                              radius: 22,
+                              backgroundColor: Colors.grey.shade200,
+                              backgroundImage: (_profileImagePath != null) 
+                                  ? FileImage(File(_profileImagePath!)) 
+                                  : null,
+                              child: (_profileImagePath == null)
+                                  ? const Icon(Icons.person, color: Colors.grey)
+                                  : null,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                        ).then((_) => _loadProfileImage());
-                      },
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Colors.grey.shade200,
-                        backgroundImage: (_profileImagePath != null) 
-                            ? FileImage(File(_profileImagePath!)) 
-                            : null,
-                        child: (_profileImagePath == null)
-                            ? const Icon(Icons.person, color: Colors.grey)
-                            : null,
-                      ),
-                    ),
-                  ],
                 ),
 
                 const SizedBox(height: 30),
@@ -179,7 +215,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.search,
                         label: 'Search',
                         onTap: () {
-                          _showInfoDialog(context, "Search", "Search functionality is currently disabled.");
+                          setState(() {
+                            _isSearching = !_isSearching;
+                          });
                         },
                       ),
                     ],
@@ -188,54 +226,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 30),
 
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
+                if (!_isSearching) 
+                  Container(
+                    height: 200,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(13),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)],
+                      borderRadius: BorderRadius.circular(16),
+                      image: const DecorationImage(
+                        image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _showAIOptionsDialog(context),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text('New in', style: GoogleFonts.inter(color: Colors.white70, fontSize: 14)),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Create plans\nwith AI Assistant',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(13),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)],
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showAIOptionsDialog(context),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text('New in', style: GoogleFonts.inter(color: Colors.white70, fontSize: 14)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Create plans\nwith AI Assistant',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.2,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
                 const SizedBox(height: 24),
 
@@ -247,7 +286,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8E55)));
                     }
 
-                    final productDocs = snapshot.data!.docs;
+                    final productDocs = snapshot.data!.docs.where((doc) {
+                      final title = (doc['title'] ?? '').toString().toLowerCase();
+                      return title.contains(_searchQuery);
+                    }).toList();
+
+                    if (productDocs.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Column(
+                            children: [
+                              Icon(Icons.search_off, size: 60, color: Colors.grey.shade300),
+                              const SizedBox(height: 16),
+                              Text("No products found", style: GoogleFonts.inter(color: Colors.grey, fontSize: 16)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
 
                     return GridView.builder(
                       shrinkWrap: true,
@@ -257,7 +314,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        childAspectRatio: 0.85,
+                        // ✅ MODIFIED: Changed from 0.85 to 0.70 to increase image vertical space
+                        childAspectRatio: 0.70,
                       ),
                       itemBuilder: (context, index) {
                         var data = productDocs[index].data() as Map<String, dynamic>;
@@ -349,26 +407,28 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              Container(
-                height: 140,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: const Color(0xFFF0F0F0),
-                  image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
-                ),
-              ),
-              if (showNewBadge)
-                Positioned(
-                  top: 10, right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(6)),
-                    child: Text('New', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4), // Added slight curve for look
+                    color: const Color(0xFFF0F0F0),
+                    image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
                   ),
                 ),
-            ],
+                if (showNewBadge)
+                  Positioned(
+                    top: 10, right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: const Color(0xFF5B8E55), borderRadius: BorderRadius.circular(6)),
+                      child: Text('New', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           Text(
