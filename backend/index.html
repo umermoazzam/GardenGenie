@@ -1,44 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Plantio - Disease Detector</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; }
-        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Plantio Disease Detector</h1>
-        <input type="file" id="imageInput" accept="image/*">
-        <br><br>
-        <button onclick="predict()">Analyze Plant</button>
-        <h2 id="result">Result here...</h2>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Plantio - Disease Detector</title>
+        <style>
+            body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
+            .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; }
+            button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>Plantio Disease Detector</h1>
+            <input type="file" id="imageInput" accept="image/*">
+            <br><br>
+            <button onclick="predict()">Analyze Plant</button>
+            <h2 id="result">Result here...</h2>
+        </div>
 
-    <script>
-        async function predict() {
-            const fileInput = document.getElementById('imageInput');
-            if (fileInput.files.length === 0) return alert("Please select an image!");
+        <script>
+            async function predict() {
+                const fileInput = document.getElementById('imageInput');
+                if (fileInput.files.length === 0) return alert("Please select an image!");
 
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
 
-            document.getElementById('result').innerText = "Analyzing...";
+                document.getElementById('result').innerText = "Analyzing...";
 
-            try {
-                const response = await fetch('http://127.0.0.1:5000/predict', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                document.getElementById('result').innerText = `Disease: ${data.disease} (${data.confidence}%)`;
-            } catch (err) {
-                document.getElementById('result').innerText = "Error connecting to backend.";
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    document.getElementById('result').innerText = `Disease: ${data.disease} (${data.confidence}%)`;
+                } catch (err) {
+                    document.getElementById('result').innerText = "Error connecting to backend.";
+                }
             }
-        }
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>

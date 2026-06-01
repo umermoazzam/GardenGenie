@@ -1,3 +1,5 @@
+// product_details_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'cart_screen.dart';
@@ -17,6 +19,58 @@ class ProductDetailsScreen extends StatelessWidget {
     required this.description,
     required this.subtitle,
   }) : super(key: key);
+
+  // ✅ CUSTOM NOTIFICATION POPUP (Bilkul image jaisa)
+  void _showCartNotification(BuildContext context) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 10, // Notch ke bilkul niche
+        left: 40,
+        right: 40,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Item added to cart',
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF1A1A1A),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+
+    // 2 seconds ke baad remove ho jaye
+    Timer(const Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +209,10 @@ class ProductDetailsScreen extends StatelessWidget {
                                 "image": imageUrl,
                               });
 
+                              // ✅ Show Custom Top Notification
+                              _showCartNotification(context);
+
+                              // ✅ Navigate to Cart Screen
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const CartScreen()),

@@ -29,10 +29,24 @@ class _CartScreenState extends State<CartScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color lightGreenBg = const Color(0xFFE8F5E9);
   
-  int selectedItemIndex = 0; 
+  // ✅ Changed to Set to allow multiple selection
+  Set<int> selectedIndices = {0}; 
 
   // Helper to access cart items
   List<Map<String, dynamic>> get items => CartScreen.cartItems;
+
+  // ✅ Logic to calculate total price of selected items
+  double _calculateTotal() {
+    double total = 0;
+    for (int index in selectedIndices) {
+      if (index < items.length) {
+        double price = double.tryParse(items[index]['price'].toString()) ?? 0;
+        int qty = items[index]['qty'] ?? 1;
+        total += (price * qty);
+      }
+    }
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,43 +101,78 @@ class _CartScreenState extends State<CartScreen> {
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () {
-                        // ✅ Pass the selected index to CheckoutScreen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CheckoutScreen(selectedIndex: selectedItemIndex),
+                
+                // ✅ UPDATED CHECKOUT SECTION: Fixed at the bottom
+                Container(
+                  padding: const EdgeInsets.fromLTRB(24, 15, 24, 25),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${selectedIndices.length} Items Selected", 
+                            style: GoogleFonts.inter(color: Colors.grey, fontSize: 13)
                           ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: primaryGreen,
-                          borderRadius: BorderRadius.circular(0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryGreen.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            )
-                          ],
-                        ),
-                        child: Text(
-                          'Checkout',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                          Text(
+                            "Rs. ${_calculateTotal().toStringAsFixed(0)}",
+                            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+                          ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          if (selectedIndices.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Please select at least one item")),
+                            );
+                            return;
+                          }
+                          
+                          // Passing list of selected items to CheckoutScreen
+                          List<Map<String, dynamic>> selectedItemsData = 
+                              selectedIndices.map((i) => items[i]).toList();
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CheckoutScreen(
+                                // Note: Adjust your CheckoutScreen to accept list if needed
+                                // selectedIndex: selectedIndices.first 
+                                selectedIndex: selectedIndices.first, 
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                          decoration: BoxDecoration(
+                            color: primaryGreen,
+                            borderRadius: BorderRadius.zero, // Square Corners
+                          ),
+                          child: Text(
+                            'Checkout',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -185,16 +234,24 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildFigmaCartItem(int index) {
     var item = items[index];
-    bool isSelected = selectedItemIndex == index;
+    bool isSelected = selectedIndices.contains(index);
 
     return GestureDetector(
-      onTap: () => setState(() => selectedItemIndex = index),
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            selectedIndices.remove(index);
+          } else {
+            selectedIndices.add(index);
+          }
+        });
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.zero, // Square Corners
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))
           ],
@@ -202,7 +259,7 @@ class _CartScreenState extends State<CartScreen> {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.zero, // Square Image
               child: Image.network(item['image'], width: 85, height: 85, fit: BoxFit.cover),
             ),
             const SizedBox(width: 16),
@@ -277,6 +334,26 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
+
+            // Discard Button
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  CartScreen.cartItems.removeAt(index);
+                  selectedIndices.remove(index);
+                  // Selection indices shift karke update karein
+                  Set<int> newIndices = {};
+                  for (int idx in selectedIndices) {
+                    if (idx > index) newIndices.add(idx - 1);
+                    else newIndices.add(idx);
+                  }
+                  selectedIndices = newIndices;
+                });
+              },
+              child: Icon(Icons.delete_outline, color: Colors.red[300], size: 24),
+            ),
+
+            const SizedBox(width: 12),
 
             Container(
               width: 26,
