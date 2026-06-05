@@ -11,6 +11,7 @@ import requests
 import base64
 from dotenv import load_dotenv
 from PIL import Image
+import smtplib
 
 # ML Libraries
 import torch
@@ -76,7 +77,7 @@ def call_groq_ai(prompt, image_base64=None):
         
         # --- DEBUGGING START ---
         if 'choices' not in res_json:
-            print(f"❌ Groq API Error Response: {res_json}") # Ye aapke VS Code terminal mein dikhega
+            print(f"❌ Groq API Error Response: {res_json}")
             error_msg = res_json.get('error', {}).get('message', 'Unknown API Error')
             return f"AI Error: {error_msg}"
         # --- DEBUGGING END ---
@@ -129,23 +130,19 @@ def validate_leaf_gate(image_bytes: bytes) -> bool:
         img_b64 = base64.b64encode(image_bytes).decode('utf-8')
         res = call_groq_ai(prompt, img_b64).strip().upper()
         
-        # --- DEBUGGING: Terminal mein check karne ke liye ---
         print(f"DEBUG: Groq Vision Response -> '{res}'") 
         
-        # If API error, return True to allow ML model to process the image
         if res.startswith("AI ERROR"):
             print(f"⚠️  Vision API failed, falling back to ML model")
             return True
         
-        # If response contains YES or LEAF, it's a valid leaf
         if "YES" in res or "LEAF" in res:
             return True
         
-        # Otherwise, it's not a leaf
         return False
     except Exception as e:
         print(f"❌ Gate Error: {e}")
-        return True # Agar AI error de toh user ko block na karein, model ko chalne dein
+        return True
 
 RESET_FORM_HTML = """
 <!DOCTYPE html>
@@ -164,7 +161,6 @@ def predict():
     
     file_bytes = request.files['file'].read()
     
-    # Leaf Check via Groq Vision
     if not validate_leaf_gate(file_bytes):
         return jsonify({"disease": "This image is not a plant leaf.", "confidence": 0.0, "status": "rejected"}), 200
 
@@ -194,18 +190,20 @@ def chat():
         
         if not msg: return jsonify({"reply": "Message empty"}), 400
         
-        # 🔥 Groq AI Call (No stars, plain text)
         reply = call_groq_ai(msg)
         clean_reply = reply.replace("**", "").replace("*", "").strip()
 
         chat_history_collection.insert_one({
-            "user_id": uid, "user_message": msg, "ai_reply": clean_reply, "timestamp": datetime.utcnow()
+            "user_id": uid,
+            "user_message": msg,
+            "ai_reply": clean_reply,
+            "timestamp": datetime.utcnow()
         })
+
         return jsonify({"reply": clean_reply}), 200
     except Exception as e:
         return jsonify({"reply": f"AI Error: {str(e)}"}), 500
 
-# Other routes stay exactly the same (History, Products, Auth)
 @app.route('/api/chat-history/<user_id>', methods=['GET'])
 def get_chat_history(user_id):
     history = list(chat_history_collection.find({"user_id": user_id}).sort("timestamp", 1))
@@ -230,39 +228,134 @@ def get_all_products():
 def register():
     data = request.get_json()
     email = data['email'].strip().lower()
-    if users_collection.find_one({"email": email}): return jsonify({"success": False}), 400
+    if users_collection.find_one({"email": email}):
+        return jsonify({"success": False}), 400
+
     users_collection.insert_one({
-        "name": data['name'], "email": email, 
-        "password": hash_password(data['password']), "created_at": datetime.utcnow()
+        "name": data['name'],
+        "email": email,
+        "password": hash_password(data['password']),
+        "created_at": datetime.utcnow()
     })
     return jsonify({"success": True}), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = users_collection.find_one({"email": data['email'].strip().lower()})
-    if not user or not verify_password(data['password'], user['password']): return jsonify({"success": False}), 401
-    return jsonify({"success": True, "user": {"id": str(user['_id']), "name": user['name']}}), 200
+    email = data['email'].strip().lower()
+    user = users_collection.find_one({"email": email})
+
+    if not user or not verify_password(data['password'], user['password']):
+        return jsonify({"success": False}), 401
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "id": str(user['_id']),
+            "name": user['name'],
+            "email": user['email']
+        }
+    }), 200
 
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
-    email = request.get_json().get('email').strip().lower()
-    user = users_collection.find_one({"email": email})
-    if not user: return jsonify({"success": False}), 404
-    token = s.dumps(email, salt='password-reset-salt')
-    link = f"{os.getenv('NGROK_URL')}/web/reset-password/{token}"
-    msg = Message("Reset Password", recipients=[email], body=f"Link: {link}")
-    mail.send(msg)
-    return jsonify({"success": True}), 200
+    try:
+        email = request.get_json().get('email').strip().lower()
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            return jsonify({"success": False, "message": "Email not found"}), 404
+
+        token = s.dumps(email, salt='password-reset-salt')
+        link = f"{os.getenv('NGROK_URL')}/web/reset-password/{token}"
+
+        msg = Message("Reset Password", recipients=[email], body=f"Link: {link}")
+        mail.send(msg)
+
+        return jsonify({"success": True, "message": "Reset link sent to your email"}), 200
+
+    except Exception as e:
+        print(f"❌ Forgot Password Error: {str(e)}")
+        return jsonify({"success": False, "message": "Failed to send email"}), 500
 
 @app.route('/web/reset-password/<token>', methods=['GET', 'POST'])
 def web_reset_password(token):
-    try: email = s.loads(token, salt='password-reset-salt', max_age=1800)
-    except: return "Link expired"
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=1800)
+    except:
+        return "Link expired"
+
     if request.method == 'POST':
-        users_collection.update_one({"email": email}, {"$set": {"password": hash_password(request.form.get('password'))}})
+        users_collection.update_one(
+            {"email": email},
+            {"$set": {"password": hash_password(request.form.get('password'))}}
+        )
         return "Updated! ✅"
+
     return RESET_FORM_HTML
 
+
+# =========================
+# ✅ PROFESSIONAL HTML CONTACT INQUIRY
+# ==========================
+
+@app.route('/api/contact-inquiry', methods=['POST', 'OPTIONS'])
+def contact_inquiry():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
+        
+    try:
+        data = request.get_json()
+        receiver_email = data.get('email') # Team member email
+        member_name = data.get('name')     # Team member name
+        customer_name = data.get('customer_name', 'A Visitor')
+        customer_email = data.get('customer_email', 'Not provided')
+
+        subject = f"🚨 Profile Activity Alert: {customer_name} wants to connect!"
+        
+        # --- HTML EMAIL TEMPLATE ---
+        html_body = f"""
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            <!-- Header -->
+            <div style="background-color: #5B8E55; padding: 25px; text-align: center; color: white;">
+                <h2 style="margin: 0; font-size: 24px;">New Connection Request</h2>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding: 30px; color: #333333; line-height: 1.6;">
+                <p style="font-size: 16px;">Hello <strong>{member_name}</strong>,</p>
+                <p style="font-size: 15px;">Someone is interested in your gardening expertise! A user has just viewed your profile on <strong>Plantio App</strong> and is trying to reach out to you.</p>
+                
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 5px solid #5B8E55; margin: 25px 0;">
+                    <h4 style="margin-top: 0; color: #5B8E55; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Visitor Information</h4>
+                    <p style="margin: 8px 0;"><strong>Name:</strong> {customer_name}</p>
+                    <p style="margin: 8px 0;"><strong>Email:</strong> <a href="mailto:{customer_email}" style="color: #5B8E55; text-decoration: none;">{customer_email}</a></p>
+                </div>
+                
+                <p style="font-size: 14px; color: #666666;">You can respond to this inquiry by clicking the button below to start an email conversation.</p>
+                
+                <div style="text-align: center; margin-top: 35px;">
+                    <a href="mailto:{customer_email}" style="background-color: #5B8E55; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Reply to {customer_name}</a>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 12px; color: #888888; border-top: 1px solid #eeeeee;">
+                <p style="margin: 0;">Automated Notification from Plantio Support System</p>
+                <p style="margin: 5px 0;">Sent on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </div>
+        </div>
+        """
+
+        msg = Message(subject, recipients=[receiver_email])
+        msg.html = html_body # Set the HTML content
+        mail.send(msg)
+        
+        print(f"✅ Professional HTML Alert sent to {member_name}")
+        return jsonify({"success": True, "message": "Interest notified!"}), 200
+    except Exception as e:
+        print(f"❌ Mail Error: {str(e)}")
+        return jsonify({"success": False, "message": "Server Error"}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
