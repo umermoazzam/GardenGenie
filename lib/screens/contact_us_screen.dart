@@ -1,9 +1,11 @@
+// contact_us_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart'; // ✅ Required for calling functionality
 import 'dart:convert';
 
 // ✅ CONVERTED TO STATEFULWIDGET TO HANDLE LIVE REFRESH
@@ -32,7 +34,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _memberImages["umermoazzam2@gmail.com"] = prefs.getString('profile_image_path_umermoazzam2@gmail.com');
-      _memberImages["haseeb@gmail.com"] = prefs.getString('profile_image_path_haseeb@gmail.com');
+      _memberImages["m.haseebntu@gmail.com"] = prefs.getString('profile_image_path_m.haseebntu@gmail.com');
       _memberImages["beelalchaudhary@gmail.com"] = prefs.getString('profile_image_path_beelalchaudhary@gmail.com');
     });
   }
@@ -67,9 +69,9 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             const SizedBox(height: 30),
             Text("Our Team", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 16),
-            _buildContactCard(context, "Umer Moazzam", "umermoazzam2@gmail.com", "+92 332 6582650"),
-            _buildContactCard(context, "Muhammad Haseeb Shahid", "m.haseebntu@gmail.com", "+92 316 6415699"),
-            _buildContactCard(context, "Muhammad Bilal Afzal", "beelalchaudhary@gmail.com", "+92 342 4882223"),
+            _buildContactCard(context, "Umer Moazzam", "umermoazzam2@gmail.com", "+923326582650"),
+            _buildContactCard(context, "Muhammad Haseeb Shahid", "m.haseebntu@gmail.com", "+923166415699"),
+            _buildContactCard(context, "Muhammad Bilal Afzal", "beelalchaudhary@gmail.com", "+923424882223"),
             const SizedBox(height: 30),
             Container(
               padding: const EdgeInsets.all(16),
@@ -160,7 +162,24 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     });
   }
 
-  // ✅ SUCCESS DIALOG LOGIC ADDED
+  // ✅ REAL-TIME CALL FUNCTION
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not launch phone dialer")),
+        );
+      }
+    }
+  }
+
+  // ✅ SUCCESS DIALOG LOGIC
   void _showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -174,7 +193,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Circular Icon Container (Mimicking the image you provided)
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -187,38 +205,20 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
               Text(
                 'Inquiry Sent!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               const SizedBox(height: 12),
               Text(
                 'The team member has been notified about your interest.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: const Color(0xFF666666),
-                  height: 1.4,
-                ),
+                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.4),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    'OK',
-                    style: GoogleFonts.inter(
-                      color: primaryGreen,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
+                  child: Text('OK', style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
               ),
             ],
@@ -232,7 +232,8 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     final String cName = prefs.getString('userName') ?? "A Plantio User";
     final String cEmail = prefs.getString('userEmail') ?? "No Email Available";
-    const String apiUrl = "http://127.0.0.1:5000/api/contact-inquiry"; 
+    // ✅ URL UPDATED FOR REMOTE TESTING (Samsung S21)
+    const String apiUrl = "https://semipublic-monopoly-lorina.ngrok-free.dev/api/contact-inquiry"; 
 
     try {
       final response = await http.post(Uri.parse(apiUrl),
@@ -241,7 +242,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
       );
       if (response.statusCode == 200) {
         if (context.mounted) {
-          // ✅ TRIGGERING THE SUCCESS DIALOG INSTEAD OF SNACKBAR
           _showSuccessDialog(context);
         }
       }
@@ -250,7 +250,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     }
   }
 
-  // (Remaining functions like _pickImage, _showImagePickerOptions stay exactly same)
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
@@ -307,8 +306,12 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
           const SizedBox(height: 4),
           Text("Team Member", style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 40),
+          
           _buildDetailTile(Icons.email_outlined, "Email Address", widget.email, onTap: () => _sendOfficialEmail(context)),
-          _buildDetailTile(Icons.phone_outlined, "Phone Number", widget.phone),
+          
+          // ✅ ADDED ONTAP FOR REAL-TIME CALL
+          _buildDetailTile(Icons.phone_outlined, "Phone Number", widget.phone, onTap: () => _makePhoneCall(widget.phone)),
+          
           _buildDetailTile(Icons.work_outline, "Department", "Plant Care Specialist"),
         ],
       ),
@@ -328,7 +331,8 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
             children: [
               Icon(icon, color: primaryGreen, size: 24),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500))]))
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500))])),
+              if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)), // Visual hint for clickable tile
             ],
           ),
         ),

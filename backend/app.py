@@ -146,9 +146,55 @@ def validate_leaf_gate(image_bytes: bytes) -> bool:
 
 RESET_FORM_HTML = """
 <!DOCTYPE html>
-<html>
-<head><title>Reset Password</title></head>
-<body><div style="text-align:center; padding:50px;"><h2>Reset Password</h2><form method="POST"><input type="password" name="password" placeholder="New Password" required><br><button type="submit">Update</button></form></div></body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password | Plantio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f9f9f9; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 350px; text-align: center; }
+        .logo-circle { width: 60px; height: 60px; border: 3px solid #5B8E55; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #5B8E55; font-size: 30px; }
+        h2 { color: #1A1A1A; font-size: 24px; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 30px; }
+        .input-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #1A1A1A; margin-bottom: 8px; text-transform: uppercase; }
+        input { width: 100%; padding: 14px; background: #F5F5F5; border: none; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
+        input:focus { box-shadow: 0 0 0 2px #5B8E55; }
+        button { width: 100%; padding: 15px; background: #5B8E55; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #4a7545; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo-circle">🌿</div>
+        <h2>Reset Password</h2>
+        <p>Set a new password for your Plantio account.</p>
+        <form method="POST">
+            <div class="input-group">
+                <label>New Password</label>
+                <input type="password" name="password" id="p1" placeholder="••••••••" required>
+            </div>
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" id="p2" placeholder="••••••••" required oninput="check()">
+            </div>
+            <p id="msg" style="color:red; font-size:12px; margin-top:-10px; display:none;">Passwords do not match</p>
+            <button type="submit" id="btn">UPDATE PASSWORD</button>
+        </form>
+    </div>
+    <script>
+        function check() {
+            var p1 = document.getElementById('p1').value;
+            var p2 = document.getElementById('p2').value;
+            var btn = document.getElementById('btn');
+            var msg = document.getElementById('msg');
+            if(p1 != p2) { btn.disabled = true; msg.style.display='block'; btn.style.opacity='0.5'; }
+            else { btn.disabled = false; msg.style.display='none'; btn.style.opacity='1'; }
+        }
+    </script>
+</body>
 </html>
 """
 
@@ -290,7 +336,8 @@ def web_reset_password(token):
             {"email": email},
             {"$set": {"password": hash_password(request.form.get('password'))}}
         )
-        return "Updated! ✅"
+        # --- SUCCESS HTML RESPONSE ---
+        return '<div style="text-align:center; padding:50px; font-family:sans-serif;"><h2>✅ Password Updated!</h2><p>You can now login from the app.</p></div>'
 
     return RESET_FORM_HTML
 

@@ -14,8 +14,9 @@
     <application
         android:label="Plantio"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
-
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"> <!-- ✅ FIXED: Added for Android 15 network compatibility -->
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -42,6 +43,11 @@
     <queries>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+                <!-- CALLING KE LIYE (Ye lazmi add karein) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="tel" />
         </intent>
     </queries>
 

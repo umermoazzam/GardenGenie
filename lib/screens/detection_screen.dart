@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
-import 'dart:convert'; // JSON parsing ke liye zaroori hai
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart'; // ✅ Added for Android 15 permissions
 
 class PlantDetectionScreen extends StatefulWidget {
   const PlantDetectionScreen({Key? key}) : super(key: key);
@@ -14,26 +15,23 @@ class PlantDetectionScreen extends StatefulWidget {
   State<PlantDetectionScreen> createState() => _PlantDetectionScreenState();
 }
 
-class _PlantDetectionScreenState extends State<PlantDetectionScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  bool _isScanning = true;
-
-  // --- UI UPDATE VARIABLES (Change 3) ---
+class _PlantDetectionScreenState extends State<PlantDetectionScreen> {
+  // --- UI UPDATE VARIABLES ---
   String _detectedDisease = "Ready to Scan";
   String _confidenceText = "Align the leaf within the frame";
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
+  // --- PERMISSION DENIED FEEDBACK ---
+  void _showPermissionDenied() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Permission denied. Please enable it in settings to proceed."),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
   }
 
-  // --- BOTTOM SHEET FUNCTION (Change 1) ---
+  // --- UPDATED BOTTOM SHEET FUNCTION (With Runtime Permissions) ---
   Future<void> _pickImage() async {
     final picker = ImagePicker();
 
@@ -52,9 +50,15 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
                 title: const Text("Take Photo"),
                 onTap: () async {
                   Navigator.pop(context);
-                  final image = await picker.pickImage(source: ImageSource.camera);
-                  if (image != null) {
-                    _sendToServer(image);
+                  // ✅ Request Camera Permission for Android 15
+                  var status = await Permission.camera.request();
+                  if (status.isGranted) {
+                    final image = await picker.pickImage(source: ImageSource.camera);
+                    if (image != null) {
+                      _sendToServer(image);
+                    }
+                  } else {
+                    _showPermissionDenied();
                   }
                 },
               ),
@@ -63,9 +67,15 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
                 title: const Text("Choose from Gallery"),
                 onTap: () async {
                   Navigator.pop(context);
-                  final image = await picker.pickImage(source: ImageSource.gallery);
-                  if (image != null) {
-                    _sendToServer(image);
+                  // ✅ Request Photos Permission for Android 15
+                  var status = await Permission.photos.request();
+                  if (status.isGranted || status.isLimited) {
+                    final image = await picker.pickImage(source: ImageSource.gallery);
+                    if (image != null) {
+                      _sendToServer(image);
+                    }
+                  } else {
+                    _showPermissionDenied();
                   }
                 },
               ),
@@ -76,7 +86,7 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
     );
   }
 
-  // --- BACKEND FUNCTION (Change 2) ---
+  // --- BACKEND FUNCTION ---
   Future<void> _sendToServer(XFile image) async {
     setState(() {
       _isLoading = true;
@@ -96,13 +106,11 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
         final data = jsonDecode(response.body);
         setState(() {
           _detectedDisease = data['disease'] ?? "Unknown";
-          // Agar confidence backend se aa raha hai toh dikhao, warna empty rakho
           _confidenceText = data['confidence'] != null 
               ? "Confidence: ${data['confidence']}%" 
               : "Scan complete";
           _isLoading = false;
         });
-        print("Server Response: ${response.body}");
       } else {
         setState(() {
           _detectedDisease = "Error";
@@ -116,14 +124,7 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
         _confidenceText = "Please check your internet/ngrok link.";
         _isLoading = false;
       });
-      print("Error: $e");
     }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -161,56 +162,7 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
             ),
           ),
 
-          // 4. Scanning Frame & Laser Animation
-          Center(
-            child: Stack(
-              children: [
-                Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Colors.white.withOpacity(0.5), width: 1),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-
-                // Laser Line
-                if (_isScanning)
-                  AnimatedBuilder(
-                    animation: _animationController,
-                    builder: (context, child) {
-                      return Positioned(
-                        top: _animationController.value * 280,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 3,
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF5B8E55)
-                                    .withOpacity(0.8),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              )
-                            ],
-                            color: const Color(0xFF5B8E55),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                _buildCorner(top: -2, left: -2, isTop: true, isLeft: true),
-                _buildCorner(top: -2, right: -2, isTop: true, isLeft: false),
-                _buildCorner(bottom: -2, left: -2, isTop: false, isLeft: true),
-                _buildCorner(bottom: -2, right: -2, isTop: false, isLeft: false),
-              ],
-            ),
-          ),
-
-          // 5. Result Card (UPDATED with Dynamic Variables)
+          // 5. Result Card
           Positioned(
             bottom: 40,
             left: 20,
@@ -246,14 +198,14 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Detected: $_detectedDisease", // REAL RESULT
+                              "Detected: $_detectedDisease",
                               style: GoogleFonts.inter(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18),
                             ),
                             Text(
-                              _confidenceText, // REAL CONFIDENCE
+                              _confidenceText,
                               style: GoogleFonts.inter(
                                   color: Colors.white70, fontSize: 13),
                             ),
@@ -278,7 +230,7 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
             ),
           ),
 
-          // 6. Camera Controls (Change 3: Updated onTap)
+          // 6. Camera Controls
           Positioned(
             bottom: 160,
             left: 0,
@@ -287,11 +239,11 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCameraButton(Icons.photo_library, () {
-                  _pickImage(); // Photo library ke liye bhi sheet khulegi
+                  _pickImage();
                 }),
                 const SizedBox(width: 30),
                 _buildCameraButton(Icons.camera_alt, () {
-                  _pickImage(); // AB YE SHEET KHOLAY GA
+                  _pickImage();
                 }, isLarge: true),
                 const SizedBox(width: 30),
                 _buildCameraButton(Icons.flash_on, () {}),
@@ -317,42 +269,6 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen>
         ),
         child: Icon(icon,
             color: Colors.white, size: isLarge ? 30 : 24),
-      ),
-    );
-  }
-
-  Widget _buildCorner({
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-    required bool isTop,
-    required bool isLeft,
-  }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: Container(
-        width: 35,
-        height: 35,
-        decoration: BoxDecoration(
-          border: Border(
-            top: isTop && top != null
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
-            bottom: !isTop && bottom != null
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
-            left: isLeft && left != null
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
-            right: !isLeft && right != null
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
-          ),
-        ),
       ),
     );
   }
