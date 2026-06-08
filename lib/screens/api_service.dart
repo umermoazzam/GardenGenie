@@ -3,9 +3,10 @@ import 'package:http/http.dart' as http;
 import '../models/product_model.dart'; // Import the model
 
 class ApiService {
-  static const String ngrokUrl = 'https://semipublic-monopoly-lorina.ngrok-free.dev';  
-  static const String baseUrl = '$ngrokUrl/api';
-  static const String rootUrl = ngrokUrl;
+  // ✅ UPDATED: Ngrok link replaced with permanent Hugging Face Cloud link
+  static const String cloudUrl = 'https://umermoazzam-plantio-backend.hf.space';  
+  static const String baseUrl = '$cloudUrl/api';
+  static const String rootUrl = cloudUrl;
 
   // 1. Fetch Products from API
   static Future<List<Product>> fetchProducts() async {
@@ -51,7 +52,7 @@ class ApiService {
       );
       return jsonDecode(response.body);
     } catch (e) {
-      return {'success': false, 'message': 'Network error: Please check your internet or Ngrok status.'};
+      return {'success': false, 'message': 'Network error: Server is currently offline.'};
     }
   }
 
@@ -113,7 +114,7 @@ class ApiService {
       );
       return jsonDecode(response.body);
     } catch (e) {
-      return {'reply': "Server connection error. Make sure Ngrok is running."};
+      return {'reply': "AI Server connection error. Please try again later."};
     }
   }
 
@@ -140,7 +141,7 @@ class ApiService {
     }
   }
 
-  // ✅ NEW: Permanent Clear Chat History from MongoDB
+  // ✅ Permanent Clear Chat History from MongoDB
   static Future<bool> clearChatHistory(String userId) async {
     try {
       final response = await http.delete(

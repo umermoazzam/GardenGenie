@@ -24,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0; 
   String? _profileImagePath; 
 
-  // ✅ SEARCH STATE VARIABLES
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   bool _isSearching = false;
@@ -61,21 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onNavBarTapped(int index) {
     if (index == 0) return;
-
     if (index == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
       );
     } else if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const RentalServicesScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
     } else if (index == 3) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const CartScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
     }
   }
 
@@ -105,17 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ✅ UPDATED HEADER: Animated Switcher for smooth search transition
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: (Widget child, Animation<double> animation) {
                     return FadeTransition(
                       opacity: animation,
                       child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, -0.2),
-                          end: Offset.zero,
-                        ).animate(animation),
+                        position: Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(animation),
                         child: child,
                       ),
                     );
@@ -124,31 +112,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Container(
                         key: const ValueKey('searchBar'),
                         height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
                         child: TextField(
                           controller: _searchController,
                           autofocus: true,
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value.toLowerCase();
-                            });
-                          },
+                          onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                           decoration: InputDecoration(
                             hintText: 'Search plants...',
                             prefixIcon: const Icon(Icons.search, color: Color(0xFF5B8E55)),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                setState(() {
-                                  _isSearching = false;
-                                  _searchQuery = "";
-                                  _searchController.clear();
-                                });
-                              },
-                            ),
+                            suffixIcon: IconButton(icon: const Icon(Icons.close), onPressed: () {
+                              setState(() { _isSearching = false; _searchQuery = ""; _searchController.clear(); });
+                            }),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -160,11 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           RichText(
                             text: TextSpan(
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                              ),
+                              style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w600, letterSpacing: -0.5),
                               children: const [
                                 TextSpan(text: 'New on ', style: TextStyle(color: Color(0xFF1A1A1A))),
                                 TextSpan(text: 'Plantio', style: TextStyle(color: Color(0xFF5B8E55))),
@@ -173,20 +143,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                              ).then((_) => _loadProfileImage());
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())).then((_) => _loadProfileImage());
                             },
                             child: CircleAvatar(
                               radius: 22,
                               backgroundColor: Colors.grey.shade200,
-                              backgroundImage: (_profileImagePath != null) 
-                                  ? FileImage(File(_profileImagePath!)) 
-                                  : null,
-                              child: (_profileImagePath == null)
-                                  ? const Icon(Icons.person, color: Colors.grey)
-                                  : null,
+                              backgroundImage: (_profileImagePath != null) ? FileImage(File(_profileImagePath!)) : null,
+                              child: (_profileImagePath == null) ? const Icon(Icons.person, color: Colors.grey) : null,
                             ),
                           ),
                         ],
@@ -199,27 +162,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildQuickActionButton(
-                        icon: Icons.water_drop_outlined,
-                        label: 'My Garden',
-                        onTap: () => Navigator.pushNamed(context, '/my-plants'),
-                      ),
+                      _buildQuickActionButton(icon: Icons.water_drop_outlined, label: 'My Garden', onTap: () => Navigator.pushNamed(context, '/my-plants')),
                       const SizedBox(width: 20),
-                      _buildQuickActionButton(
-                        icon: Icons.local_florist_outlined,
-                        label: 'My Plants',
-                        onTap: () => Navigator.pushNamed(context, '/my-plants'),
-                      ),
+                      _buildQuickActionButton(icon: Icons.local_florist_outlined, label: 'My Plants', onTap: () => Navigator.pushNamed(context, '/my-plants')),
                       const SizedBox(width: 20),
-                      _buildQuickActionButton(
-                        icon: Icons.search,
-                        label: 'Search',
-                        onTap: () {
-                          setState(() {
-                            _isSearching = !_isSearching;
-                          });
-                        },
-                      ),
+                      _buildQuickActionButton(icon: Icons.search, label: 'Search', onTap: () => setState(() => _isSearching = !_isSearching)),
                     ],
                   ),
                 ),
@@ -228,24 +175,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 if (!_isSearching) 
                   Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    height: 200, width: double.infinity,
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), image: const DecorationImage(image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'), fit: BoxFit.cover)),
                     child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(13),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)],
-                        ),
-                      ),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(13), gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)])),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -259,15 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text('New in', style: GoogleFonts.inter(color: Colors.white70, fontSize: 14)),
                                 const SizedBox(height: 4),
-                                Text(
-                                  'Create plans\nwith AI Assistant',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.2,
-                                  ),
-                                ),
+                                Text('Create plans\nwith AI Assistant', style: GoogleFonts.inter(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w600, height: 1.2)),
                               ],
                             ),
                           ),
@@ -278,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 24),
 
+                // ✅ UPDATED REAL-TIME STREAMBUILDER
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance.collection('products').snapshots(),
                   builder: (context, snapshot) {
@@ -311,19 +237,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: productDocs.length,
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        // ✅ MODIFIED: Changed from 0.85 to 0.70 to increase image vertical space
-                        childAspectRatio: 0.70,
+                        crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.70,
                       ),
                       itemBuilder: (context, index) {
                         var data = productDocs[index].data() as Map<String, dynamic>;
 
+                        // Mapping data from Firestore
                         String title = data['title'] ?? 'No Title';
                         String imageUrl = data['image'] ?? '';
                         String price = (data['price'] ?? '0').toString();
-                        String description = data['description'] ?? 'No description available for this plant.';
+                        String description = data['description'] ?? 'No description available.';
                         bool isNew = data['isNew'] ?? false;
                         String subtitle = data['subtitle'] ?? 'Garden Genie Specialist';
 
@@ -349,9 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 15),
         child: GestureDetector(
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen()));
-          },
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen())),
           child: Container(
             width: 58, height: 58,
             decoration: BoxDecoration(
@@ -389,11 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Container(
-            width: 64, height: 58,
-            decoration: const BoxDecoration(color: Color(0xFF5B8E55), shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
+          Container(width: 64, height: 58, decoration: const BoxDecoration(color: Color(0xFF5B8E55), shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 28)),
           const SizedBox(height: 10),
           Text(label, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5B8E55), fontWeight: FontWeight.w500)),
         ],
@@ -413,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4), // Added slight curve for look
+                    borderRadius: BorderRadius.circular(4),
                     color: const Color(0xFFF0F0F0),
                     image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
                   ),
@@ -431,12 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))
-          ),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
         ],
       ),
     );
@@ -444,9 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAIOptionsDialog(BuildContext context) {
     showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
+      context: context, backgroundColor: Colors.transparent, isScrollControlled: true,
       builder: (context) => SafeArea(
         child: Container(
           decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -458,35 +368,20 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               Text('AI Features', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
-              _buildAIOption(
-                icon: Icons.chat_bubble_outline,
-                title: 'AI Chatbot',
-                description: 'Get instant gardening assistance',
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
-                },
-              ),
+              _buildAIOption(icon: Icons.chat_bubble_outline, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
+              }),
               const SizedBox(height: 16),
-              _buildAIOption(
-                icon: Icons.camera_alt_outlined,
-                title: 'Plant Disease Detector',
-                description: 'Scan and identify plant diseases',
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen()));
-                },
-              ),
+              _buildAIOption(icon: Icons.camera_alt_outlined, title: 'Plant Disease Detector', description: 'Scan and identify plant diseases', onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen()));
+              }),
               const SizedBox(height: 16),
-              _buildAIOption(
-                icon: Icons.article_outlined,
-                title: 'Blogs & Videos',
-                description: 'Learn from educational content',
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const BlogsVideosScreen()));
-                },
-              ),
+              _buildAIOption(icon: Icons.article_outlined, title: 'Blogs & Videos', description: 'Learn from educational content', onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const BlogsVideosScreen()));
+              }),
             ],
           ),
         ),
@@ -496,18 +391,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildAIOption({required IconData icon, required String title, required String description, required VoidCallback onTap}) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      onTap: onTap, borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            Container(
-              width: 50, height: 50,
-              decoration: BoxDecoration(color: const Color(0xFF5B8E55).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: const Color(0xFF5B8E55), size: 28),
-            ),
+            Container(width: 50, height: 50, decoration: BoxDecoration(color: const Color(0xFF5B8E55).withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: const Color(0xFF5B8E55), size: 28)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

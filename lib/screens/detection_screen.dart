@@ -95,7 +95,7 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen> {
     });
 
     try {
-      var uri = Uri.parse('https://semipublic-monopoly-lorina.ngrok-free.dev/predict');
+      var uri = Uri.parse('https://umermoazzam-plantio-backend.hf.space/predict');
       var request = http.MultipartRequest('POST', uri);
       request.files.add(await http.MultipartFile.fromPath('file', image.path));
 

@@ -7,8 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
-// ✅ ADDED IMPORT (Contact Us Screen)
+// ✅ ADDED IMPORT (Contact Us & Admin Dashboard)
 import 'contact_us_screen.dart';
+import 'admin_screen.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -245,12 +246,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     GoogleFonts.inter(fontSize: 14, color: textGrey)),
             const SizedBox(height: 30),
 
+            // ✅ UNIQUE ADMIN PANEL (Updated for two owners)
+            if (_userEmail == "click.umer50@gmail.com" || _userEmail == "beelalchaudhary@gmail.com") 
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const AdminDashboardScreen())
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: primaryGreen.withOpacity(0.3), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.admin_panel_settings, color: primaryGreen, size: 26),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            "Admin Panel",
+                            style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primaryGreen),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16, color: primaryGreen),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             _buildProfileOption(Icons.shopping_bag_outlined, "My Orders", () {}),
             _buildProfileOption(Icons.shopping_bag_outlined, "History", () {}),
             _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {}),
             _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
 
-            // ✅ UPDATED CONTACT US NAVIGATION
             _buildProfileOption(
               Icons.contact_support_outlined,
               "Contact Us",

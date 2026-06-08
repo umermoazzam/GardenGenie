@@ -233,7 +233,7 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     final String cName = prefs.getString('userName') ?? "A Plantio User";
     final String cEmail = prefs.getString('userEmail') ?? "No Email Available";
     // ✅ URL UPDATED FOR REMOTE TESTING (Samsung S21)
-    const String apiUrl = "https://semipublic-monopoly-lorina.ngrok-free.dev/api/contact-inquiry"; 
+    const String apiUrl = "https://umermoazzam-plantio-backend.hf.space/api/contact-inquiry";
 
     try {
       final response = await http.post(Uri.parse(apiUrl),
