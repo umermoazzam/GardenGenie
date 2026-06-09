@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart'; // ✅ Required for calling functionality
+import 'package:url_launcher/url_launcher.dart'; // ✅ Required for calling and web functionality
 import 'dart:convert';
 
 // ✅ CONVERTED TO STATEFULWIDGET TO HANDLE LIVE REFRESH
@@ -37,6 +37,19 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       _memberImages["m.haseebntu@gmail.com"] = prefs.getString('profile_image_path_m.haseebntu@gmail.com');
       _memberImages["beelalchaudhary@gmail.com"] = prefs.getString('profile_image_path_beelalchaudhary@gmail.com');
     });
+  }
+
+  // ✅ UPDATED: LAUNCHES OFFICIAL PLANTIO.PK INSTAGRAM PAGE
+  Future<void> _launchInstagram() async {
+    const String instagramUrl = "https://www.instagram.com/plantio.pk/"; 
+    final Uri url = Uri.parse(instagramUrl);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not launch Instagram")),
+        );
+      }
+    }
   }
 
   @override
@@ -79,7 +92,23 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
               child: Row(children: [Icon(Icons.access_time, color: primaryGreen, size: 20), const SizedBox(width: 12), Text("Mon - Fri: 9:00 AM to 6:00 PM", style: GoogleFonts.inter(fontSize: 14, color: textGrey))]),
             ),
             const SizedBox(height: 40),
-            Center(child: Column(children: [Text("Follow our journey", style: GoogleFonts.inter(fontSize: 13, color: textGrey)), const SizedBox(height: 16), Row(mainAxisAlignment: MainAxisAlignment.center, children: [_buildSocialIcon(Icons.facebook), const SizedBox(width: 20), _buildSocialIcon(Icons.camera_alt_outlined), const SizedBox(width: 20), _buildSocialIcon(Icons.language)])])),
+            Center(
+              child: Column(
+                children: [
+                  Text("Follow our journey", style: GoogleFonts.inter(fontSize: 13, color: textGrey)),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: _launchInstagram, // ✅ Updated Clickable action
+                        child: _buildSocialIcon("assets/icons/instagram.png"), // 👈 Used image asset path
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -91,8 +120,16 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     return Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 24)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)), Text(subtitle, style: GoogleFonts.inter(fontSize: 14, color: textGrey))])]);
   }
 
-  Widget _buildSocialIcon(IconData icon) {
-    return Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.grey.withOpacity(0.2))), child: Icon(icon, color: textGrey, size: 20));
+  // ✅ UPDATED: Helper now accepts asset path String
+  Widget _buildSocialIcon(String assetPath) {
+    return Container(
+      padding: const EdgeInsets.all(10), 
+      decoration: BoxDecoration(
+        shape: BoxShape.circle, 
+        border: Border.all(color: Colors.grey.withOpacity(0.2))
+      ), 
+      child: Image.asset(assetPath, width: 22, height: 22), // Custom asset image
+    );
   }
 
   Widget _buildContactCard(BuildContext context, String name, String email, String phone) {
@@ -162,7 +199,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     });
   }
 
-  // ✅ REAL-TIME CALL FUNCTION
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(
       scheme: 'tel',
@@ -179,7 +215,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     }
   }
 
-  // ✅ SUCCESS DIALOG LOGIC
   void _showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -232,7 +267,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     final String cName = prefs.getString('userName') ?? "A Plantio User";
     final String cEmail = prefs.getString('userEmail') ?? "No Email Available";
-    // ✅ URL UPDATED FOR REMOTE TESTING (Samsung S21)
     const String apiUrl = "https://umermoazzam-plantio-backend.hf.space/api/contact-inquiry";
 
     try {
@@ -308,10 +342,7 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
           const SizedBox(height: 40),
           
           _buildDetailTile(Icons.email_outlined, "Email Address", widget.email, onTap: () => _sendOfficialEmail(context)),
-          
-          // ✅ ADDED ONTAP FOR REAL-TIME CALL
           _buildDetailTile(Icons.phone_outlined, "Phone Number", widget.phone, onTap: () => _makePhoneCall(widget.phone)),
-          
           _buildDetailTile(Icons.work_outline, "Department", "Plant Care Specialist"),
         ],
       ),
@@ -332,7 +363,7 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
               Icon(icon, color: primaryGreen, size: 24),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500))])),
-              if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)), // Visual hint for clickable tile
+              if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)),
             ],
           ),
         ),

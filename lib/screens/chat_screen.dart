@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'api_service.dart'; 
 import 'cart_screen.dart'; // ✅ Import CartScreen
@@ -25,7 +26,7 @@ class PlantChatApp extends StatelessWidget {
 // Screen 1: Individual Chat Screen (Plantio AI)
 class IndividualChatScreen extends StatefulWidget {
   final String userId;
-  const IndividualChatScreen({Key? key, this.userId = "test_user"}) : super(key: key);
+  const IndividualChatScreen({Key? key, required this.userId}) : super(key: key);
 
   @override
   State<IndividualChatScreen> createState() => _IndividualChatScreenState();
@@ -423,7 +424,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const IndividualChatScreen(userId: "test_user")));
+              final String currentUid = FirebaseAuth.instance.currentUser?.uid ?? "";
+              Navigator.push(context, MaterialPageRoute(builder: (context) => IndividualChatScreen(userId: currentUid)));
             },
             child: _buildChatItem(name: 'Plantio AI', message: 'How can I help you today?', time: 'Now', isAI: true),
           ),

@@ -99,7 +99,7 @@ class ApiService {
   }
 
   // 5. Send Message with userId for persistent chat
-  static Future<Map<String, dynamic>> sendMessage({required String message, String userId = "test_user"}) async {
+  static Future<Map<String, dynamic>> sendMessage({required String message, required String userId}) async {
     try {
       final response = await http.post(
         Uri.parse('$rootUrl/chat'), 

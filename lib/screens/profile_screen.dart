@@ -38,9 +38,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    // Reliability ke liye direct auth se bhi email utha sakte hain
+    final User? user = FirebaseAuth.instance.currentUser;
+    
     setState(() {
-      _userName = prefs.getString('userName') ?? "";
-      _userEmail = prefs.getString('userEmail') ?? "";
+      _userName = prefs.getString('userName') ?? user?.displayName ?? "User";
+      _userEmail = prefs.getString('userEmail') ?? user?.email ?? "";
       _profileImagePath = prefs.getString('profile_image_path');
 
       if (_profileImagePath != null && !File(_profileImagePath!).existsSync()) {
@@ -64,30 +67,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  'No',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
+                child: Text('No', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text(
-                  'Yes',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
+                child: Text('Yes', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
               ),
             ],
           ),
-        ) ??
-        false;
+        ) ?? false;
 
     if (confirm) {
       await FirebaseAuth.instance.signOut();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-
       if (!mounted) return;
-
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -98,27 +92,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 50,
-      );
-
+      final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
       if (pickedFile != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('profile_image_path', pickedFile.path);
-
-        setState(() {
-          _profileImagePath = pickedFile.path;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile picture updated!')),
-        );
+        setState(() => _profileImagePath = pickedFile.path);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile picture updated!')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
     }
   }
 
@@ -131,9 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showImagePickerOptions() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (BuildContext context) {
         return SafeArea(
           child: Wrap(
@@ -141,28 +121,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Color(0xFF5B8E55)),
                 title: Text('Choose from library', style: GoogleFonts.inter()),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF5B8E55)),
                 title: Text('Take photo', style: GoogleFonts.inter()),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
               ),
               if (_profileImagePath != null)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
-                  title: Text('Remove current picture',
-                      style: GoogleFonts.inter(color: Colors.red)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _removeImage();
-                  },
+                  title: Text('Remove current picture', style: GoogleFonts.inter(color: Colors.red)),
+                  onTap: () { Navigator.pop(context); _removeImage(); },
                 ),
             ],
           ),
@@ -173,6 +143,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 🔍 DUAL-OWNER ADMIN ACCESS LOGIC (Strict Authorization)
+    // Primary source: SharedPreferences | Fallback: FirebaseAuth
+    final String emailFromPrefs = _userEmail.toLowerCase().trim();
+    final String emailFromFirebase = (FirebaseAuth.instance.currentUser?.email ?? "").toLowerCase().trim();
+    final String authorizedEmail = emailFromPrefs.isNotEmpty ? emailFromPrefs : emailFromFirebase;
+    
+    bool isAdmin = authorizedEmail == "click.umer50@gmail.com" || 
+                   authorizedEmail == "beelalchaudhary@gmail.com";
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -182,11 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'My Profile',
-          style: GoogleFonts.inter(
-              color: textBlack, fontSize: 18, fontWeight: FontWeight.w600),
-        ),
+        title: Text('My Profile', style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -198,64 +173,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Stack(
                 children: [
                   Container(
-                    width: 100,
-                    height: 100,
+                    width: 100, height: 100,
                     decoration: BoxDecoration(
-                      color: bgGrey,
-                      shape: BoxShape.circle,
+                      color: bgGrey, shape: BoxShape.circle,
                       border: Border.all(color: primaryGreen, width: 2),
-                      image: (_profileImagePath != null &&
-                              File(_profileImagePath!).existsSync())
-                          ? DecorationImage(
-                              image: FileImage(File(_profileImagePath!)),
-                              fit: BoxFit.cover,
-                            )
+                      image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
+                          ? DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover)
                           : null,
                     ),
-                    child: (_profileImagePath == null ||
-                            !File(_profileImagePath!).existsSync())
+                    child: (_profileImagePath == null || !File(_profileImagePath!).existsSync())
                         ? const Icon(Icons.person, size: 50, color: Colors.grey)
                         : null,
                   ),
                   Positioned(
-                    bottom: 0,
-                    right: 0,
+                    bottom: 0, right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: primaryGreen,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(Icons.camera_alt,
-                          color: Colors.white, size: 16),
+                      decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            Text(_userName,
-                style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: textBlack)),
+            Text(_userName, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 4),
-            Text(_userEmail,
-                style:
-                    GoogleFonts.inter(fontSize: 14, color: textGrey)),
+            Text(_userEmail, style: GoogleFonts.inter(fontSize: 14, color: textGrey)),
             const SizedBox(height: 30),
 
-            // ✅ UNIQUE ADMIN PANEL (Updated for two owners)
-            if (_userEmail == "click.umer50@gmail.com" || _userEmail == "beelalchaudhary@gmail.com") 
+            // ✅ UPDATED ADMIN PANEL BUTTON (Now visible to Beelal too)
+            if (isAdmin) 
               Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
                 child: InkWell(
                   onTap: () {
-                    Navigator.push(
-                      context, 
-                      MaterialPageRoute(builder: (context) => const AdminDashboardScreen())
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboardScreen()));
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
@@ -270,12 +223,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(Icons.admin_panel_settings, color: primaryGreen, size: 26),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Text(
-                            "Admin Panel",
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: primaryGreen),
+                          child: Text("Admin Control Panel",
+                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: primaryGreen),
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios, size: 16, color: primaryGreen),
@@ -286,50 +235,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
 
             _buildProfileOption(Icons.shopping_bag_outlined, "My Orders", () {}),
-            _buildProfileOption(Icons.shopping_bag_outlined, "History", () {}),
+            _buildProfileOption(Icons.history, "History", () {}),
             _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {}),
             _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
-
-            _buildProfileOption(
-              Icons.contact_support_outlined,
-              "Contact Us",
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ContactUsScreen(),
-                  ),
-                );
-              },
-            ),
+            _buildProfileOption(Icons.contact_support_outlined, "Contact Us", () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
+            }),
 
             const SizedBox(height: 30),
 
             SizedBox(
-              width: double.infinity,
-              height: 50,
+              width: double.infinity, height: 50,
               child: ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen,
-                  elevation: 0,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
+                  backgroundColor: primaryGreen, elevation: 0,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.logout, color: Colors.white),
                     const SizedBox(width: 10),
-                    Text(
-                      'Log Out',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('Log Out', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -340,8 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileOption(
-      IconData icon, String title, VoidCallback onTap) {
+  Widget _buildProfileOption(IconData icon, String title, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: InkWell(
@@ -349,25 +276,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9F9F9),
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
               Icon(icon, color: primaryGreen, size: 24),
               const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: textBlack),
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.grey),
+              Expanded(child: Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: textBlack))),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),
         ),
