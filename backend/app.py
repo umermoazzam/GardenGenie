@@ -12,6 +12,7 @@ import base64
 from dotenv import load_dotenv
 from PIL import Image
 import smtplib
+import traceback
 
 # ML Libraries
 import torch
@@ -24,16 +25,24 @@ load_dotenv()
 from itsdangerous import URLSafeTimedSerializer
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app)
 
-# Config
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+# ==========================================
+# ✅ FIXED MAIL CONFIGURATION FOR CLOUD (HF)
+# ==========================================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_PORT'] = 587             # 465 ko 587 kar dein
+app.config['MAIL_USE_TLS'] = True         # False ko True kar dein
+app.config['MAIL_USE_SSL'] = False        # True ko False kar dein
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
+app.config['MAIL_DEBUG'] = True
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a_very_secret_default_string')
+
+if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
+    print("❌ MAIL_USERNAME or MAIL_PASSWORD is missing; SMTP may fail.")
 
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -308,21 +317,43 @@ def forgot_password():
     try:
         email = request.get_json().get('email').strip().lower()
         user = users_collection.find_one({"email": email})
-
+        
         if not user:
             return jsonify({"success": False, "message": "Email not found"}), 404
 
         token = s.dumps(email, salt='password-reset-salt')
+        # NGROK_URL ki jagah Hugging Face ka link bhi ho sakta hai
         link = f"{os.getenv('NGROK_URL')}/web/reset-password/{token}"
 
-        msg = Message("Reset Password", recipients=[email], body=f"Link: {link}")
-        mail.send(msg)
+        api_key = os.getenv('BREVO_API_KEY')
+        url = "https://api.brevo.com/v3/smtp/email"
+        
+        headers = {
+            "api-key": api_key,
+            "content-type": "application/json",
+            "accept": "application/json"
+        }
 
+        payload = {
+            "sender": {"name": "Plantio Support", "email": "umermoazzam2@gmail.com"},
+            "to": [{"email": email}],
+            "subject": "Reset Your Plantio Password",
+            "htmlContent": f"""
+            <div style="font-family: sans-serif; padding: 20px;">
+                <h2>Password Reset Request</h2>
+                <p>Click the button below to reset your password. This link is valid for 30 minutes.</p>
+                <a href="{link}" style="background: #5B8E55; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+                <p>If you didn't request this, please ignore this email.</p>
+            </div>
+            """
+        }
+
+        requests.post(url, json=payload, headers=headers)
         return jsonify({"success": True, "message": "Reset link sent to your email"}), 200
 
     except Exception as e:
         print(f"❌ Forgot Password Error: {str(e)}")
-        return jsonify({"success": False, "message": "Failed to send email"}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/web/reset-password/<token>', methods=['GET', 'POST'])
 def web_reset_password(token):
@@ -348,61 +379,52 @@ def web_reset_password(token):
 
 @app.route('/api/contact-inquiry', methods=['POST', 'OPTIONS'])
 def contact_inquiry():
-    if request.method == 'OPTIONS':
+    if request.method == 'OPTIONS': 
         return jsonify({"status": "ok"}), 200
-        
     try:
-        data = request.get_json()
-        receiver_email = data.get('email') # Team member email
-        member_name = data.get('name')     # Team member name
+        data = request.get_json() or {}
+        receiver_email = data.get('email')
+        member_name = data.get('name')
         customer_name = data.get('customer_name', 'A Visitor')
         customer_email = data.get('customer_email', 'Not provided')
 
-        subject = f"🚨 Profile Activity Alert: {customer_name} wants to connect!"
+        # --- BREVO API LOGIC ---
+        api_key = os.getenv('BREVO_API_KEY')
+        url = "https://api.brevo.com/v3/smtp/email"
         
-        # --- HTML EMAIL TEMPLATE ---
-        html_body = f"""
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-            <!-- Header -->
-            <div style="background-color: #5B8E55; padding: 25px; text-align: center; color: white;">
-                <h2 style="margin: 0; font-size: 24px;">New Connection Request</h2>
-            </div>
-            
-            <!-- Body -->
-            <div style="padding: 30px; color: #333333; line-height: 1.6;">
-                <p style="font-size: 16px;">Hello <strong>{member_name}</strong>,</p>
-                <p style="font-size: 15px;">Someone is interested in your gardening expertise! A user has just viewed your profile on <strong>Plantio App</strong> and is trying to reach out to you.</p>
-                
-                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 5px solid #5B8E55; margin: 25px 0;">
-                    <h4 style="margin-top: 0; color: #5B8E55; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Visitor Information</h4>
-                    <p style="margin: 8px 0;"><strong>Name:</strong> {customer_name}</p>
-                    <p style="margin: 8px 0;"><strong>Email:</strong> <a href="mailto:{customer_email}" style="color: #5B8E55; text-decoration: none;">{customer_email}</a></p>
-                </div>
-                
-                <p style="font-size: 14px; color: #666666;">You can respond to this inquiry by clicking the button below to start an email conversation.</p>
-                
-                <div style="text-align: center; margin-top: 35px;">
-                    <a href="mailto:{customer_email}" style="background-color: #5B8E55; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Reply to {customer_name}</a>
-                </div>
-            </div>
-            
-            <!-- Footer -->
-            <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 12px; color: #888888; border-top: 1px solid #eeeeee;">
-                <p style="margin: 0;">Automated Notification from Plantio Support System</p>
-                <p style="margin: 5px 0;">Sent on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            </div>
-        </div>
-        """
+        headers = {
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        }
 
-        msg = Message(subject, recipients=[receiver_email])
-        msg.html = html_body # Set the HTML content
-        mail.send(msg)
+        payload = {
+            "sender": {"name": "Plantio Support", "email": "umermoazzam2@gmail.com"},
+            "to": [{"email": receiver_email, "name": member_name}],
+            "subject": f"Plantio: {customer_name} wants to connect!",
+            "htmlContent": f"""
+                <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: #5B8E55;">New Connection Request</h2>
+                    <p>Hi <b>{member_name}</b>,</p>
+                    <p><b>{customer_name}</b> ({customer_email}) is interested in your profile on Plantio.</p>
+                    <br>
+                    <a href="mailto:{customer_email}" style="background: #5B8E55; color: white; padding: 10px 20px; text-decoration: none; border-radius: 50px;">Reply to Customer</a>
+                </div>
+            """
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
         
-        print(f"✅ Professional HTML Alert sent to {member_name}")
-        return jsonify({"success": True, "message": "Interest notified!"}), 200
+        if response.status_code in [200, 201, 202]:
+            print(f"✅ Email sent successfully to {receiver_email} via Brevo")
+            return jsonify({"success": True, "message": "Inquiry sent!"}), 200
+        else:
+            print(f"❌ Brevo Error: {response.text}")
+            return jsonify({"success": False, "message": "Email provider error"}), 500
+
     except Exception as e:
-        print(f"❌ Mail Error: {str(e)}")
-        return jsonify({"success": False, "message": "Server Error"}), 500
+        print(f"❌ Error: {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
     
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=7860)
