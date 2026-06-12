@@ -265,22 +265,45 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
 
   Future<void> _sendOfficialEmail(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    final String cName = prefs.getString('userName') ?? "A Plantio User";
-    final String cEmail = prefs.getString('userEmail') ?? "No Email Available";
+    final String cName = prefs.getString('userName') ?? prefs.getString('name') ?? "A Plantio User";
+    final String cEmail = prefs.getString('userEmail') ?? prefs.getString('email') ?? "No Email Available";
     const String apiUrl = "https://umermoazzam-plantio-backend.hf.space/api/contact-inquiry";
+
+    // ✅ NEW: SHOW SENDING SNACKBAR
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Sending inquiry to ${widget.name}..."),
+        backgroundColor: primaryGreen,
+        duration: const Duration(seconds: 2),
+      ),
+    );
 
     try {
       final response = await http.post(Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": widget.email, "name": widget.name, "customer_name": cName, "customer_email": cEmail}),
       );
+
       if (response.statusCode == 200) {
         if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide sending snackbar
           _showSuccessDialog(context);
+        }
+      } else {
+        // ✅ NEW: SHOW ERROR SNACKBAR IF SERVER RETURNS ERROR
+        final errorData = jsonDecode(response.body);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: ${errorData['message']}"), backgroundColor: Colors.redAccent),
+          );
         }
       }
     } catch (e) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Server error")));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Connection error: $e"), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
 

@@ -38,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    // Reliability ke liye direct auth se bhi email utha sakte hain
     final User? user = FirebaseAuth.instance.currentUser;
     
     setState(() {
@@ -143,8 +142,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 🔍 DUAL-OWNER ADMIN ACCESS LOGIC (Strict Authorization)
-    // Primary source: SharedPreferences | Fallback: FirebaseAuth
     final String emailFromPrefs = _userEmail.toLowerCase().trim();
     final String emailFromFirebase = (FirebaseAuth.instance.currentUser?.email ?? "").toLowerCase().trim();
     final String authorizedEmail = emailFromPrefs.isNotEmpty ? emailFromPrefs : emailFromFirebase;
@@ -156,7 +153,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white, // ✅ ADDED: Prevents color tinting on scroll
         elevation: 0,
+        scrolledUnderElevation: 0, // ✅ ADDED: Ensures no elevation shadow on scroll
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -202,7 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(_userEmail, style: GoogleFonts.inter(fontSize: 14, color: textGrey)),
             const SizedBox(height: 30),
 
-            // ✅ UPDATED ADMIN PANEL BUTTON (Now visible to Beelal too)
             if (isAdmin) 
               Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
@@ -239,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {}),
             _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
             _buildProfileOption(Icons.contact_support_outlined, "Contact Us", () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
             }),
 
             const SizedBox(height: 30),

@@ -49,21 +49,17 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFCFB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent, elevation: 0, toolbarHeight: 80, leadingWidth: 70,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Center(
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: lightGreenBg, shape: BoxShape.circle),
-                child: const Icon(Icons.chevron_left, color: Colors.black, size: 28),
-              ),
-            ),
-          ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white, // ✅ MATCHING PROFILE SCREEN
+        elevation: 0,
+        scrolledUnderElevation: 0, // ✅ MATCHING PROFILE SCREEN
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20), // ✅ MATCHING PROFILE SCREEN BACK BUTTON
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text('My Cart', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text('My Cart', 
+          style: GoogleFonts.inter(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600) // ✅ MATCHING PROFILE SCREEN STYLE
+        ),
         centerTitle: true,
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.black)),
@@ -100,7 +96,6 @@ class _CartScreenState extends State<CartScreen> {
                         ],
                       ),
                       GestureDetector(
-                        // ✅ UPDATED CHECKOUT LOGIC
                         onTap: () async {
                           if (selectedIndices.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select at least one item")));
@@ -108,22 +103,18 @@ class _CartScreenState extends State<CartScreen> {
                           }
                           
                           try {
-                            // Collect only selected items
                             List<Map<String, dynamic>> selectedItemsData = selectedIndices.map((i) => items[i]).toList();
 
-                            // Save to Firestore 'orders' collection
                             await FirebaseFirestore.instance.collection('orders').add({
-                              'userName': 'Guest User', // Change this to real user name if available
+                              'userName': 'Guest User', 
                               'totalPrice': _calculateTotal().toStringAsFixed(0),
                               'items': selectedItemsData,
                               'status': 'Pending',
                               'orderDate': FieldValue.serverTimestamp(),
                             });
 
-                            // UI Feedback
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order Placed Successfully!")));
 
-                            // Reset Cart
                             setState(() {
                               CartScreen.cartItems.clear();
                               selectedIndices.clear();
