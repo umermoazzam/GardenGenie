@@ -6,8 +6,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
-  // Note: Mobile ke liye clientId aksar zaroori nahi hota (json se uthata hai) 
-  // lekin agar aapne likha hai toh koi masla nahi.
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: '190765752610-ifkpd06qotkppbks3pkradm2eh0eu8np.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
@@ -63,19 +61,19 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // ✅ FIX: disconnect() ki wajah se "Failed to disconnect" error aata hai.
-      // Hum sirf signOut() use karenge jo purane session ko clear kar deta hai bina error diye.
+      // Clear previous sessions for a fresh account picker
       try {
         await _googleSignIn.signOut();
         await _auth.signOut();
       } catch (e) {
-        // Agar pehle se logged in nahi hai toh error ignore karein
+        // Silently ignore if no user was signed in
       }
       
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
+      // ✅ Handle case where user closes the picker on Mobile (returns null)
       if (googleUser == null) {
-        return null; // User ne cancel kar diya
+        return null; 
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -115,8 +113,15 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
-      print("Actual Google Error: $e"); // Debugging ke liye
-      if (e.toString().contains('sign_in_failed')) {
+      // ✅ Handle case where user closes the popup on Web (throws Exception)
+      String errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('popup_closed') || errorStr.contains('canceled')) {
+        print("User closed the Google Sign-in popup manually.");
+        return null; // Return null so no error dialog is triggered in UI
+      }
+
+      print("Actual Google Error: $e"); 
+      if (errorStr.contains('sign_in_failed')) {
         throw 'Google Sign-In failed. Please ensure:\n'
             '1. SHA-1 certificate is added to Firebase\n'
             '2. Support Email is set in Firebase settings\n'
