@@ -31,9 +31,9 @@ CORS(app)
 # ✅ FIXED MAIL CONFIGURATION FOR CLOUD (HF)
 # ==========================================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587             # 465 ko 587 kar dein
-app.config['MAIL_USE_TLS'] = True         # False ko True kar dein
-app.config['MAIL_USE_SSL'] = False        # True ko False kar dein
+app.config['MAIL_PORT'] = 587             
+app.config['MAIL_USE_TLS'] = True         
+app.config['MAIL_USE_SSL'] = False        
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
@@ -49,53 +49,27 @@ s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 # --- Groq Configuration ---
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-
 GROQ_TEXT_MODEL = "llama-3.1-8b-instant"
-GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview" # Optimized for vision
+GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview" 
 
 def call_groq_ai(prompt, image_base64=None):
-    """Groq API Call Helper with Debugging"""
     url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     model = GROQ_VISION_MODEL if image_base64 else GROQ_TEXT_MODEL
-      
     messages = []
     if image_base64:
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + image_base64}}
-            ]
-        }]
+        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + image_base64}}]}]
     else:
-        messages = [
-            {"role": "system", "content": "Your name is Garden Genie. You are a friendly gardening assistant. Plain text only."},
-            {"role": "user", "content": prompt}
-        ]
-
+        messages = [{"role": "system", "content": "Your name is Garden Genie. You are a friendly gardening assistant. Plain text only."}, {"role": "user", "content": prompt}]
     payload = {"model": model, "messages": messages, "temperature": 0.7}
-
     try:
         response = requests.post(url, json=payload, headers=headers)
         res_json = response.json()
-        
-        # --- DEBUGGING START ---
-        if 'choices' not in res_json:
-            print(f"❌ Groq API Error Response: {res_json}")
-            error_msg = res_json.get('error', {}).get('message', 'Unknown API Error')
-            return f"AI Error: {error_msg}"
-        # --- DEBUGGING END ---
-        
+        if 'choices' not in res_json: return f"AI Error: {res_json.get('error', {}).get('message', 'Unknown API Error')}"
         return res_json['choices'][0]['message']['content']
-    except Exception as e:
-        return f"AI Error: {str(e)}"
+    except Exception as e: return f"AI Error: {str(e)}"
     
-# --- ML Model Loading (MobileNetV2) ---
+# --- ML Model Loading ---
 print("🔍 Loading Disease model...")
 model_path = "disease_model"
 data_transforms = transforms.Compose([
@@ -103,13 +77,11 @@ data_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
-
 try:
     model = MobileNetV2ForImageClassification.from_pretrained(model_path)
     model.eval()
     print("🚀 Disease model loaded successfully!")
 except Exception as e:
-    print(f"❌ Model Error: {e}")
     model = None
 
 # --- MongoDB Atlas ---
@@ -124,34 +96,16 @@ except Exception as e:
     print(f"❌ DB Error: {e}")
 
 # --- Helper Functions ---
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-def verify_password(password: str, hashed: bytes) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed)
-
+def hash_password(password: str) -> str: return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+def verify_password(password: str, hashed: bytes) -> bool: return bcrypt.checkpw(password.encode('utf-8'), hashed)
 def validate_leaf_gate(image_bytes: bytes) -> bool:
     if not GROQ_API_KEY: return True
-    
-    prompt = "Is this a plant leaf or part of a plant? Answer with ONLY 'YES' or 'NO'. If it is a person, object, or animal, say 'NO'."
-    
+    prompt = "Is this a plant leaf or part of a plant? Answer with ONLY 'YES' or 'NO'."
     try:
         img_b64 = base64.b64encode(image_bytes).decode('utf-8')
         res = call_groq_ai(prompt, img_b64).strip().upper()
-        
-        print(f"DEBUG: Groq Vision Response -> '{res}'") 
-        
-        if res.startswith("AI ERROR"):
-            print(f"⚠️  Vision API failed, falling back to ML model")
-            return True
-        
-        if "YES" in res or "LEAF" in res:
-            return True
-        
-        return False
-    except Exception as e:
-        print(f"❌ Gate Error: {e}")
-        return True
+        return "YES" in res or "LEAF" in res
+    except: return True
 
 RESET_FORM_HTML = """
 <!DOCTYPE html>
@@ -179,17 +133,10 @@ RESET_FORM_HTML = """
     <div class="card">
         <div class="logo-circle">🌿</div>
         <h2>Reset Password</h2>
-        <p>Set a new password for your Plantio account.</p>
         <form method="POST">
-            <div class="input-group">
-                <label>New Password</label>
-                <input type="password" name="password" id="p1" placeholder="••••••••" required>
-            </div>
-            <div class="input-group">
-                <label>Confirm Password</label>
-                <input type="password" id="p2" placeholder="••••••••" required oninput="check()">
-            </div>
-            <p id="msg" style="color:red; font-size:12px; margin-top:-10px; display:none;">Passwords do not match</p>
+            <div class="input-group"><label>New Password</label><input type="password" name="password" id="p1" required></div>
+            <div class="input-group"><label>Confirm Password</label><input type="password" id="p2" required oninput="check()"></div>
+            <p id="msg" style="color:red; font-size:12px; display:none;">Passwords do not match</p>
             <button type="submit" id="btn">UPDATE PASSWORD</button>
         </form>
     </div>
@@ -198,9 +145,8 @@ RESET_FORM_HTML = """
             var p1 = document.getElementById('p1').value;
             var p2 = document.getElementById('p2').value;
             var btn = document.getElementById('btn');
-            var msg = document.getElementById('msg');
-            if(p1 != p2) { btn.disabled = true; msg.style.display='block'; btn.style.opacity='0.5'; }
-            else { btn.disabled = false; msg.style.display='none'; btn.style.opacity='1'; }
+            if(p1 != p2) { btn.disabled = true; document.getElementById('msg').style.display='block'; }
+            else { btn.disabled = false; document.getElementById('msg').style.display='none'; }
         }
     </script>
 </body>
@@ -213,12 +159,9 @@ RESET_FORM_HTML = """
 def predict():
     if model is None: return jsonify({"error": "Model not loaded"}), 500
     if 'file' not in request.files: return jsonify({"error": "No file"}), 400
-    
     file_bytes = request.files['file'].read()
-    
     if not validate_leaf_gate(file_bytes):
         return jsonify({"disease": "This image is not a plant leaf.", "confidence": 0.0, "status": "rejected"}), 200
-
     try:
         image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
         img_tensor = data_transforms(image).unsqueeze(0)
@@ -227,13 +170,10 @@ def predict():
             probs = F.softmax(outputs.logits, dim=-1)
             idx = torch.argmax(probs, dim=-1).item()
             conf = probs[0][idx].item()
-        
         labels = getattr(model.config, "id2label", {})
         label = labels.get(idx, labels.get(str(idx), "Unknown"))
-
         return jsonify({"disease": label, "confidence": round(conf * 100, 2), "status": "success"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
@@ -242,22 +182,12 @@ def chat():
         data = request.get_json()
         msg = data.get('message', '')
         uid = data.get('userId', 'test_user')
-        
         if not msg: return jsonify({"reply": "Message empty"}), 400
-        
         reply = call_groq_ai(msg)
         clean_reply = reply.replace("**", "").replace("*", "").strip()
-
-        chat_history_collection.insert_one({
-            "user_id": uid,
-            "user_message": msg,
-            "ai_reply": clean_reply,
-            "timestamp": datetime.utcnow()
-        })
-
+        chat_history_collection.insert_one({"user_id": uid, "user_message": msg, "ai_reply": clean_reply, "timestamp": datetime.utcnow()})
         return jsonify({"reply": clean_reply}), 200
-    except Exception as e:
-        return jsonify({"reply": f"AI Error: {str(e)}"}), 500
+    except Exception as e: return jsonify({"reply": f"AI Error: {str(e)}"}), 500
 
 @app.route('/api/chat-history/<user_id>', methods=['GET'])
 def get_chat_history(user_id):
@@ -283,15 +213,8 @@ def get_all_products():
 def register():
     data = request.get_json()
     email = data['email'].strip().lower()
-    if users_collection.find_one({"email": email}):
-        return jsonify({"success": False}), 400
-
-    users_collection.insert_one({
-        "name": data['name'],
-        "email": email,
-        "password": hash_password(data['password']),
-        "created_at": datetime.utcnow()
-    })
+    if users_collection.find_one({"email": email}): return jsonify({"success": False}), 400
+    users_collection.insert_one({"name": data['name'], "email": email, "password": hash_password(data['password']), "created_at": datetime.utcnow()})
     return jsonify({"success": True}), 201
 
 @app.route('/api/login', methods=['POST'])
@@ -299,18 +222,8 @@ def login():
     data = request.get_json()
     email = data['email'].strip().lower()
     user = users_collection.find_one({"email": email})
-
-    if not user or not verify_password(data['password'], user['password']):
-        return jsonify({"success": False}), 401
-
-    return jsonify({
-        "success": True,
-        "user": {
-            "id": str(user['_id']),
-            "name": user['name'],
-            "email": user['email']
-        }
-    }), 200
+    if not user or not verify_password(data['password'], user['password']): return jsonify({"success": False}), 401
+    return jsonify({"success": True, "user": {"id": str(user['_id']), "name": user['name'], "email": user['email']}}), 200
 
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
@@ -322,60 +235,64 @@ def forgot_password():
             return jsonify({"success": False, "message": "Email not found"}), 404
 
         token = s.dumps(email, salt='password-reset-salt')
-        # NGROK_URL ki jagah Hugging Face ka link bhi ho sakta hai
         link = f"{os.getenv('NGROK_URL')}/web/reset-password/{token}"
+        timestamp = datetime.utcnow().strftime("%B %d, %Y")
 
         api_key = os.getenv('BREVO_API_KEY')
         url = "https://api.brevo.com/v3/smtp/email"
-        
-        headers = {
-            "api-key": api_key,
-            "content-type": "application/json",
-            "accept": "application/json"
-        }
+        headers = {"api-key": api_key, "content-type": "application/json"}
+
+        # High-End Professional Template
+        html_body = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; background: #ffffff; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+            <div style="background: #5B8E55; padding: 30px; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.5px;">Password Reset</h2>
+            </div>
+            
+            <div style="padding: 40px;">
+                <p style="color: #24292e; font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+                <p style="color: #586069; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+                    We received a request to reset your password for your <strong>Plantio</strong> account. If you didn't make this request, please ignore this email.
+                </p>
+
+                <div style="text-align: center; margin: 40px 0;">
+                    <a href="{link}" style="background: #5B8E55; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Reset Password</a>
+                </div>
+                
+                <p style="color: #999; font-size: 13px; text-align: center;">This link will expire in 30 minutes.</p>
+            </div>
+
+            <div style="background: #fcfcfc; padding: 20px; text-align: center; border-top: 1px solid #e1e4e8; color: #a1a1a1; font-size: 11px;">
+                <p style="margin: 0;">Plantio Security System • {timestamp}</p>
+            </div>
+        </div>
+        """
 
         payload = {
-            "sender": {"name": "Plantio Support", "email": "umermoazzam2@gmail.com"},
+            "sender": {"name": "Plantio Security", "email": "umermoazzam2@gmail.com"},
             "to": [{"email": email}],
-            "subject": "Reset Your Plantio Password",
-            "htmlContent": f"""
-            <div style="font-family: sans-serif; padding: 20px;">
-                <h2>Password Reset Request</h2>
-                <p>Click the button below to reset your password. This link is valid for 30 minutes.</p>
-                <a href="{link}" style="background: #5B8E55; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
-                <p>If you didn't request this, please ignore this email.</p>
-            </div>
-            """
+            "subject": "Reset your Plantio password",
+            "htmlContent": html_body
         }
-
+        
         requests.post(url, json=payload, headers=headers)
-        return jsonify({"success": True, "message": "Reset link sent to your email"}), 200
-
+        return jsonify({"success": True, "message": "Reset link sent"}), 200
+        
     except Exception as e:
-        print(f"❌ Forgot Password Error: {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/web/reset-password/<token>', methods=['GET', 'POST'])
 def web_reset_password(token):
-    try:
-        email = s.loads(token, salt='password-reset-salt', max_age=1800)
-    except:
-        return "Link expired"
-
+    try: email = s.loads(token, salt='password-reset-salt', max_age=1800)
+    except: return "Link expired"
     if request.method == 'POST':
-        users_collection.update_one(
-            {"email": email},
-            {"$set": {"password": hash_password(request.form.get('password'))}}
-        )
-        # --- SUCCESS HTML RESPONSE ---
-        return '<div style="text-align:center; padding:50px; font-family:sans-serif;"><h2>✅ Password Updated!</h2><p>You can now login from the app.</p></div>'
-
+        users_collection.update_one({"email": email}, {"$set": {"password": hash_password(request.form.get('password'))}})
+        return "Password Updated!"
     return RESET_FORM_HTML
 
-
-# =========================
-# ✅ PROFESSIONAL HTML CONTACT INQUIRY
-# ==========================
+# ==========================================================
+# ✅ UPDATED: HIGH-END PROFESSIONAL UI/UX EMAIL (EXACT TEMPLATE)
+# ==========================================================
 
 @app.route('/api/contact-inquiry', methods=['POST', 'OPTIONS'])
 def contact_inquiry():
@@ -387,43 +304,61 @@ def contact_inquiry():
         member_name = data.get('name')
         customer_name = data.get('customer_name', 'A Visitor')
         customer_email = data.get('customer_email', 'Not provided')
+        timestamp = datetime.utcnow().strftime("%B %d, %Y at %H:%M UTC")
 
-        # --- BREVO API LOGIC ---
         api_key = os.getenv('BREVO_API_KEY')
         url = "https://api.brevo.com/v3/smtp/email"
-        
-        headers = {
-            "accept": "application/json",
-            "api-key": api_key,
-            "content-type": "application/json"
-        }
+        headers = {"accept": "application/json", "api-key": api_key, "content-type": "application/json"}
+
+        # Professional High-End Template
+        html_body = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; background: #ffffff; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+            <div style="background: #5B8E55; padding: 30px; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.5px;">New Connection Request</h2>
+            </div>
+            
+            <div style="padding: 40px;">
+                <p style="color: #24292e; font-size: 16px; margin-bottom: 20px;">Hello <strong>{member_name}</strong>,</p>
+                <p style="color: #586069; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+                    A visitor is interested in your Plantio profile. Here are the details of the request:
+                </p>
+
+                <div style="background: #f6f8fa; padding: 20px; border-radius: 8px; border: 1px solid #e1e4e8;">
+                    <div style="margin-bottom: 15px;">
+                        <span style="display: block; color: #586069; font-size: 12px; text-transform: uppercase; font-weight: bold;">Visitor Name</span>
+                        <span style="color: #24292e; font-size: 15px; font-weight: 500;">{customer_name}</span>
+                    </div>
+                    <div>
+                        <span style="display: block; color: #586069; font-size: 12px; text-transform: uppercase; font-weight: bold;">Email Address</span>
+                        <span style="color: #24292e; font-size: 15px; font-weight: 500;">{customer_email}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center;">
+                    <a href="mailto:{customer_email}" style="background: #5B8E55; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Reply to {customer_name}</a>
+                </div>
+            </div>
+
+            <div style="background: #fcfcfc; padding: 20px; text-align: center; border-top: 1px solid #e1e4e8; color: #a1a1a1; font-size: 11px;">
+                <p style="margin: 0;">Plantio Connection System • {timestamp}</p>
+            </div>
+        </div>
+        """
 
         payload = {
-            "sender": {"name": "Plantio Support", "email": "umermoazzam2@gmail.com"},
+            "sender": {"name": "Plantio System", "email": "umermoazzam2@gmail.com"},
             "to": [{"email": receiver_email, "name": member_name}],
-            "subject": f"Plantio: {customer_name} wants to connect!",
-            "htmlContent": f"""
-                <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
-                    <h2 style="color: #5B8E55;">New Connection Request</h2>
-                    <p>Hi <b>{member_name}</b>,</p>
-                    <p><b>{customer_name}</b> ({customer_email}) is interested in your profile on Plantio.</p>
-                    <br>
-                    <a href="mailto:{customer_email}" style="background: #5B8E55; color: white; padding: 10px 20px; text-decoration: none; border-radius: 50px;">Reply to Customer</a>
-                </div>
-            """
+            "subject": f"🚨 New Connection Request | {customer_name} wants to connect!",
+            "htmlContent": html_body
         }
 
         response = requests.post(url, json=payload, headers=headers)
         
-        if response.status_code in [200, 201, 202]:
-            print(f"✅ Email sent successfully to {receiver_email} via Brevo")
-            return jsonify({"success": True, "message": "Inquiry sent!"}), 200
+        if response.status_code >= 200 and response.status_code < 300:
+            return jsonify({"success": True}), 200
         else:
-            print(f"❌ Brevo Error: {response.text}")
-            return jsonify({"success": False, "message": "Email provider error"}), 500
-
+            return jsonify({"success": False, "message": "API Error"}), 500
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
     
 if __name__ == '__main__':

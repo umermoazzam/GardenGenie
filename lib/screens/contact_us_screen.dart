@@ -5,10 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart'; // ✅ Required for calling and web functionality
+import 'package:url_launcher/url_launcher.dart'; 
 import 'dart:convert';
 
-// ✅ CONVERTED TO STATEFULWIDGET TO HANDLE LIVE REFRESH
 class ContactUsScreen extends StatefulWidget {
   const ContactUsScreen({super.key});
 
@@ -39,7 +38,6 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     });
   }
 
-  // ✅ UPDATED: LAUNCHES OFFICIAL PLANTIO.PK INSTAGRAM PAGE
   Future<void> _launchInstagram() async {
     const String instagramUrl = "https://www.instagram.com/plantio.pk/"; 
     final Uri url = Uri.parse(instagramUrl);
@@ -101,8 +99,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: _launchInstagram, // ✅ Updated Clickable action
-                        child: _buildSocialIcon("assets/icons/instagram.png"), // 👈 Used image asset path
+                        onTap: _launchInstagram,
+                        child: _buildSocialIcon("assets/icons/instagram.png"),
                       ),
                     ],
                   ),
@@ -120,7 +118,6 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     return Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 24)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)), Text(subtitle, style: GoogleFonts.inter(fontSize: 14, color: textGrey))])]);
   }
 
-  // ✅ UPDATED: Helper now accepts asset path String
   Widget _buildSocialIcon(String assetPath) {
     return Container(
       padding: const EdgeInsets.all(10), 
@@ -128,7 +125,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         shape: BoxShape.circle, 
         border: Border.all(color: Colors.grey.withOpacity(0.2))
       ), 
-      child: Image.asset(assetPath, width: 22, height: 22), // Custom asset image
+      child: Image.asset(assetPath, width: 22, height: 22),
     );
   }
 
@@ -200,18 +197,9 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
   }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch phone dialer")),
-        );
-      }
     }
   }
 
@@ -230,24 +218,13 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: primaryGreen.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), shape: BoxShape.circle),
                 child: Icon(Icons.mark_email_read_outlined, color: primaryGreen, size: 40),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Inquiry Sent!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
+              Text('Inquiry Sent!', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 12),
-              Text(
-                'The team member has been notified about your interest.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.4),
-              ),
+              Text('The team member has been notified about your interest.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.4)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -269,14 +246,7 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
     final String cEmail = prefs.getString('userEmail') ?? prefs.getString('email') ?? "No Email Available";
     const String apiUrl = "https://umermoazzam-plantio-backend.hf.space/api/contact-inquiry";
 
-    // ✅ NEW: SHOW SENDING SNACKBAR
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Sending inquiry to ${widget.name}..."),
-        backgroundColor: primaryGreen,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    // ✅ SNACKBAR REMOVED AS REQUESTED
 
     try {
       final response = await http.post(Uri.parse(apiUrl),
@@ -286,11 +256,9 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
 
       if (response.statusCode == 200) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide sending snackbar
           _showSuccessDialog(context);
         }
       } else {
-        // ✅ NEW: SHOW ERROR SNACKBAR IF SERVER RETURNS ERROR
         final errorData = jsonDecode(response.body);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -363,7 +331,6 @@ class _TeamMemberProfileScreenState extends State<TeamMemberProfileScreen> {
           const SizedBox(height: 4),
           Text("Team Member", style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 40),
-          
           _buildDetailTile(Icons.email_outlined, "Email Address", widget.email, onTap: () => _sendOfficialEmail(context)),
           _buildDetailTile(Icons.phone_outlined, "Phone Number", widget.phone, onTap: () => _makePhoneCall(widget.phone)),
           _buildDetailTile(Icons.work_outline, "Department", "Plant Care Specialist"),

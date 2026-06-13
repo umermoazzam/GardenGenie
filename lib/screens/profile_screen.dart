@@ -7,9 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
-// ✅ ADDED IMPORT (Contact Us & Admin Dashboard)
+// ✅ ADDED IMPORTS
 import 'contact_us_screen.dart';
 import 'admin_screen.dart'; 
+import 'history_screen.dart'; // <--- History Screen import add kar diya gaya hai
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -153,9 +154,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white, // ✅ ADDED: Prevents color tinting on scroll
+        surfaceTintColor: Colors.white, 
         elevation: 0,
-        scrolledUnderElevation: 0, // ✅ ADDED: Ensures no elevation shadow on scroll
+        scrolledUnderElevation: 0, 
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -233,7 +234,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
 
             _buildProfileOption(Icons.shopping_bag_outlined, "My Orders", () {}),
-            _buildProfileOption(Icons.history, "History", () {}),
+            
+            // ✅ UPDATED: History Button now navigates to HistoryScreen
+            _buildProfileOption(Icons.history, "History", () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => const HistoryScreen()),
+              );
+            }),
+
             _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {}),
             _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
             _buildProfileOption(Icons.contact_support_outlined, "Contact Us", () {

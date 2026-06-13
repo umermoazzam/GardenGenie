@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Firestore for persistence
 import 'home_screen.dart';
 import 'api_service.dart'; 
-import 'cart_screen.dart'; // ✅ Import CartScreen
-import 'rental_services_screen.dart'; // ✅ Import RentalServicesScreen
+import 'cart_screen.dart'; 
+import 'rental_services_screen.dart'; 
+import 'history_screen.dart'; 
 
 class PlantChatApp extends StatelessWidget {
   const PlantChatApp({Key? key}) : super(key: key);
@@ -34,7 +36,10 @@ class IndividualChatScreen extends StatefulWidget {
 
 class _IndividualChatScreenState extends State<IndividualChatScreen> {
   bool _isDarkMode = false;
+  final TextEditingController _messageController = TextEditingController();
+  bool _isLoading = false;
 
+  // Colors for Themes
   Color get _bgColor => _isDarkMode ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
   Color get _appBarColor => _isDarkMode ? const Color(0xFF1F1F1F) : Colors.white;
   Color get _textColor => _isDarkMode ? Colors.white : const Color(0xFF1B1E28);
@@ -42,43 +47,9 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Color get _userBubbleColor => _isDarkMode ? const Color(0xFF2D4B2D) : const Color(0xFFECFFEA);
   Color get _inputBgColor => _isDarkMode ? const Color(0xFF1F1F1F) : const Color(0xFFF5F5F5);
 
-  final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, String>> _messages = []; 
-  bool _isLoading = false;
-
   @override
   void initState() {
     super.initState();
-    _loadChatHistory();
-  }
-
-  Future<void> _loadChatHistory() async {
-    setState(() => _isLoading = true);
-    try {
-      final history = await ApiService.getChatHistory(widget.userId);
-      setState(() {
-        _messages.clear();
-        if (history.isEmpty) {
-          _messages.add({
-            'role': 'ai',
-            'message': 'Hello! I am Garden Genie. How can I help you today?',
-            'time': 'Just now'
-          });
-        } else {
-          for (var item in history) {
-            _messages.add({
-              'role': item['role'],
-              'message': item['message'],
-              'time': item['time']
-            });
-          }
-        }
-      });
-    } catch (e) {
-      print("History load error: $e");
-    } finally {
-      setState(() => _isLoading = false);
-    }
   }
 
   Future<void> _showClearChatDialog() async {
@@ -113,10 +84,16 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Future<void> _performClearChat() async {
     setState(() => _isLoading = true);
     try {
+      var snapshots = await FirebaseFirestore.instance
+          .collection('chats')
+          .where('userId', isEqualTo: widget.userId)
+          .get();
+      
+      for (var doc in snapshots.docs) {
+        await doc.reference.delete();
+      }
+      
       await ApiService.clearChatHistory(widget.userId); 
-      setState(() {
-        _messages.clear(); 
-      });
     } catch (e) {
       print("Error clearing chat: $e");
     } finally {
@@ -126,23 +103,54 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
 
   Future<void> _handleSend() async {
     if (_messageController.text.trim().isEmpty) return;
+    
     final userMessage = _messageController.text;
-    final currentTime = "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}";
-    setState(() {
-      _messages.add({'role': 'user', 'message': userMessage, 'time': currentTime});
-      _isLoading = true;
-    });
+    final timestamp = FieldValue.serverTimestamp();
+    final timeString = "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}";
+
+    setState(() => _isLoading = true);
     _messageController.clear();
+
     try {
+      var historyCheck = await FirebaseFirestore.instance
+          .collection('history')
+          .where('userId', isEqualTo: widget.userId)
+          .where('type', isEqualTo: 'chat')
+          .limit(1)
+          .get();
+
+      if (historyCheck.docs.isEmpty) {
+        await FirebaseFirestore.instance.collection('history').add({
+          'userId': widget.userId,
+          'type': 'chat',
+          'title': 'AI Assistant Conversation',
+          'result': 'Gardening Inquiry',
+          'imageUrl': '',
+          'timestamp': timestamp,
+        });
+      }
+
+      await FirebaseFirestore.instance.collection('chats').add({
+        'userId': widget.userId,
+        'role': 'user',
+        'message': userMessage,
+        'time': timeString,
+        'timestamp': timestamp,
+      });
+
       final data = await ApiService.sendMessage(message: userMessage, userId: widget.userId);
-      String aiMessage = data['reply'] ?? "No response from AI.";
-      setState(() {
-        _messages.add({'role': 'ai', 'message': aiMessage.trim(), 'time': currentTime});
+      String aiReply = (data['reply'] ?? "No response from AI.").trim();
+
+      await FirebaseFirestore.instance.collection('chats').add({
+        'userId': widget.userId,
+        'role': 'ai',
+        'message': aiReply,
+        'time': timeString,
+        'timestamp': timestamp,
       });
+
     } catch (e) {
-      setState(() {
-        _messages.add({'role': 'ai', 'message': "Sorry, I'm having trouble connecting to the server.", 'time': "Error"});
-      });
+      print("Chat Save Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -205,14 +213,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               },
               itemBuilder: (BuildContext context) => [
                 _buildPopupItem(_isDarkMode ? Icons.light_mode : Icons.dark_mode, _isDarkMode ? "Light Theme" : "Dark Theme", "theme"),
-                _buildPopupItem(Icons.info_outline, "Contact info", "info"),
-                _buildPopupItem(Icons.check_circle_outline, "Select messages", "select"),
-                _buildPopupItem(Icons.notifications_off_outlined, "Mute notifications", "mute"),
-                _buildPopupItem(Icons.close, "Close chat", "close"),
-                _buildPopupItem(Icons.report_problem_outlined, "Report", "report"),
-                _buildPopupItem(Icons.block, "Block", "block"),
                 _buildPopupItem(Icons.delete_sweep_outlined, "Clear chat", "clear"), 
-                _buildPopupItem(Icons.delete_outline, "Delete chat", "delete"),
               ],
             ),
           ),
@@ -221,16 +222,38 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 32, bottom: 16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final chat = _messages[index];
-                if (chat['role'] == 'ai') {
-                  return _buildReceivedMessage(chat['message']!, chat['time']!);
-                } else {
-                  return _buildSentMessage(chat['message']!, chat['time']!);
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('chats')
+                  .where('userId', isEqualTo: widget.userId)
+                  .orderBy('timestamp', descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8C51)));
                 }
+                
+                var docs = snapshot.data!.docs;
+
+                // ✅ Always show welcome message as first item for persistence and alignment
+                return ListView.builder(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 32, bottom: 16),
+                  itemCount: docs.length + 1, // Add 1 for the welcome message
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Initial Welcome Message (Always at the top)
+                      return _buildReceivedMessage('Hello! I am Garden Genie. How can I help you today?', 'Just now');
+                    }
+                    
+                    // Firestore Messages (shifted by 1)
+                    var chat = docs[index - 1].data() as Map<String, dynamic>;
+                    if (chat['role'] == 'ai') {
+                      return _buildReceivedMessage(chat['message']!, chat['time']!);
+                    } else {
+                      return _buildSentMessage(chat['message']!, chat['time']!);
+                    }
+                  },
+                );
               },
             ),
           ),
@@ -431,7 +454,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      // --- UPDATED NAVIGATION BAR TO MATCH HOME SCREEN ---
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onNavBarTapped,
