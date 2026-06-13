@@ -232,8 +232,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-
-            _buildProfileOption(Icons.shopping_bag_outlined, "My Orders", () {}),
             
             // ✅ UPDATED: History Button now navigates to HistoryScreen
             _buildProfileOption(Icons.history, "History", () {
