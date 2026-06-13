@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:http/http.dart' as http; // Added for ImgBB
+import 'dart:convert'; // Added for JSON parsing
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -36,7 +38,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  // Function to upload image to Firebase Storage and Save Product
+  // UPDATED FUNCTION: Uploads to ImgBB instead of Firebase Storage
   Future<void> _publishProduct() async {
     if (_nameController.text.isEmpty || _priceController.text.isEmpty || _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,12 +50,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() => _isUploading = true);
 
     try {
-      // 1. Upload Image to Firebase Storage
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference storageRef = FirebaseStorage.instance.ref().child('product_images/$fileName');
-      UploadTask uploadTask = storageRef.putFile(_selectedImage!);
-      TaskSnapshot snapshot = await uploadTask;
-      String downloadUrl = await snapshot.ref.getDownloadURL();
+      // 1. Upload Image to ImgBB (Free & No Card Needed)
+      var request = http.MultipartRequest('POST', Uri.parse('https://api.imgbb.com/1/upload'));
+      
+      // 👇 YAHAN APNI IMGBB WALI API KEY PASTE KAREIN
+      request.fields['key'] = '07eb6a84c9b0110403a0fb43dc6a7198'; 
+      
+      request.files.add(await http.MultipartFile.fromPath('image', _selectedImage!.path));
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      var jsonData = json.decode(responseData);
+
+      if (response.statusCode != 200) {
+        throw "Upload failed: ${jsonData['error']['message']}";
+      }
+
+      // ImgBB se milne wala direct image link
+      String downloadUrl = jsonData['data']['url'];
 
       // 2. Save Data to Firestore
       await FirebaseFirestore.instance.collection('products').add({
@@ -81,6 +95,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     } catch (e) {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      print("Full Error: $e");
     }
   }
 

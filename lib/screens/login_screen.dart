@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_screen.dart';
@@ -62,7 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 message,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold, // BOLD
+                    color: Colors.black),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -76,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'OK',
                     style: GoogleFonts.inter(
                         color: const Color(0xFF5B8E55),
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.bold, // BOLD
                         fontSize: 16),
                   ),
                 ),
@@ -170,7 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio',
-                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.inter(
+                        fontSize: 24, 
+                        fontWeight: FontWeight.bold // BOLD
+                    ),
                   ),
                 ],
               ),
@@ -179,19 +183,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 text: TextSpan(
                   style: GoogleFonts.inter(
                     fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold, // BOLD
                     color: const Color(0xFF1A1A1A),
                   ),
                   children: [
                     const TextSpan(text: 'Login on '),
-                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
+                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 'Login to your account to continue.',
-                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666)),
+                style: GoogleFonts.inter(
+                    fontSize: 15, 
+                    color: const Color(0xFF666666),
+                    fontWeight: FontWeight.bold // BOLD
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -216,7 +224,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         activeColor: primaryGreen,
                       ),
                       Text('Remember Me',
-                          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
+                          style: GoogleFonts.inter(
+                              fontSize: 14, 
+                              color: const Color(0xFF666666),
+                              fontWeight: FontWeight.bold // BOLD
+                          )),
                     ],
                   ),
                   GestureDetector(
@@ -228,7 +240,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text('Forgot Password?',
                         style: GoogleFonts.inter(
-                            fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
+                            fontSize: 14, 
+                            color: primaryGreen, 
+                            fontWeight: FontWeight.bold // BOLD
+                        )),
                   ),
                 ],
               ),
@@ -242,6 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
                     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    elevation: 0,
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -249,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
+                      : Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
 
@@ -275,7 +291,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     label: Text(
                       'Continue with Google',
-                      style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+                      style: GoogleFonts.inter(
+                          fontSize: 15, 
+                          color: Colors.black87, 
+                          fontWeight: FontWeight.bold // BOLD
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -292,7 +312,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Don\'t have an account? ',
-                      style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
+                      style: GoogleFonts.inter(
+                          fontSize: 14, 
+                          color: const Color(0xFF666666),
+                          fontWeight: FontWeight.bold // BOLD
+                      )),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(
@@ -302,7 +326,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text('Sign up',
                         style: GoogleFonts.inter(
-                            color: primaryGreen, fontWeight: FontWeight.w600)),
+                            color: primaryGreen, 
+                            fontWeight: FontWeight.bold // BOLD
+                        )),
                   ),
                 ],
               ),
@@ -324,16 +350,25 @@ class _LoginScreenState extends State<LoginScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
+      decoration: const BoxDecoration(color: Color(0xFFFAFAFA)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.inter(),
+        // ✅ Typed text is Normal (Simple)
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF1A1A1A),
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
-          prefixIcon: Icon(icon, color: primaryGreen),
+          // ✅ Placeholder (Hint) text is BOLD
+          hintStyle: GoogleFonts.inter(
+            color: Colors.grey[400],
+            fontWeight: FontWeight.bold,
+          ),
+          prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           suffixIcon: isPasswordField
               ? Padding(
                   padding: const EdgeInsets.only(right: 8.0),
@@ -341,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icon(
                       obscureText ? Icons.visibility_off : Icons.visibility,
                       color: primaryGreen,
-                      size: 18,
+                      size: 20,
                     ),
                     onPressed: toggleObscure,
                   ),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
+
 import 'chat_screen.dart';
 import 'blogs_videos_screen.dart';
 import 'rental_services_screen.dart';
@@ -203,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 24),
 
-                // ✅ UPDATED REAL-TIME STREAMBUILDER
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance.collection('products').snapshots(),
                   builder: (context, snapshot) {
@@ -242,18 +242,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         var data = productDocs[index].data() as Map<String, dynamic>;
 
-                        // Mapping data from Firestore
                         String title = data['title'] ?? 'No Title';
                         String imageUrl = data['image'] ?? '';
                         String price = (data['price'] ?? '0').toString();
                         String description = data['description'] ?? 'No description available.';
-                        bool isNew = data['isNew'] ?? false;
                         String subtitle = data['subtitle'] ?? 'Garden Genie Specialist';
+
+                        // ✅ DYNAMIC "NEW" LOGIC:
+                        // Checks if 'createdAt' exists and if it was added within the last 60 minutes.
+                        bool showBadge = false;
+                        if (data['createdAt'] != null) {
+                          Timestamp t = data['createdAt'] as Timestamp;
+                          DateTime date = t.toDate();
+                          DateTime now = DateTime.now();
+                          // Difference less than 1 hour
+                          showBadge = now.difference(date).inMinutes < 60;
+                        }
 
                         return _buildProductCard(
                           imageUrl: imageUrl,
                           title: title,
-                          showNewBadge: isNew,
+                          showNewBadge: showBadge,
                           onTap: () => _navigateToDetails(title, imageUrl, price, description, subtitle),
                         );
                       },

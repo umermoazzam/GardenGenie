@@ -20,12 +20,11 @@ class ProductDetailsScreen extends StatelessWidget {
     required this.subtitle,
   }) : super(key: key);
 
-  // ✅ CUSTOM NOTIFICATION POPUP (Bilkul image jaisa)
   void _showCartNotification(BuildContext context) {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(context).padding.top + 10, // Notch ke bilkul niche
+        top: MediaQuery.of(context).padding.top + 10,
         left: 40,
         right: 40,
         child: Material(
@@ -65,8 +64,6 @@ class ProductDetailsScreen extends StatelessWidget {
     );
 
     overlay.insert(overlayEntry);
-
-    // 2 seconds ke baad remove ho jaye
     Timer(const Duration(seconds: 2), () {
       overlayEntry.remove();
     });
@@ -112,18 +109,22 @@ class ProductDetailsScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new, 
+                        size: 28, 
+                        color: Colors.white,
+                        shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                      ),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black54),
                   ),
                 ),
-                const Icon(Icons.more_vert, color: Colors.white, size: 28),
               ],
             ),
           ),
@@ -160,9 +161,7 @@ class ProductDetailsScreen extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-
                     const SizedBox(height: 40),
-
                     Text(
                       'Description',
                       style: GoogleFonts.inter(
@@ -172,7 +171,6 @@ class ProductDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 15),
-
                     Expanded(
                       child: SingleChildScrollView(
                         child: Text(
@@ -185,7 +183,6 @@ class ProductDetailsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.only(top: 20, bottom: 10),
                       child: Row(
@@ -199,7 +196,6 @@ class ProductDetailsScreen extends StatelessWidget {
                               color: const Color.fromARGB(255, 0, 0, 0),
                             ),
                           ),
-
                           ElevatedButton(
                             onPressed: () {
                               CartScreen.addToCart({
@@ -208,11 +204,7 @@ class ProductDetailsScreen extends StatelessWidget {
                                 "qty": 1,
                                 "image": imageUrl,
                               });
-
-                              // ✅ Show Custom Top Notification
                               _showCartNotification(context);
-
-                              // ✅ Navigate to Cart Screen
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const CartScreen()),
@@ -243,33 +235,7 @@ class ProductDetailsScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.38,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildDot(isActive: true),
-                _buildDot(isActive: false),
-                _buildDot(isActive: false),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDot({required bool isActive}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      height: 8,
-      width: 8,
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF5B8E55) : Colors.white.withOpacity(0.5),
-        shape: BoxShape.circle,
       ),
     );
   }

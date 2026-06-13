@@ -5,6 +5,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Note: Mobile ke liye clientId aksar zaroori nahi hota (json se uthata hai) 
+  // lekin agar aapne likha hai toh koi masla nahi.
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: '190765752610-ifkpd06qotkppbks3pkradm2eh0eu8np.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
@@ -36,9 +39,7 @@ class AuthService {
             'createdAt': FieldValue.serverTimestamp(),
           });
         } catch (firestoreError) {
-          print(
-            'Warning: Could not create user document in Firestore: $firestoreError',
-          );
+          print('Warning: Could not create user document in Firestore: $firestoreError');
         }
       }
 
@@ -62,20 +63,22 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // Clear any cached Google session to force account picker on every sign-in
-      await _googleSignIn.disconnect();
-      
-      // Also sign out from Firebase to ensure a fresh authentication flow
-      await _auth.signOut();
+      // ✅ FIX: disconnect() ki wajah se "Failed to disconnect" error aata hai.
+      // Hum sirf signOut() use karenge jo purane session ko clear kar deta hai bina error diye.
+      try {
+        await _googleSignIn.signOut();
+        await _auth.signOut();
+      } catch (e) {
+        // Agar pehle se logged in nahi hai toh error ignore karein
+      }
       
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        return null;
+        return null; // User ne cancel kar diya
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         throw 'Failed to obtain authentication tokens from Google';
@@ -86,20 +89,14 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
-
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
       final User? user = userCredential.user;
 
       if (user != null) {
         try {
           await user.getIdToken(true);
 
-          final userDoc = await _firestore
-              .collection('users')
-              .doc(user.uid)
-              .get();
+          final userDoc = await _firestore.collection('users').doc(user.uid).get();
 
           if (!userDoc.exists) {
             await _firestore.collection('users').doc(user.uid).set({
@@ -110,9 +107,7 @@ class AuthService {
             });
           }
         } catch (firestoreError) {
-          print(
-            'Warning: Could not create user document in Firestore: $firestoreError',
-          );
+          print('Warning: Could not create user document in Firestore: $firestoreError');
         }
       }
 
@@ -120,10 +115,11 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
+      print("Actual Google Error: $e"); // Debugging ke liye
       if (e.toString().contains('sign_in_failed')) {
         throw 'Google Sign-In failed. Please ensure:\n'
             '1. SHA-1 certificate is added to Firebase\n'
-            '2. Google Sign-In is enabled in Firebase Console\n'
+            '2. Support Email is set in Firebase settings\n'
             '3. google-services.json is up to date';
       }
       throw 'An error occurred during Google sign-in: ${e.toString()}';
@@ -163,22 +159,13 @@ class AuthService {
 
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
-      case 'weak-password':
-        return 'The password provided is too weak.';
-      case 'email-already-in-use':
-        return 'An account already exists with that email.';
-      case 'invalid-email':
-        return 'The email address is not valid.';
-      case 'operation-not-allowed':
-        return 'Operation not allowed.';
-      case 'user-disabled':
-        return 'This user account has been disabled.';
-      case 'user-not-found':
-        return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Wrong password provided.';
-      default:
-        return 'An error occurred: ${e.message}';
+      case 'weak-password': return 'The password provided is too weak.';
+      case 'email-already-in-use': return 'An account already exists with that email.';
+      case 'invalid-email': return 'The email address is not valid.';
+      case 'user-disabled': return 'This user account has been disabled.';
+      case 'user-not-found': return 'No user found with this email.';
+      case 'wrong-password': return 'Wrong password provided.';
+      default: return 'An error occurred: ${e.message}';
     }
   }
 }

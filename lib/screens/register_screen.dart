@@ -61,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold, // BOLD
                   color: Colors.black,
                 ),
               ),
@@ -77,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'OK',
                     style: GoogleFonts.inter(
                       color: const Color(0xFF5B8E55),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold, // BOLD
                       fontSize: 16,
                     ),
                   ),
@@ -146,6 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Logo and Title Row
               Row(
                 children: [
                   Container(
@@ -161,7 +162,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio',
-                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.inter(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.bold // BOLD
+                    ),
                   ),
                 ],
               ),
@@ -170,19 +174,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 text: TextSpan(
                   style: GoogleFonts.inter(
                     fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold, // BOLD
                     color: const Color(0xFF1A1A1A),
                   ),
                   children: [
                     const TextSpan(text: 'Register on '),
-                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
+                    TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Create an account, We can\'t wait to have you.',
-                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666)),
+                style: GoogleFonts.inter(
+                  fontSize: 15, 
+                  color: const Color(0xFF666666),
+                  fontWeight: FontWeight.bold // BOLD
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -227,8 +235,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
                     activeColor: primaryGreen,
                   ),
-                  Text('I Agree to the terms and conditions',
-                      style: GoogleFonts.inter(fontSize: 14)),
+                  Expanded(
+                    child: Text(
+                      'I Agree to the terms and conditions',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold // BOLD
+                      )
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -254,7 +269,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         )
                       : Text(
                           'REGISTER',
-                          style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
+                          style: GoogleFonts.inter(
+                            color: Colors.white, 
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold // BOLD
+                          ),
                         ),
                 ),
               ),
@@ -265,7 +284,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(
                     'Already have an account?',
-                    style: GoogleFonts.inter(color: const Color(0xFF666666)),
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF666666),
+                      fontWeight: FontWeight.bold // BOLD
+                    ),
                   ),
                   const SizedBox(width: 5),
                   MouseRegion(
@@ -277,9 +299,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                         );
                       },
-                      child: Text('Login',
-                          style: GoogleFonts.inter(
-                              color: primaryGreen, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Login',
+                        style: GoogleFonts.inter(
+                          color: primaryGreen, 
+                          fontWeight: FontWeight.bold // BOLD
+                        )
+                      ),
                     ),
                   ),
                 ],
@@ -302,16 +328,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
+      decoration: const BoxDecoration(color: Color(0xFFFAFAFA)),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.inter(),
+        // ✅ Typed Text is Normal (Simple)
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF1A1A1A),
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
-          prefixIcon: Icon(icon, color: primaryGreen),
+          // ✅ Placeholder (Hint) is BOLD
+          hintStyle: GoogleFonts.inter(
+            color: Colors.grey[400],
+            fontWeight: FontWeight.bold,
+          ),
+          prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           suffixIcon: isPasswordField
               ? Padding(
                   padding: const EdgeInsets.only(right: 8.0),
@@ -319,7 +354,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icon(
                       obscureText ? Icons.visibility_off : Icons.visibility,
                       color: primaryGreen,
-                      size: 18,
+                      size: 20,
                     ),
                     onPressed: toggleObscure,
                   ),

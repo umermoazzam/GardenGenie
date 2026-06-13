@@ -41,6 +41,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 iconPath,
                 width: 40,
                 height: 40,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.info_outline,
+                  size: 40,
+                  color: Color(0xFF5B8E55),
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -48,7 +53,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold, // BOLD
                   color: Colors.black,
                 ),
               ),
@@ -64,7 +69,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     'OK',
                     style: GoogleFonts.inter(
                       color: const Color(0xFF5B8E55),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold, // BOLD
                       fontSize: 16,
                     ),
                   ),
@@ -118,7 +123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -135,7 +140,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: const Icon(Icons.eco, color: primaryGreen, size: 20),
                   ),
                   const SizedBox(width: 8),
-                  Text('Plantio', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Plantio', 
+                    style: GoogleFonts.inter(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.bold // BOLD
+                    )
+                  ),
                 ],
               ),
               const SizedBox(height: 40),
@@ -143,7 +154,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 'Forgot Password?',
                 style: GoogleFonts.inter(
                   fontSize: 28,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold, // BOLD
                   color: const Color(0xFF1A1A1A),
                 ),
               ),
@@ -154,6 +165,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   fontSize: 15,
                   color: const Color(0xFF666666),
                   height: 1.5,
+                  fontWeight: FontWeight.bold // BOLD
                 ),
               ),
               const SizedBox(height: 40),
@@ -172,7 +184,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   onPressed: _isLoading ? null : _handleSendResetLink,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
-                    shape: const RoundedRectangleBorder(),
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                     elevation: 0,
                   ),
                   child: _isLoading
@@ -183,7 +195,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         )
                       : Text(
                           'SEND RESET LINK',
-                          style: GoogleFonts.inter(fontSize: 16, color: Colors.white),
+                          style: GoogleFonts.inter(
+                            fontSize: 16, 
+                            color: Colors.white, 
+                            fontWeight: FontWeight.bold // BOLD
+                          ),
                         ),
                 ),
               ),
@@ -191,8 +207,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Remember password?', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666))),
-                  const SizedBox(width: 5),
+                  Text(
+                    'Remember password? ', 
+                    style: GoogleFonts.inter(
+                      fontSize: 14, 
+                      color: const Color(0xFF666666),
+                      fontWeight: FontWeight.bold // BOLD
+                    )
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(
@@ -204,7 +226,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       'Login',
                       style: GoogleFonts.inter(
                         color: primaryGreen,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold, // BOLD
                         fontSize: 14,
                       ),
                     ),
@@ -227,17 +249,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     Color primaryGreen = Colors.green,
   }) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFFAFAFA)), // Match Login
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.inter(fontSize: 15),
+        // ✅ Typed text is Normal (Simple)
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF1A1A1A),
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(color: const Color(0xFF666666)),
+          // ✅ Placeholder (Hint) text is BOLD
+          hintStyle: GoogleFonts.inter(
+            color: Colors.grey[400],
+            fontWeight: FontWeight.bold,
+          ),
           prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -260,9 +289,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/sent_mail.png',
+                'assets/images/sent_mail.png', // Corrected path to match typical structure
                 width: 50,
                 height: 50,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.mark_email_read_outlined,
+                  size: 50,
+                  color: Color(0xFF5B8E55),
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -270,7 +304,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold, // BOLD
                   color: Colors.black,
                 ),
               ),
@@ -282,6 +316,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   fontSize: 15,
                   color: const Color(0xFF666666),
                   height: 1.4,
+                  fontWeight: FontWeight.bold // BOLD
                 ),
               ),
               const SizedBox(height: 24),
@@ -302,7 +337,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     'OK',
                     style: GoogleFonts.inter(
                       color: const Color(0xFF5B8E55),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold, // BOLD
                       fontSize: 16,
                     ),
                   ),
