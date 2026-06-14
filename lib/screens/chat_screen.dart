@@ -1,12 +1,12 @@
+// chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Firestore for persistence
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'home_screen.dart';
 import 'api_service.dart'; 
 import 'cart_screen.dart'; 
 import 'rental_services_screen.dart'; 
-import 'history_screen.dart'; 
 
 class PlantChatApp extends StatelessWidget {
   const PlantChatApp({Key? key}) : super(key: key);
@@ -47,11 +47,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Color get _userBubbleColor => _isDarkMode ? const Color(0xFF2D4B2D) : const Color(0xFFECFFEA);
   Color get _inputBgColor => _isDarkMode ? const Color(0xFF1F1F1F) : const Color(0xFFF5F5F5);
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Future<void> _showClearChatDialog() async {
     return showDialog<void>(
       context: context,
@@ -60,8 +55,10 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         return AlertDialog(
           backgroundColor: _appBarColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: Text('Clear Chat?', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: _textColor)),
-          content: Text('Are you sure you want to clear all messages permanently?', 
+          // Added actionsAlignment for centering buttons
+          actionsAlignment: MainAxisAlignment.center, 
+          title: Text('', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: _textColor)),
+          content: Text('Are you sure you want to clear all messages?', 
             style: GoogleFonts.inter(color: _textColor)),
           actions: <Widget>[
             TextButton(
@@ -95,7 +92,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
       
       await ApiService.clearChatHistory(widget.userId); 
     } catch (e) {
-      print("Error clearing chat: $e");
+      debugPrint("Error clearing chat: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -150,7 +147,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
       });
 
     } catch (e) {
-      print("Chat Save Error: $e");
+      debugPrint("Chat Save Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -235,17 +232,14 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
                 
                 var docs = snapshot.data!.docs;
 
-                // ✅ Always show welcome message as first item for persistence and alignment
                 return ListView.builder(
                   padding: const EdgeInsets.only(left: 16, right: 16, top: 32, bottom: 16),
-                  itemCount: docs.length + 1, // Add 1 for the welcome message
+                  itemCount: docs.length + 1, 
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      // Initial Welcome Message (Always at the top)
                       return _buildReceivedMessage('Hello! I am Garden Genie. How can I help you today?', 'Just now');
                     }
                     
-                    // Firestore Messages (shifted by 1)
                     var chat = docs[index - 1].data() as Map<String, dynamic>;
                     if (chat['role'] == 'ai') {
                       return _buildReceivedMessage(chat['message']!, chat['time']!);
@@ -385,14 +379,15 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 0; 
   final Color darkTextColor = const Color(0xFF1B1E28);
 
   void _onNavBarTapped(int index) {
-    if (index == _currentIndex && index == 0) return;
-
     if (index == 0) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacement(
+        context, 
+        MaterialPageRoute(builder: (context) => const HomeScreen())
+      );
     } else if (index == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),

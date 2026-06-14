@@ -11,7 +11,7 @@ import 'login_screen.dart';
 import 'contact_us_screen.dart';
 import 'admin_screen.dart'; 
 import 'history_screen.dart'; 
-import 'shipping_address.dart'; // <--- Shipping Address Screen import add kiya gaya hai
+import 'shipping_address.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -175,23 +175,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Stack(
                 children: [
                   Container(
-                    width: 100, height: 100,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: bgGrey, shape: BoxShape.circle,
-                      border: Border.all(color: primaryGreen, width: 2),
-                      image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
-                          ? DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover)
-                          : null,
+                      color: Colors.transparent, // Background transparent kar diya
+                      shape: BoxShape.circle,
+                      // ✅ UPDATED LOGIC: DecorationImage hi pura handle karega
+                      image: DecorationImage(
+                        image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
+                            ? FileImage(File(_profileImagePath!)) as ImageProvider
+                            : const AssetImage('assets/icons/user.png'), // Default icon path
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                    child: (_profileImagePath == null || !File(_profileImagePath!).existsSync())
-                        ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                        : null,
                   ),
                   Positioned(
                     bottom: 0, right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                      decoration: BoxDecoration(
+                        color: primaryGreen, 
+                        shape: BoxShape.circle, 
+                        border: Border.all(color: Colors.white, width: 2)
+                      ),
                       child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                     ),
                   ),
@@ -239,7 +245,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const HistoryScreen()));
             }),
 
-            // ✅ UPDATED: Ab ye ShippingAddressScreen par navigate karega
             _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {
                Navigator.push(context, MaterialPageRoute(builder: (context) => const ShippingAddressScreen()));
             }),
@@ -264,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const Icon(Icons.logout, color: Colors.white),
                     const SizedBox(width: 10),
-                    Text('Log Out', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text('Log Out', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),

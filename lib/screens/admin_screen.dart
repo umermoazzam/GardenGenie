@@ -307,27 +307,111 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('orders').orderBy('orderDate', descending: true).snapshots(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) return Center(child: Text("Error loading orders: ${snapshot.error}"));
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        
         final docs = snapshot.data!.docs;
+
+        if (docs.isEmpty) {
+          return Center(child: Text("No orders found", style: GoogleFonts.inter()));
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.all(15),
           itemCount: docs.length,
           itemBuilder: (context, index) {
             var data = docs[index].data() as Map<String, dynamic>;
+            
+            String orderID = docs[index].id.length > 5 ? docs[index].id.substring(0, 5) : docs[index].id;
+            String status = data['status'] ?? 'Pending';
+            String customer = data['userName'] ?? data['userEmail'] ?? 'Unknown';
+            String total = data['totalPrice']?.toString() ?? '0';
+
             return Container(
               margin: const EdgeInsets.only(bottom: 15),
               padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text("Order #${docs[index].id.substring(0, 5)}", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                  Text(data['status'], style: GoogleFonts.inter(fontSize: 12, color: primaryGreen, fontWeight: FontWeight.bold)),
-                ]),
-                const Divider(height: 25),
-                Text("Customer: ${data['userName']}", style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Text("Total Price: Rs. ${data['totalPrice']}", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: primaryGreen)),
-              ]),
+              decoration: BoxDecoration(
+                color: Colors.white, 
+                borderRadius: BorderRadius.circular(16), 
+                border: Border.all(color: Colors.grey.shade100),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, 
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+                    children: [
+                      Text("Order #$orderID", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primaryGreen.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(5)
+                        ),
+                        child: Text(status, style: GoogleFonts.inter(fontSize: 12, color: primaryGreen, fontWeight: FontWeight.bold)),
+                      ),
+                    ]
+                  ),
+                  const Divider(height: 25),
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text("Customer: $customer", style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Total Amount:", style: GoogleFonts.inter(fontSize: 13, color: Colors.grey)),
+                      Text("Rs. $total", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: primaryGreen, fontSize: 16)),
+                    ],
+                  ),
+
+                  // ✅ ADDED SHIPPING ADDRESS SECTION
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200)
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Icon(Icons.local_shipping_outlined, size: 14, color: primaryGreen),
+                          const SizedBox(width: 6),
+                          Text("SHIPPING ADDRESS", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        ]),
+                        const SizedBox(height: 6),
+                        Text(
+                          data['shippingAddress']?['fullAddress'] ?? "No Address Provided",
+                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          "Phone: ${data['shippingAddress']?['phone'] ?? 'N/A'}",
+                          style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+                  // Delete Order Button (Admin Only)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => docs[index].reference.delete(),
+                      icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                      label: Text("Remove", style: GoogleFonts.inter(color: Colors.red, fontSize: 12)),
+                    ),
+                  )
+                ]
+              ),
             );
           },
         );

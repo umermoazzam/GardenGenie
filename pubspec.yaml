@@ -114,8 +114,10 @@ flutter:
     - assets/mint.jpg
     - assets/icons/instagram.png
     - assets/images/umer.jpeg
-    - assets/images/haseeb.png
-
+    - assets/images/haseeb.jpeg
+    - assets/images/beelal.jpeg
+    - assets/icons/user.png
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

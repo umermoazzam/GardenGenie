@@ -1,9 +1,10 @@
-// cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'rental_services_screen.dart';
+import 'checkout_screen.dart'; // Ensure import is present
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -41,6 +42,42 @@ class _CartScreenState extends State<CartScreen> {
       }
     }
     return total;
+  }
+
+  void _showDeleteConfirmationDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Text(
+            "Are you sure you want to remove this item?",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(fontSize: 15, color: Colors.grey[700]),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("No", style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(width: 20),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  CartScreen.cartItems.removeAt(index);
+                  selectedIndices.remove(index);
+                });
+                Navigator.pop(context);
+              },
+              child: Text("Yes", style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -95,32 +132,18 @@ class _CartScreenState extends State<CartScreen> {
                         ],
                       ),
                       GestureDetector(
-                        onTap: () async {
+                        onTap: () {
                           if (selectedIndices.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select at least one item")));
                             return;
                           }
-                          
-                          try {
-                            List<Map<String, dynamic>> selectedItemsData = selectedIndices.map((i) => items[i]).toList();
-
-                            await FirebaseFirestore.instance.collection('orders').add({
-                              'userName': 'Guest User', 
-                              'totalPrice': _calculateTotal().toStringAsFixed(0),
-                              'items': selectedItemsData,
-                              'status': 'Pending',
-                              'orderDate': FieldValue.serverTimestamp(),
-                            });
-
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order Placed Successfully!")));
-
-                            setState(() {
-                              CartScreen.cartItems.clear();
-                              selectedIndices.clear();
-                            });
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Order Failed: $e")));
-                          }
+                          // Navigate to Checkout Screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CheckoutScreen(selectedIndex: selectedIndices.first),
+                            ),
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -133,7 +156,6 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-      // ✅ Removed Scanner (FloatingActionButton) as requested
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(canvasColor: Colors.white),
         child: BottomNavigationBar(
@@ -203,9 +225,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () {
-                setState(() { CartScreen.cartItems.removeAt(index); selectedIndices.remove(index); });
-              },
+              onTap: () => _showDeleteConfirmationDialog(index),
               child: Icon(Icons.delete_outline, color: Colors.red[300], size: 24),
             ),
             const SizedBox(width: 12),

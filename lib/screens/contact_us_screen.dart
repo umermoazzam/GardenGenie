@@ -24,7 +24,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   final Map<String, String> _memberAssets = {
     "umermoazzam2@gmail.com": "assets/images/umer.jpeg",
     "m.haseebntu@gmail.com": "assets/images/haseeb.jpeg",
-    "beelalchaudhary@gmail.com": "assets/images/bilal.png",
+    "beelalchaudhary@gmail.com": "assets/images/beelal.png",
   };
 
   Future<void> _launchInstagram() async {
