@@ -1,8 +1,8 @@
-// rental_services_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'cart_screen.dart'; // Import for navigation
 
 class RentalServicesScreen extends StatefulWidget {
   const RentalServicesScreen({Key? key}) : super(key: key);
@@ -12,11 +12,10 @@ class RentalServicesScreen extends StatefulWidget {
 }
 
 class _RentalServicesScreenState extends State<RentalServicesScreen> {
-  // --- SEARCH LOGIC ---
+  final int _currentIndex = 2; // Set index to 2 for Rentals tab
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
-  // --- MANUAL GARDENERS DATA ---
   final List<Map<String, dynamic>> manualGardeners = const [
     {
       'name': 'Muhammad Beelal',
@@ -65,7 +64,19 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     },
   ];
 
-  // --- BOOKING SHEET LOGIC ---
+  void _onNavBarTapped(int index) {
+    if (index == _currentIndex) return;
+    if (index == 0) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+    } else if (index == 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
+      );
+    } else if (index == 3) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
+    }
+  }
+
   void _showBookingSheet(BuildContext context, String gardenerName) {
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
@@ -88,10 +99,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.zero,
-          ),
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero),
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
             top: 20, left: 25, right: 25,
@@ -303,15 +311,15 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white, // MATCHING PROFILE SCREEN
+        surfaceTintColor: Colors.white,
         elevation: 0,
-        scrolledUnderElevation: 0, // MATCHING PROFILE SCREEN
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20), // MATCHING PROFILE SCREEN
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('Services & Rentals', 
-          style: GoogleFonts.inter(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.w600) // MATCHING PROFILE SCREEN STYLE
+          style: GoogleFonts.inter(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.w600)
         ),
         centerTitle: true,
       ),
@@ -401,8 +409,25 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
               },
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 100), // Adjusted for Nav bar spacing
         ]),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavBarTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B8E55),
+        unselectedItemColor: const Color(0xFF999999),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        elevation: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+        ],
       ),
     );
   }
@@ -459,11 +484,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.zero,
-          border: Border.all(color: Colors.grey[200]!),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero, border: Border.all(color: Colors.grey[200]!)),
         child: Row(
           children: [
             Hero(

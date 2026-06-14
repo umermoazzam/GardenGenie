@@ -1,8 +1,7 @@
 // cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Added Firestore
-import 'checkout_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'home_screen.dart';
 import 'rental_services_screen.dart';
 
@@ -50,15 +49,15 @@ class _CartScreenState extends State<CartScreen> {
       backgroundColor: const Color(0xFFFBFCFB),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white, // ✅ MATCHING PROFILE SCREEN
+        surfaceTintColor: Colors.white, 
         elevation: 0,
-        scrolledUnderElevation: 0, // ✅ MATCHING PROFILE SCREEN
+        scrolledUnderElevation: 0, 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20), // ✅ MATCHING PROFILE SCREEN BACK BUTTON
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('My Cart', 
-          style: GoogleFonts.inter(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600) // ✅ MATCHING PROFILE SCREEN STYLE
+          style: GoogleFonts.inter(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600)
         ),
         centerTitle: true,
         actions: [
@@ -134,16 +133,18 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15),
-        child: Container(width: 58, height: 58, decoration: BoxDecoration(color: const Color(0xFF5B8E55), shape: BoxShape.circle, boxShadow: [BoxShadow(color: const Color(0xFF5B8E55).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6))]), child: const Icon(Icons.crop_free, color: Colors.white, size: 26)),
-      ),
+      // ✅ Removed Scanner (FloatingActionButton) as requested
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(canvasColor: Colors.white),
         child: BottomNavigationBar(
-          currentIndex: 3, type: BottomNavigationBarType.fixed, backgroundColor: Colors.white, elevation: 0,
-          selectedItemColor: primaryGreen, unselectedItemColor: const Color(0xFF999999), showSelectedLabels: false, showUnselectedLabels: false,
+          currentIndex: 3, 
+          type: BottomNavigationBarType.fixed, 
+          backgroundColor: Colors.white, 
+          elevation: 0,
+          selectedItemColor: primaryGreen, 
+          unselectedItemColor: const Color(0xFF999999), 
+          showSelectedLabels: false, 
+          showUnselectedLabels: false,
           onTap: (index) {
             if (index == 0) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
             else if (index == 2) Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));

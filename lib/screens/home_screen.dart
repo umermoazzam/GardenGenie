@@ -22,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0; 
+  final int _currentIndex = 0; 
   String? _profileImagePath; 
 
   final TextEditingController _searchController = TextEditingController();
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavBarTapped(int index) {
-    if (index == 0) return;
+    if (index == _currentIndex) return;
     if (index == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
@@ -248,14 +248,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         String description = data['description'] ?? 'No description available.';
                         String subtitle = data['subtitle'] ?? 'Garden Genie Specialist';
 
-                        // ✅ DYNAMIC "NEW" LOGIC:
-                        // Checks if 'createdAt' exists and if it was added within the last 60 minutes.
                         bool showBadge = false;
                         if (data['createdAt'] != null) {
                           Timestamp t = data['createdAt'] as Timestamp;
                           DateTime date = t.toDate();
                           DateTime now = DateTime.now();
-                          // Difference less than 1 hour
                           showBadge = now.difference(date).inMinutes < 60;
                         }
 
@@ -294,22 +291,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavBarTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B8E55),
-        unselectedItemColor: const Color(0xFF999999),
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        elevation: 0,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
-        ],
+      bottomNavigationBar: Theme(
+        data: ThemeData(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onNavBarTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFF5B8E55),
+          unselectedItemColor: const Color(0xFF999999),
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+            BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+          ],
+        ),
       ),
     );
   }

@@ -10,7 +10,8 @@ import 'login_screen.dart';
 // ✅ ADDED IMPORTS
 import 'contact_us_screen.dart';
 import 'admin_screen.dart'; 
-import 'history_screen.dart'; // <--- History Screen import add kar diya gaya hai
+import 'history_screen.dart'; 
+import 'shipping_address.dart'; // <--- Shipping Address Screen import add kiya gaya hai
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -148,7 +149,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String authorizedEmail = emailFromPrefs.isNotEmpty ? emailFromPrefs : emailFromFirebase;
     
     bool isAdmin = authorizedEmail == "click.umer50@gmail.com" || 
-                   authorizedEmail == "beelalchaudhary@gmail.com";
+                   authorizedEmail == "beelalchaudhary@gmail.com" ||
+                   authorizedEmail == "rmubeensaeed2222@gmail.com";
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -161,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('My Profile', style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.w600)),
+        title: Text('My Profile', style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -233,15 +235,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             
-            // ✅ UPDATED: History Button now navigates to HistoryScreen
             _buildProfileOption(Icons.history, "History", () {
-              Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => const HistoryScreen()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const HistoryScreen()));
             }),
 
-            _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {}),
+            // ✅ UPDATED: Ab ye ShippingAddressScreen par navigate karega
+            _buildProfileOption(Icons.local_shipping_outlined, "Shipping Addresses", () {
+               Navigator.push(context, MaterialPageRoute(builder: (context) => const ShippingAddressScreen()));
+            }),
+
             _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
             _buildProfileOption(Icons.contact_support_outlined, "Contact Us", () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
