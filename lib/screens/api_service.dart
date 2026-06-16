@@ -1,4 +1,6 @@
+// api_service.dart
 import 'dart:convert';
+import 'dart:io'; // Required for handling File inside predictImage
 import 'package:http/http.dart' as http;
 import '../models/product_model.dart'; // Import the model
 
@@ -155,6 +157,31 @@ class ApiService {
     } catch (e) {
       print('Error clearing history: $e');
       return false;
+    }
+  }
+
+  // ✅ NEW ADDITION: Predict Image function to catch deep ML payload parameters
+  static Future<Map<String, dynamic>?> predictImage(File imageFile) async {
+    try {
+      // Direct call target on standard predictive architecture route
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/predict'));
+      
+      // Inject headers to bypass proxy intercept rules safely during debug cycles
+      request.headers.addAll({
+        'ngrok-skip-browser-warning': 'true',
+      });
+
+      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        var res = await http.Response.fromStream(response);
+        return json.decode(res.body); // Returns complete dynamic nested JSON response mapping
+      }
+      return null;
+    } catch (e) {
+      print('Error running predictive model inference: $e');
+      return null;
     }
   }
 }

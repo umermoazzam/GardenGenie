@@ -46,7 +46,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
         ),
         title: Text(
           'Shipping Addresses',
-          style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -116,7 +116,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     return Center(
       child: Text(
         "No saved addresses found.",
-        style: GoogleFonts.inter(color: textGrey),
+        style: GoogleFonts.poppins(color: textGrey),
       ),
     );
   }
@@ -158,7 +158,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
                   const SizedBox(width: 8),
                   Text(
                     addr['title'],
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold, fontSize: 16, color: textBlack),
                   ),
                 ],
@@ -169,7 +169,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
                   decoration: BoxDecoration(
                       color: primaryGreen, borderRadius: BorderRadius.circular(4)),
                   child: Text("DEFAULT",
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold)),
@@ -179,11 +179,11 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
           const SizedBox(height: 12),
           Text(
             addr['address'],
-            style: GoogleFonts.inter(color: textGrey, fontSize: 14, height: 1.4),
+            style: GoogleFonts.poppins(color: textGrey, fontSize: 14, height: 1.4),
           ),
           Text(
             "Phone: ${addr['phone']}",
-            style: GoogleFonts.inter(color: textGrey, fontSize: 14),
+            style: GoogleFonts.poppins(color: textGrey, fontSize: 14),
           ),
           const SizedBox(height: 16),
           Row(
@@ -214,7 +214,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
           Icon(icon, size: 18, color: textGrey),
           const SizedBox(width: 4),
           Text(label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.poppins(
                   color: textGrey, fontSize: 13, fontWeight: FontWeight.w500)),
         ],
       ),
@@ -238,10 +238,10 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
           ),
           child: Text(
             '+ NEW ADDRESS',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.poppins(
                 color: primaryGreen,
                 fontSize: 15,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 1),
           ),
         ),
@@ -272,7 +272,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Add New Address",
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                         fontSize: 20, fontWeight: FontWeight.bold, color: textBlack)),
                 const SizedBox(height: 25),
                 _buildBoldField("Full Name", Icons.person_outline, _nameController),
@@ -287,7 +287,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
                     keyboardType: TextInputType.number),
                 const SizedBox(height: 25),
                 Text("Address Category",
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                         fontSize: 14, fontWeight: FontWeight.bold, color: textBlack)),
                 const SizedBox(height: 12),
                 Row(
@@ -356,9 +356,9 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                     ),
                     child: Text("SAVE ADDRESS",
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.poppins(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 16)),
                   ),
                 ),
@@ -378,12 +378,12 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
       controller: controller,
       keyboardType: keyboardType,
       cursorColor: primaryGreen,
-      style: GoogleFonts.inter(
+      style: GoogleFonts.poppins(
           fontSize: 15, fontWeight: FontWeight.w600, color: textBlack),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: textGrey, size: 20),
         hintText: placeholder,
-        hintStyle: GoogleFonts.inter(
+        hintStyle: GoogleFonts.poppins(
             color: Colors.grey.shade500, fontSize: 14, fontWeight: FontWeight.w500),
         filled: true,
         fillColor: bgGrey,
@@ -429,7 +429,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
           ),
           const SizedBox(width: 10),
           Text(title,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: textBlack)),
@@ -458,7 +458,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
             ),
             const SizedBox(width: 12),
             Text(label,
-                style: GoogleFonts.inter( 
+                style: GoogleFonts.poppins(
                     fontSize: 14, color: textGrey, fontWeight: FontWeight.w500)),
           ],
         ),

@@ -12,54 +12,54 @@ class RentalServicesScreen extends StatefulWidget {
 }
 
 class _RentalServicesScreenState extends State<RentalServicesScreen> {
-  final int _currentIndex = 2; // Set index to 2 for Rentals tab
+  final int _currentIndex = 2; 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
   final List<Map<String, dynamic>> manualGardeners = const [
     {
-      'name': 'Muhammad Beelal',
+      'name': 'Uzair Asif',
       'skill': 'Lawn & Landscape Specialist',
       'rating': '4.8',
-      'email': 'beelalchaudhary@gmail.com',
+      'email': 'uzairasif@gmail.com',
       'phone': '+923424882223',
-      'image': 'https://img.freepik.com/free-photo/portrait-man-smiling-outdoors_23-2148946213.jpg',
+      'image': 'assets/images/uzair.jpeg',
       'bio': 'Expert in landscape architecture and seasonal lawn maintenance with over 5 years of experience.'
     },
     {
-      'name': 'Wasif Ali',
+      'name': 'Faheem Raza',
       'skill': 'Organic Kitchen Gardening',
       'rating': '4.9',
-      'email': 'showbizz951@gmail.com',
+      'email': 'faheemraza@gmail.com',
       'phone': '+923218409358',
-      'image': 'https://img.freepik.com/free-photo/medium-shot-woman-working-nature_23-2149021516.jpg',
+      'image': 'assets/images/faheem.jpeg',
       'bio': 'Specialized in setting up organic vegetable patches and soil nutrient management.'
     },
     {
-      'name': 'Muhammad Haseeb Shahid',
+      'name': 'Nabeel Sheikh',
       'skill': 'Plant Healthcare & Pruning',
       'rating': '4.7',
-      'email': 'm.haseebntu@gmail.com',
+      'email': 'nabeel.sheikh@gmail.com',
       'phone': '+923166415699',
-      'image': 'https://img.freepik.com/free-photo/confident-gardener-standing-with-arms-crossed_23-2148113110.jpg',
+      'image': 'assets/images/nabeel.jpeg',
       'bio': 'Focuses on plant surgery, pruning, and protecting plants from common local pests.'
     },
     {
-      'name': 'Umer Moazzam',
+      'name': 'Wasif Ali',
       'skill': 'Terrace Garden Designer',
       'rating': '5.0',
-      'email': 'umermoazzam2@gmail.com',
+      'email': 'wasifali@gmail.com',
       'phone': '+923326582650',
-      'image': 'https://img.freepik.com/free-photo/female-florist-working-nursery_23-2148894172.jpg',
+      'image': 'assets/images/wasif.jpeg',
       'bio': 'Creative designer for small spaces, transforming terraces into lush green escapes.'
     },
     {
-      'name': 'Muhammad Junaid',
+      'name': 'Talal Amin',
       'skill': 'Full Garden Restoration',
       'rating': '4.6',
-      'email': 'junaid.gardeners@gmail.com',
-      'phone': '+92 333 5556677',
-      'image': 'https://img.freepik.com/free-photo/man-working-garden-nursery_23-2148894145.jpg',
+      'email': 'talalamin@gmail.com',
+      'phone': '+923335556677',
+      'image': 'assets/images/talal.jpeg',
       'bio': 'Hardworking specialist in restoring neglected gardens to their former glory.'
     },
   ];
@@ -110,9 +110,9 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
             children: [
               Center(child: Container(width: 50, height: 5, decoration: const BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.zero))),
               const SizedBox(height: 20),
-              Text("Book $gardenerName", style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text("Book $gardenerName", style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 20),
-              Text("Select Service", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+              Text("Select Service", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -122,7 +122,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                     value: selectedService,
                     isExpanded: true,
                     dropdownColor: Colors.white,
-                    style: GoogleFonts.inter(color: Colors.black, fontSize: 15),
+                    style: GoogleFonts.poppins(color: Colors.black, fontSize: 15),
                     items: servicePrices.keys.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                     onChanged: (val) => setSheetState(() => selectedService = val!),
                   ),
@@ -135,7 +135,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Date", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                        Text("Date", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () async {
@@ -164,7 +164,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Time Slot", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                        Text("Time Slot", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () async {
@@ -182,14 +182,14 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              Text("Service Location", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+              Text("Service Location", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
               const SizedBox(height: 10),
               TextField(
                 controller: addressController,
-                style: GoogleFonts.inter(color: Colors.black),
+                style: GoogleFonts.poppins(color: Colors.black),
                 decoration: InputDecoration(
                   hintText: "Enter your full address",
-                  hintStyle: GoogleFonts.inter(color: Colors.grey),
+                  hintStyle: GoogleFonts.poppins(color: Colors.grey),
                   filled: true,
                   fillColor: Colors.white,
                   border: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFE0E0E0))),
@@ -220,7 +220,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                   },
                   child: isLoading 
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text("Confirm Booking", style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    : Text("Confirm Booking", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ],
@@ -237,7 +237,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(text, style: GoogleFonts.inter(fontSize: 13, color: text.contains("Pick") ? Colors.grey : Colors.black)),
+          Text(text, style: GoogleFonts.poppins(fontSize: 13, color: text.contains("Pick") ? Colors.grey : Colors.black)),
           const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.grey),
         ],
       ),
@@ -279,16 +279,16 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           children: [
             Container(padding: const EdgeInsets.all(15), decoration: const BoxDecoration(color: Color(0xFFE8F5E9), shape: BoxShape.rectangle), child: const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 50)),
             const SizedBox(height: 20),
-            Text('Request Sent!', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text('Request Sent!', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 14)),
+            Text(message, textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14)),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5B8E55), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero), padding: const EdgeInsets.symmetric(vertical: 12)),
-                child: Text('Great!', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text('Great!', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
           ],
@@ -319,7 +319,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('Services & Rentals', 
-          style: GoogleFonts.inter(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.w600)
+          style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.w600)
         ),
         centerTitle: true,
       ),
@@ -331,10 +331,10 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: 'Search tools or gardeners...',
-                hintStyle: GoogleFonts.inter(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
+                hintStyle: GoogleFonts.poppins(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
                 prefixIcon: const Icon(Icons.search, color: primaryGreen, size: 24),
                 filled: true,
                 fillColor: Colors.white,
@@ -349,8 +349,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Rent Tools', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-              Text('View all', style: GoogleFonts.inter(color: primaryGreen, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text('Rent Tools', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text('View all', style: GoogleFonts.poppins(color: primaryGreen, fontSize: 13, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 15),
@@ -371,7 +371,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                   }).toList();
 
                   if (toolDocs.isEmpty) {
-                    return Center(child: Text("No tools found", style: GoogleFonts.inter(color: Colors.grey)));
+                    return Center(child: Text("No tools found", style: GoogleFonts.poppins(color: Colors.grey)));
                   }
 
                   return ListView.builder(
@@ -388,28 +388,28 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           ),
 
           const SizedBox(height: 30),
-          Text('Professional Gardeners', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+          Text('Professional Gardeners', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
           const SizedBox(height: 15),
 
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             child: filteredGardeners.isEmpty 
             ? Center(child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text("No gardeners found", style: GoogleFonts.inter(color: Colors.grey)),
-            ))
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text("No gardeners found", style: GoogleFonts.poppins(color: Colors.grey)),
+              ))
             : ListView.builder(
-              key: ValueKey('garden_list_$_searchQuery'),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredGardeners.length,
-              itemBuilder: (context, index) {
-                final g = filteredGardeners[index];
-                return _buildGardenerRow(context, g, primaryGreen);
-              },
-            ),
+                key: ValueKey('garden_list_$_searchQuery'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredGardeners.length,
+                itemBuilder: (context, index) {
+                  final g = filteredGardeners[index];
+                  return _buildGardenerRow(context, g, primaryGreen);
+                },
+              ),
           ),
-          const SizedBox(height: 100), // Adjusted for Nav bar spacing
+          const SizedBox(height: 100), 
         ]),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -446,8 +446,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black)),
-                Text(price, style: GoogleFonts.inter(color: color, fontWeight: FontWeight.w600)),
+                Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black)),
+                Text(price, style: GoogleFonts.poppins(color: color, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -465,6 +465,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     );
   }
 
+  // ✅ UPDATED: Gardener row with circular image
   Widget _buildGardenerRow(BuildContext context, Map<String, dynamic> g, Color color) {
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -489,13 +490,24 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           children: [
             Hero(
               tag: 'gardener_img_${g['name']}',
-              child: Container(width: 60, height: 60, decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(g['image']), fit: BoxFit.cover))),
+              child: Container(
+                width: 60, 
+                height: 60, 
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle, // Circular shape applied here
+                  border: Border.all(color: color.withOpacity(0.1), width: 1),
+                  image: DecorationImage(
+                    image: AssetImage(g['image']), 
+                    fit: BoxFit.cover
+                  )
+                )
+              ),
             ),
             const SizedBox(width: 15),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(g['name'], style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
-                Text(g['skill'], style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 13)),
+                Text(g['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
+                Text(g['skill'], style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 13)),
               ]),
             ),
             Column(
@@ -537,25 +549,37 @@ class GardenerProfileScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Gardener Profile", style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text("Gardener Profile", style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 20),
+            // ✅ UPDATED: Circular image in Profile Screen
             Hero(
               tag: 'gardener_img_${gardener['name']}',
-              child: Container(width: 140, height: 140, decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(gardener['image']), fit: BoxFit.cover))),
+              child: Container(
+                width: 140, 
+                height: 140, 
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle, // Circular shape applied here
+                  border: Border.all(color: primaryGreen.withOpacity(0.1), width: 3),
+                  image: DecorationImage(
+                    image: AssetImage(gardener['image']), 
+                    fit: BoxFit.cover
+                  )
+                )
+              ),
             ),
             const SizedBox(height: 20),
-            Text(gardener['name'], style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
-            Text(gardener['skill'], style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600])),
+            Text(gardener['name'], style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(gardener['skill'], style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600])),
             const SizedBox(height: 10),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Icon(Icons.star, color: Colors.orange, size: 20),
               const SizedBox(width: 5),
-              Text(gardener['rating'], style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(gardener['rating'], style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             ]),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20), child: Divider()),
             _buildInfoSection(Icons.email, "Email", gardener['email']),
@@ -565,9 +589,9 @@ class GardenerProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("About", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                  Text("About", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                   const SizedBox(height: 10),
-                  Text(gardener['bio'], style: GoogleFonts.inter(color: Colors.grey[700], height: 1.5, fontSize: 15)),
+                  Text(gardener['bio'], style: GoogleFonts.poppins(color: Colors.grey[700], height: 1.5, fontSize: 15)),
                 ],
               ),
             ),
@@ -582,7 +606,7 @@ class GardenerProfileScreen extends StatelessWidget {
                     onHire();
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, padding: const EdgeInsets.symmetric(vertical: 18), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
-                  child: Text("Hire Now", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Text("Hire Now", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
             ),
@@ -607,8 +631,8 @@ class GardenerProfileScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 12)),
-              Text(value, style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+              Text(label, style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
+              Text(value, style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
             ],
           ),
         ],

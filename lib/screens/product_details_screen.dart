@@ -48,13 +48,13 @@ class ProductDetailsScreen extends StatelessWidget {
               Text(
                 'Added to Cart!', 
                 textAlign: TextAlign.center, 
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)
               ),
               const SizedBox(height: 12),
               Text(
                 'The item has been successfully added.', 
                 textAlign: TextAlign.center, 
-                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.4)
+                style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF666666), height: 1.4)
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -65,7 +65,7 @@ class ProductDetailsScreen extends StatelessWidget {
                     // Manual move to Cart Screen
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
                   },
-                  child: Text('OK', style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
+                  child: Text('OK', style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
               ),
             ],
@@ -127,16 +127,16 @@ class ProductDetailsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.inter(fontSize: 25, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A), letterSpacing: -0.5)),
+                Text(title, style: GoogleFonts.poppins(fontSize: 25, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A), letterSpacing: -0.5)),
                 const SizedBox(height: 6),
-                Text(subtitle, style: GoogleFonts.inter(fontSize: 15, color: primaryGreen, fontWeight: FontWeight.bold)),
+                Text(subtitle, style: GoogleFonts.poppins(fontSize: 15, color: primaryGreen, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 30),
-                Text('Description', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF1A1A1A))),
+                Text('Description', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
                 const SizedBox(height: 7),
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    child: Text(description, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.6, fontWeight: FontWeight.w500)),
+                    child: Text(description, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF666666), height: 1.6, fontWeight: FontWeight.w500)),
                   ),
                 ),
                 Padding(
@@ -147,8 +147,8 @@ class ProductDetailsScreen extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Price', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          Text('Rs. $price', style: GoogleFonts.inter(fontSize: 21, fontWeight: FontWeight.w800, color: Colors.black)),
+                          Text('Price', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey)),
+                          Text('Rs. $price', style: GoogleFonts.poppins(fontSize: 21, fontWeight: FontWeight.bold, color: Colors.black)),
                         ],
                       ),
                       ElevatedButton(
@@ -168,7 +168,7 @@ class ProductDetailsScreen extends StatelessWidget {
                           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                           elevation: 0,
                         ),
-                        child: Text('ADD TO CART', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.0)),
+                        child: Text('ADD TO CART', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 1.0)),
                       ),
                     ],
                   ),

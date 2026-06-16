@@ -60,9 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins( // ✅ Changed to Poppins
                     fontSize: 18, 
-                    fontWeight: FontWeight.bold, // BOLD
+                    fontWeight: FontWeight.bold, 
                     color: Colors.black),
               ),
               const SizedBox(height: 24),
@@ -75,9 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Text(
                     'OK',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
                         color: const Color(0xFF5B8E55),
-                        fontWeight: FontWeight.bold, // BOLD
+                        fontWeight: FontWeight.bold, 
                         fontSize: 16),
                   ),
                 ),
@@ -108,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userName', result['user']['name']);
       await prefs.setString('userEmail', result['user']['email']);
+      await prefs.setString('userId', result['user']['id']);
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -171,9 +172,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
                         fontSize: 24, 
-                        fontWeight: FontWeight.bold // BOLD
+                        fontWeight: FontWeight.w600 
                     ),
                   ),
                 ],
@@ -181,9 +182,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 50),
               RichText(
                 text: TextSpan(
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold, // BOLD
+                  style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                    fontSize: 25,
+                    fontWeight: FontWeight.w600, 
                     color: const Color(0xFF1A1A1A),
                   ),
                   children: [
@@ -195,10 +196,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               Text(
                 'Login to your account to continue.',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins( // ✅ Changed to Poppins
                     fontSize: 15, 
                     color: const Color(0xFF666666),
-                    fontWeight: FontWeight.bold // BOLD
+                    fontWeight: FontWeight.w600 
                 ),
               ),
               const SizedBox(height: 40),
@@ -224,10 +225,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         activeColor: primaryGreen,
                       ),
                       Text('Remember Me',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.poppins( // ✅ Changed to Poppins
                               fontSize: 14, 
                               color: const Color(0xFF666666),
-                              fontWeight: FontWeight.bold // BOLD
+                              fontWeight: FontWeight.w600 
                           )),
                     ],
                   ),
@@ -239,10 +240,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text('Forgot Password?',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.poppins( // ✅ Changed to Poppins
                             fontSize: 14, 
                             color: primaryGreen, 
-                            fontWeight: FontWeight.bold // BOLD
+                            fontWeight: FontWeight.w600, 
                         )),
                   ),
                 ],
@@ -265,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : Text('LOGIN', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      : Text('LOGIN', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)), // ✅ Poppins
                 ),
               ),
 
@@ -291,10 +292,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     label: Text(
                       'Continue with Google',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins( // ✅ Changed to Poppins
                           fontSize: 15, 
                           color: Colors.black87, 
-                          fontWeight: FontWeight.bold // BOLD
+                          fontWeight: FontWeight.w600 
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -312,10 +313,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Don\'t have an account? ',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins( // ✅ Changed to Poppins
                           fontSize: 14, 
                           color: const Color(0xFF666666),
-                          fontWeight: FontWeight.bold // BOLD
+                          fontWeight: FontWeight.w600 
                       )),
                   GestureDetector(
                     onTap: () {
@@ -325,9 +326,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text('Sign up',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.poppins( // ✅ Changed to Poppins
                             color: primaryGreen, 
-                            fontWeight: FontWeight.bold // BOLD
+                            fontWeight: FontWeight.bold 
                         )),
                   ),
                 ],
@@ -355,18 +356,16 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        // ✅ Typed text is Normal (Simple)
-        style: GoogleFonts.inter(
+        style: GoogleFonts.poppins( // ✅ Changed to Poppins (Normal Text)
           fontWeight: FontWeight.normal,
           color: const Color(0xFF1A1A1A),
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          // ✅ Placeholder (Hint) text is BOLD
-          hintStyle: GoogleFonts.inter(
+          hintStyle: GoogleFonts.poppins( // ✅ Changed to Poppins (Bold Hint)
             color: Colors.grey[400],
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
           prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           suffixIcon: isPasswordField

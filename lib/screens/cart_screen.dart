@@ -55,13 +55,13 @@ class _CartScreenState extends State<CartScreen> {
           content: Text(
             "Are you sure you want to remove this item?",
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 15, color: Colors.grey[700]),
+            style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey[700]),
           ),
           actionsAlignment: MainAxisAlignment.center,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("No", style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600)),
+              child: Text("No", style: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.w600)),
             ),
             const SizedBox(width: 20),
             TextButton(
@@ -72,7 +72,7 @@ class _CartScreenState extends State<CartScreen> {
                 });
                 Navigator.pop(context);
               },
-              child: Text("Yes", style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.bold)),
+              child: Text("Yes", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -94,7 +94,7 @@ class _CartScreenState extends State<CartScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('My Cart', 
-          style: GoogleFonts.inter(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600)
+          style: GoogleFonts.poppins(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600)
         ),
         centerTitle: true,
         actions: [
@@ -103,7 +103,7 @@ class _CartScreenState extends State<CartScreen> {
         ],
       ),
       body: items.isEmpty 
-          ? Center(child: Text("Your cart is empty", style: GoogleFonts.inter(fontSize: 16, color: Colors.grey)))
+          ? Center(child: Text("Your cart is empty", style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)))
           : Column(
               children: [
                 Expanded(
@@ -127,8 +127,8 @@ class _CartScreenState extends State<CartScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${selectedIndices.length} Items Selected", style: GoogleFonts.inter(color: Colors.grey, fontSize: 13)),
-                          Text("Rs. ${_calculateTotal().toStringAsFixed(0)}", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                          Text("${selectedIndices.length} Items Selected", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
+                          Text("Rs. ${_calculateTotal().toStringAsFixed(0)}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                         ],
                       ),
                       GestureDetector(
@@ -148,7 +148,7 @@ class _CartScreenState extends State<CartScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                           decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.zero),
-                          child: Text('Checkout', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          child: Text('Checkout', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
                         ),
                       ),
                     ],
@@ -204,19 +204,19 @@ class _CartScreenState extends State<CartScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['name'], style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.grey[800])),
+                  Text(item['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.grey[800])),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: const Color(0xFFFFF4EB), borderRadius: BorderRadius.circular(8)), child: Text('Rs. ${item['price']}', style: GoogleFonts.inter(color: Colors.orange[700], fontWeight: FontWeight.bold, fontSize: 13))),
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: const Color(0xFFFFF4EB), borderRadius: BorderRadius.circular(8)), child: Text('Rs. ${item['price']}', style: GoogleFonts.poppins(color: Colors.orange[700], fontWeight: FontWeight.bold, fontSize: 13))),
                       const SizedBox(width: 12),
                       Row(
                         children: [
-                          GestureDetector(onTap: () => setState(() { if (item['qty'] > 1) item['qty']--; }), child: Text('-', style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 14))),
+                          GestureDetector(onTap: () => setState(() { if (item['qty'] > 1) item['qty']--; }), child: Text('-', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14))),
                           const SizedBox(width: 6),
-                          Text('${item['qty']}', style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 14)),
+                          Text('${item['qty']}', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14)),
                           const SizedBox(width: 6),
-                          GestureDetector(onTap: () => setState(() { item['qty']++; }), child: Text('+', style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 14))),
+                          GestureDetector(onTap: () => setState(() { item['qty']++; }), child: Text('+', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14))),
                         ],
                       ),
                     ],

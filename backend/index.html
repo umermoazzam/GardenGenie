@@ -1,44 +1,69 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Plantio - Disease Detector</title>
-        <style>
-            body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
-            .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; }
-            button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <h1>Plantio Disease Detector</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plantio - Disease Detector</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; text-align: left; max-width: 500px; width: 100%; }
+        h1 { text-align: center; margin-top: 0; }
+        .input-group { text-align: center; margin-bottom: 20px; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; display: block; margin: 0 auto; }
+        .result-container { margin-top: 20px; font-size: 16px; line-height: 1.5; }
+        .result-title { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-bottom: 12px; }
+        .meta-info { font-size: 14px; color: #7f8c8d; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Plantio Disease Detector</h1>
+        <div class="input-group">
             <input type="file" id="imageInput" accept="image/*">
-            <br><br>
-            <button onclick="predict()">Analyze Plant</button>
-            <h2 id="result">Result here...</h2>
         </div>
+        <button onclick="predict()">Analyze Plant</button>
+        <div id="result" class="result-container">
+            <h2 style="text-align: center; color: #7f8c8d; font-size: 18px;">Result here...</h2>
+        </div>
+    </div>
 
-        <script>
-            async function predict() {
-                const fileInput = document.getElementById('imageInput');
-                if (fileInput.files.length === 0) return alert("Please select an image!");
+    <script>
+        async function predict() {
+            const fileInput = document.getElementById('imageInput');
+            if (fileInput.files.length === 0) return alert("Please select an image!");
 
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
 
-                document.getElementById('result').innerText = "Analyzing...";
+            document.getElementById('result').innerHTML = `<h2 style="text-align: center; color: #2980b9; font-size: 18px;">Analyzing...</h2>`;
 
-                try {
-                    const response = await fetch('http://127.0.0.1:5000/predict', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    document.getElementById('result').innerText = `Disease: ${data.disease} (${data.confidence}%)`;
-                } catch (err) {
-                    document.getElementById('result').innerText = "Error connecting to backend.";
+            try {
+                // Backend port remaining unchanged on 7860
+                const response = await fetch('http://127.0.0.1:7860/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    // UI handles arrays for steps and products seamlessly using .join()
+                    document.getElementById('result').innerHTML = `
+                        <h3 class="result-title">Disease: ${data.disease}</h3>
+                        <div class="meta-info">
+                            <span style="color:green; margin-right: 15px;"><b>Plant:</b> ${data.plant}</span>
+                            <span style="color:blue"><b>Confidence:</b> ${data.confidence}%</span>
+                        </div>
+                        <p><b>Info:</b> ${data.brief_info || 'N/A'}</p>
+                        <p><b>Steps:</b> ${data.what_to_do && data.what_to_do.length ? data.what_to_do.join(', ') : 'N/A'}</p>
+                        <p><b>Products:</b> ${data.recommended_products && data.recommended_products.length ? data.recommended_products.join(', ') : 'N/A'}</p>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `<h3 class="result-title" style="color:red">Error: ${data.disease}</h3>`;
                 }
+            } catch (err) {
+                document.getElementById('result').innerHTML = `<h3 class="result-title" style="color:red; font-size: 16px;">Error: Cannot reach backend on port 7860.</h3>`;
             }
-        </script>
-    </body>
-    </html>
+        }
+    </script>
+</body>
+</html>

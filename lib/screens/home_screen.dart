@@ -66,7 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == _currentIndex) return;
     if (index == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
+        SnackBar(
+          content: Text(
+            'Categories / Shop Screen is currently disabled',
+            style: GoogleFonts.poppins(),
+          ),
+        ),
       );
     } else if (index == 2) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
@@ -97,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         // Added TweenAnimationBuilder for a decent Fade + Slide entry transition
         child: TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 2500),
+          duration: const Duration(milliseconds: 1500),
           tween: Tween(begin: 0.0, end: 1.0),
           curve: Curves.easeOutCubic,
           builder: (context, value, child) {
@@ -133,10 +138,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             controller: _searchController,
                             autofocus: true,
                             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-                            style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w600),
+                            style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600),
                             decoration: InputDecoration(
                               hintText: 'Search plants...',
-                              hintStyle: GoogleFonts.inter(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
+                              hintStyle: GoogleFonts.poppins(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
                               prefixIcon: Icon(Icons.search, color: primaryGreen, size: 24),
                               suffixIcon: IconButton(
                                 icon: const Icon(Icons.close, color: Colors.black), 
@@ -162,39 +167,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         )
-                      : Row(
+                      : Container(
                           key: const ValueKey('titleBar'),
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                style: GoogleFonts.inter(fontSize: 25, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-                                children: [
-                                  const TextSpan(text: 'New on ', style: TextStyle(color: Color(0xFF1A1A1A))),
-                                  TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())).then((_) => _loadProfileImage());
-                              },
-                              child: Container(
-                                width: 43,
-                                height: 43,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.transparent,
-                                  image: DecorationImage(
-                                    image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
-                                        ? FileImage(File(_profileImagePath!)) as ImageProvider
-                                        : const AssetImage('assets/icons/user.png'),
-                                    fit: BoxFit.cover,
+                          width: double.infinity,
+                          // Hum Stack ka use kar rahe hain taake text top se start ho aur profile fixed side pe rahe
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 55.0, right: 50.0), // Padding to avoid overlap with profile icon
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w600, letterSpacing: -0.5),
+                                    children: [
+                                      const TextSpan(text: 'New on ', style: TextStyle(color: Color(0xFF1A1A1A))),
+                                      TextSpan(text: 'Plantio', style: TextStyle(color: primaryGreen)),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())).then((_) => _loadProfileImage());
+                                  },
+                                  child: Container(
+                                    width: 43,
+                                    height: 43,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.transparent,
+                                      image: DecorationImage(
+                                        image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
+                                            ? FileImage(File(_profileImagePath!)) as ImageProvider
+                                            : const AssetImage('assets/icons/user.png'),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                   ),
 
@@ -218,7 +233,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (!_isSearching) 
                     Container(
                       height: 200, width: double.infinity,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), image: const DecorationImage(image: NetworkImage('https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=800'), fit: BoxFit.cover)),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16), 
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/banner.png'), 
+                          fit: BoxFit.cover
+                        )
+                      ),
                       child: Container(
                         decoration: BoxDecoration(borderRadius: BorderRadius.circular(13), gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.6)])),
                         child: Material(
@@ -232,9 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Text('New in', style: GoogleFonts.inter(color: Colors.white70, fontSize: 13)),
+                                  Text('New in', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13)),
                                   const SizedBox(height: 4),
-                                  Text('Create plans\nwith AI Assistant', style: GoogleFonts.inter(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold, height: 1.2)),
+                                  Text('Create plans\nwith AI Assistant', style: GoogleFonts.poppins(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w600, height: 1.2)),
                                 ],
                               ),
                             ),
@@ -248,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance.collection('products').snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.hasError) return const Text('Something went wrong');
+                      if (snapshot.hasError) return Text('Something went wrong', style: GoogleFonts.poppins());
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(child: CircularProgressIndicator(color: primaryGreen));
                       }
@@ -266,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Icon(Icons.search_off, size: 60, color: Colors.grey.shade300),
                                 const SizedBox(height: 16),
-                                Text("No products found", style: GoogleFonts.inter(color: Colors.grey, fontSize: 16)),
+                                Text("No products found", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
                               ],
                             ),
                           ),
@@ -366,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Container(width: 64, height: 58, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 28)),
           const SizedBox(height: 10),
-          Text(label, style: GoogleFonts.inter(fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
+          Text(label, style: GoogleFonts.poppins(fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -384,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(10),
                     color: const Color(0xFFF0F0F0),
                     image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
                   ),
@@ -395,14 +416,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(6)),
-                      child: Text('New', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      child: Text('New', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                   ),
               ],
             ),
           ),
           const SizedBox(height: 10),
-          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
         ],
       ),
     );
@@ -420,12 +441,25 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 24),
-              Text('AI Features', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('AI Features', style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
-              _buildAIOption(icon: Icons.chat_bubble_outline, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
-              }),
+              
+              // ✅ UPDATED ONTAP TO FETCH USERID AND ROUTE TO INDIVIDUALCHATSCREEN
+              _buildAIOption(
+                icon: Icons.chat_bubble_outline, 
+                title: 'AI Chatbot', 
+                description: 'Get instant gardening assistance', 
+                onTap: () async { 
+                  Navigator.pop(context);
+                  final prefs = await SharedPreferences.getInstance();
+                  final String? uid = prefs.getString('userId'); 
+                  
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (_) => IndividualChatScreen(userId: uid ?? "guest_user")) 
+                  );
+                }
+              ),
               const SizedBox(height: 16),
               _buildAIOption(icon: Icons.camera_alt_outlined, title: 'Leaf Disease Detector', description: 'Scan and identify leaf diseases', onTap: () {
                 Navigator.pop(context);
@@ -457,9 +491,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text(description, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666))),
+                  Text(description, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF666666))),
                 ],
               ),
             ),

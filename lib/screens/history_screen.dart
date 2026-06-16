@@ -14,8 +14,10 @@ class HistoryScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Activity History', 
-          style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Activity History', 
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18), // Updated to Poppins
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -44,7 +46,7 @@ class HistoryScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.history_toggle_off, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  Text("No history yet", style: GoogleFonts.inter(color: Colors.grey)),
+                  Text("No history yet", style: GoogleFonts.poppins(color: Colors.grey)), // Updated to Poppins
                 ],
               ),
             );
@@ -67,7 +69,6 @@ class HistoryScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => IndividualChatScreen(userId: currentUserId)),
                       );
                     } else if (type == 'scan') {
-                      // ✅ UPDATED: Navigates to Detail Screen instead of Detection Screen
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => LeafScanDetailScreen(data: data)),
@@ -94,9 +95,9 @@ class HistoryScreen extends StatelessWidget {
                                 : null,
                           ),
                           child: (data['imageUrl'] == null || data['imageUrl'] == "")
-                              ? Icon(
-                                  type == 'chat' ? Icons.chat_bubble_outline : Icons.eco_outlined, 
-                                  color: const Color(0xFF5B8E55)
+                              ? const Icon(
+                                  Icons.eco_outlined, 
+                                  color: Color(0xFF5B8E55),
                                 )
                               : null,
                         ),
@@ -105,11 +106,15 @@ class HistoryScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(data['title'] ?? "Activity", 
-                                style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text(
+                                data['title'] ?? "Activity", 
+                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), // Updated to Poppins
+                              ),
                               const SizedBox(height: 4),
-                              Text("Result: ${data['result'] ?? 'Completed'}", 
-                                style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade600)),
+                              Text(
+                                "Result: ${data['result'] ?? 'Completed'}", 
+                                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600), // Updated to Poppins
+                              ),
                             ],
                           ),
                         ),
@@ -127,54 +132,171 @@ class HistoryScreen extends StatelessWidget {
   }
 }
 
-// ✅ NEW: Scan Detail Screen so users can see previous diagnosis without opening camera
 class LeafScanDetailScreen extends StatelessWidget {
   final Map<String, dynamic> data;
   const LeafScanDetailScreen({Key? key, required this.data}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF5B8E55);
+    String scanDate = "Recently";
+    
+    if (data['timestamp'] != null) {
+      DateTime dt = (data['timestamp'] as Timestamp).toDate();
+      scanDate = "${dt.day}/${dt.month}/${dt.year}";
+    }
+
+    final String? imageUrl = data['imageUrl'];
+    final bool hasValidImage = imageUrl != null && imageUrl.isNotEmpty;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
-        title: Text('Leaf Analysis Result', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.black), onPressed: () => Navigator.pop(context)),
+        centerTitle: true,
+        title: Text(
+          'Diagnosis Result', 
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18), // Updated to Poppins
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Center(child: Icon(Icons.eco, size: 100, color: Color(0xFF5B8E55))),
-            const SizedBox(height: 30),
-            Text("Leaf Diagnosis Summary", style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            _detailRow("Title:", data['title'] ?? "N/A"),
-            _detailRow("Result:", data['result'] ?? "Healthy"),
-            _detailRow("Scanned on:", data['timestamp']?.toDate().toString().split(' ')[0] ?? "Recently"),
-            const SizedBox(height: 40),
-            Text("Tip:", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(
-              "Keep monitoring your plants regularly. You can always ask Garden Genie for further advice based on this diagnosis.",
-              style: GoogleFonts.inter(fontSize: 15, color: Colors.grey.shade700, height: 1.5),
+            const SizedBox(height: 10),
+            
+            Center(
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.12),
+                      blurRadius: 32,
+                      spreadRadius: 6,
+                      offset: const Offset(0, 8),
+                    )
+                  ],
+                  border: Border.all(color: Colors.white, width: 4),
+                  image: hasValidImage
+                      ? DecorationImage(
+                          image: NetworkImage(imageUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: !hasValidImage
+                    ? const Center(
+                        child: Icon(
+                          Icons.eco, 
+                          size: 80, 
+                          color: primaryColor,
+                        ),
+                      )
+                    : null,
+              ),
             ),
+            const SizedBox(height: 36),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFEFEFEF)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.015), 
+                    blurRadius: 12, 
+                    offset: const Offset(0, 6),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Summary", 
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black), // Updated to Poppins
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: Color(0xFFF1F1F1)),
+                  const SizedBox(height: 20),
+                  
+                  _infoTile("Title", data['title'] ?? "Analysis"),
+                  _infoTile("Status", data['result'] ?? "Unknown", isResult: true),
+                  _infoTile("Analyzed on", scanDate),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: primaryColor.withOpacity(0.12)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.lightbulb_outline, color: primaryColor, size: 22),
+                      const SizedBox(width: 10),
+                      Text(
+                        "Expert Tip", 
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor), // Updated to Poppins
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Keep monitoring your plants regularly. You can always ask Garden Genie for further advice based on this diagnosis.",
+                    style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87, height: 1.5), // Updated to Poppins
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _infoTile(String label, String value, {bool isResult = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 16)),
-          const SizedBox(width: 10),
-          Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16)),
+          Text(
+            label.toUpperCase(), 
+            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2), // Updated to Poppins
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value, 
+            style: GoogleFonts.poppins(
+              fontSize: 16, 
+              fontWeight: FontWeight.w600, 
+              color: isResult ? const Color(0xFF5B8E55) : Colors.black87,
+            ), // Updated to Poppins
+          ),
         ],
       ),
     );

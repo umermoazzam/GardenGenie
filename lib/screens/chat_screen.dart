@@ -55,7 +55,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         return AlertDialog(
           backgroundColor: _appBarColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          // Added actionsAlignment for centering buttons
           actionsAlignment: MainAxisAlignment.center, 
           title: Text('', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: _textColor)),
           content: Text('Are you sure you want to clear all messages?', 
@@ -101,6 +100,14 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Future<void> _handleSend() async {
     if (_messageController.text.trim().isEmpty) return;
     
+    // ✅ FirebaseAuth use karne ke bajaye widget se aane wali ID use karein
+    final String currentUid = widget.userId; 
+    
+    if (currentUid == "guest_user" || currentUid.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User session error. Please login again.")));
+        return;
+    }
+    
     final userMessage = _messageController.text;
     final timestamp = FieldValue.serverTimestamp();
     final timeString = "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}";
@@ -109,16 +116,17 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
     _messageController.clear();
 
     try {
+      // History document logic for keeping track of conversations
       var historyCheck = await FirebaseFirestore.instance
           .collection('history')
-          .where('userId', isEqualTo: widget.userId)
+          .where('userId', isEqualTo: currentUid)
           .where('type', isEqualTo: 'chat')
           .limit(1)
           .get();
 
       if (historyCheck.docs.isEmpty) {
         await FirebaseFirestore.instance.collection('history').add({
-          'userId': widget.userId,
+          'userId': currentUid,
           'type': 'chat',
           'title': 'AI Assistant Conversation',
           'result': 'Gardening Inquiry',
@@ -127,27 +135,28 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         });
       }
 
+      // Message save karte waqt User ID lazmi bhej rahe hain
       await FirebaseFirestore.instance.collection('chats').add({
-        'userId': widget.userId,
+        'userId': currentUid, 
         'role': 'user',
         'message': userMessage,
         'time': timeString,
         'timestamp': timestamp,
       });
 
-      final data = await ApiService.sendMessage(message: userMessage, userId: widget.userId);
+      // API call mein bhi currentUid bhej rahe hain jo backend check karega
+      final data = await ApiService.sendMessage(message: userMessage, userId: currentUid);
       String aiReply = (data['reply'] ?? "No response from AI.").trim();
 
       await FirebaseFirestore.instance.collection('chats').add({
-        'userId': widget.userId,
+        'userId': currentUid,
         'role': 'ai',
         'message': aiReply,
         'time': timeString,
         'timestamp': timestamp,
       });
-
     } catch (e) {
-      debugPrint("Chat Save Error: $e");
+      debugPrint("Chat Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }

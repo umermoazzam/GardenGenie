@@ -24,7 +24,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   final Map<String, String> _memberAssets = {
     "umermoazzam2@gmail.com": "assets/images/umer.jpeg",
     "m.haseebntu@gmail.com": "assets/images/haseeb.jpeg",
-    "beelalchaudhary@gmail.com": "assets/images/beelal.png",
+    "beelalchaudhary@gmail.com": "assets/images/beelal.jpeg",
   };
 
   Future<void> _launchInstagram() async {
@@ -53,7 +53,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         ),
         title: Text(
           "Contact Us",
-          style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       body: SingleChildScrollView(
@@ -61,13 +61,13 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Get in Touch", style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: textBlack)),
+            Text("Get in Touch", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 8),
-            Text("Our team is here to help you with any questions or concerns about your plants.", style: GoogleFonts.inter(fontSize: 14, color: textGrey, height: 1.5)),
+            Text("Our team is here to help you with any questions or concerns about your plants.", style: GoogleFonts.poppins(fontSize: 14, color: textGrey, height: 1.5)),
             const SizedBox(height: 30),
             _buildSupportSection(Icons.headset_mic_outlined, "Customer Support", "support@plantio.com"),
             const SizedBox(height: 30),
-            Text("Our Team", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: textBlack)),
+            Text("Our Team", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 16),
             _buildContactCard(context, "Umer Moazzam", "umermoazzam2@gmail.com", "+923326582650"),
             _buildContactCard(context, "Muhammad Haseeb Shahid", "m.haseebntu@gmail.com", "+923166415699"),
@@ -76,13 +76,13 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.withOpacity(0.1))),
-              child: Row(children: [Icon(Icons.access_time, color: primaryGreen, size: 20), const SizedBox(width: 12), Text("Mon - Fri: 9:00 AM to 6:00 PM", style: GoogleFonts.inter(fontSize: 14, color: textGrey))]),
+              child: Row(children: [Icon(Icons.access_time, color: primaryGreen, size: 20), const SizedBox(width: 12), Text("Mon - Fri: 9:00 AM to 6:00 PM", style: GoogleFonts.poppins(fontSize: 14, color: textGrey))]),
             ),
             const SizedBox(height: 40),
             Center(
               child: Column(
                 children: [
-                  Text("Follow our journey", style: GoogleFonts.inter(fontSize: 13, color: textGrey)),
+                  Text("Follow our journey", style: GoogleFonts.poppins(fontSize: 13, color: textGrey)),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +104,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   }
 
   Widget _buildSupportSection(IconData icon, String title, String subtitle) {
-    return Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 24)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)), Text(subtitle, style: GoogleFonts.inter(fontSize: 14, color: textGrey))])]);
+    return Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 24)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)), Text(subtitle, style: GoogleFonts.poppins(fontSize: 14, color: textGrey))])]);
   }
 
   Widget _buildSocialIcon(String assetPath) {
@@ -150,7 +150,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: textBlack)), const SizedBox(height: 4), Text(email, style: GoogleFonts.inter(fontSize: 12, color: textGrey))])),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: textBlack)), const SizedBox(height: 4), Text(email, style: GoogleFonts.poppins(fontSize: 12, color: textGrey))])),
               const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
             ],
           ),
@@ -202,15 +202,15 @@ class TeamMemberProfileScreen extends StatelessWidget {
                 child: Icon(Icons.mark_email_read_outlined, color: primaryGreen, size: 40),
               ),
               const SizedBox(height: 20),
-              Text('Inquiry Sent!', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text('Inquiry Sent!', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 12),
-              Text('The team member has been notified about your interest.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF666666), height: 1.4)),
+              Text('The team member has been notified about your interest.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF666666), height: 1.4)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('OK', style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
+                  child: Text('OK', style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
               ),
             ],
@@ -264,7 +264,7 @@ class TeamMemberProfileScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black), 
           onPressed: () => Navigator.pop(context)
         ), 
-        title: Text('Member Profile', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold))
+        title: Text('Member Profile', style: GoogleFonts.poppins(fontSize: 20, color: Colors.black, fontWeight: FontWeight.w600))
       ),
       body: Column(
         children: [
@@ -285,9 +285,9 @@ class TeamMemberProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text(name, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(name, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text("Team Member", style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
+          Text("Team Member", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 40),
           _buildDetailTile(Icons.email_outlined, "Email Address", email, onTap: () => _sendOfficialEmail(context)),
           _buildDetailTile(Icons.phone_outlined, "Phone Number", phone, onTap: () => _makePhoneCall(phone)),
@@ -310,7 +310,7 @@ class TeamMemberProfileScreen extends StatelessWidget {
             children: [
               Icon(icon, color: primaryGreen, size: 24),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500))])),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500))])),
               if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)),
             ],
           ),

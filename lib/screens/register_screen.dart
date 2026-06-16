@@ -59,9 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins( // ✅ Changed to Poppins
                   fontSize: 18,
-                  fontWeight: FontWeight.bold, // BOLD
+                  fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
@@ -75,9 +75,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: Text(
                     'OK',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
                       color: const Color(0xFF5B8E55),
-                      fontWeight: FontWeight.bold, // BOLD
+                      fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
@@ -162,9 +162,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
                       fontSize: 24, 
-                      fontWeight: FontWeight.bold // BOLD
+                      fontWeight: FontWeight.w600, 
                     ),
                   ),
                 ],
@@ -172,9 +172,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 40),
               RichText(
                 text: TextSpan(
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold, // BOLD
+                  style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                    fontSize: 25,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF1A1A1A),
                   ),
                   children: [
@@ -186,10 +186,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 12),
               Text(
                 'Create an account, We can\'t wait to have you.',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins( // ✅ Changed to Poppins
                   fontSize: 15, 
                   color: const Color(0xFF666666),
-                  fontWeight: FontWeight.bold // BOLD
+                  fontWeight: FontWeight.w600 
                 ),
               ),
               const SizedBox(height: 40),
@@ -238,9 +238,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Expanded(
                     child: Text(
                       'I Agree to the terms and conditions',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins( // ✅ Changed to Poppins
                         fontSize: 14,
-                        fontWeight: FontWeight.bold // BOLD
+                        fontWeight: FontWeight.w600 
                       )
                     ),
                   ),
@@ -269,10 +269,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         )
                       : Text(
                           'REGISTER',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.poppins( // ✅ Changed to Poppins
                             color: Colors.white, 
                             fontSize: 16, 
-                            fontWeight: FontWeight.bold // BOLD
+                            fontWeight: FontWeight.w500 
                           ),
                         ),
                 ),
@@ -284,9 +284,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(
                     'Already have an account?',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
                       color: const Color(0xFF666666),
-                      fontWeight: FontWeight.bold // BOLD
+                      fontWeight: FontWeight.w600 
                     ),
                   ),
                   const SizedBox(width: 5),
@@ -301,9 +301,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                       child: Text(
                         'Login',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.poppins( // ✅ Changed to Poppins
                           color: primaryGreen, 
-                          fontWeight: FontWeight.bold // BOLD
+                          fontWeight: FontWeight.bold 
                         )
                       ),
                     ),
@@ -333,18 +333,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        // ✅ Typed Text is Normal (Simple)
-        style: GoogleFonts.inter(
+        style: GoogleFonts.poppins( // ✅ Changed to Poppins (Normal for typing)
           fontWeight: FontWeight.normal,
           color: const Color(0xFF1A1A1A),
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          // ✅ Placeholder (Hint) is BOLD
-          hintStyle: GoogleFonts.inter(
+          hintStyle: GoogleFonts.poppins( // ✅ Changed to Poppins (Bold for Hint)
             color: Colors.grey[400],
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
           prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           suffixIcon: isPasswordField

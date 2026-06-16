@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -9,6 +8,7 @@ import os
 import io
 import requests
 import base64
+import json
 from dotenv import load_dotenv
 from PIL import Image
 import smtplib
@@ -31,7 +31,7 @@ CORS(app)
 # ✅ FIXED MAIL CONFIGURATION FOR CLOUD (HF)
 # ==========================================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587             
+app.config['MAIL_PORT'] = 587           
 app.config['MAIL_USE_TLS'] = True         
 app.config['MAIL_USE_SSL'] = False        
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
@@ -46,6 +46,15 @@ if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
 
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+# --- Global Disease Database Load ---
+try:
+    with open('disease_info.json', 'r') as f:
+        DISEASE_DB = json.load(f)
+    print("📚 disease_info.json loaded successfully!")
+except Exception as e:
+    print(f"⚠️ Warning: Could not load disease_info.json: {e}")
+    DISEASE_DB = {}
 
 # --- Groq Configuration ---
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -98,15 +107,112 @@ except Exception as e:
 # --- Helper Functions ---
 def hash_password(password: str) -> str: return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 def verify_password(password: str, hashed: bytes) -> bool: return bcrypt.checkpw(password.encode('utf-8'), hashed)
-def validate_leaf_gate(image_bytes: bytes) -> bool:
-    if not GROQ_API_KEY: return True
-    prompt = "Is this a plant leaf or part of a plant? Answer with ONLY 'YES' or 'NO'."
+
+# --- ML-FIRST FAIR LOGIC: VALIDATE LEAF GATE ---
+def validate_leaf_gate(image_bytes: bytes):
+    if not GROQ_API_KEY: return True, "Plant"
+    
+    prompt = """
+    Identify if there is any plant foliage, leaf, or stem in this image. 
+    Context: A user is scanning a plant in a garden, so a pot, hand, or soil might be visible.
+    Reply: YES | [Plant Name] if any plant part is found.
+    Reply: NO if the image is clearly something else (like a tool, person's face, or car).
+    """
     try:
         img_b64 = base64.b64encode(image_bytes).decode('utf-8')
-        res = call_groq_ai(prompt, img_b64).strip().upper()
-        return "YES" in res or "LEAF" in res
-    except: return True
+        res = call_groq_ai(prompt, img_b64).strip()
+        if "YES" in res.upper():
+            plant_name = res.split("|")[-1].strip() if "|" in res else "Plant"
+            return True, plant_name
+        return False, None
+    except: 
+        return True, "Plant"
 
+# --- ML-FIRST FAIR LOGIC: PREDICT ROUTE ---
+@app.route('/predict', methods=['POST'])
+def predict():
+    if model is None: return jsonify({"error": "Model not loaded"}), 500
+    if 'file' not in request.files: return jsonify({"error": "No file"}), 400
+    
+    file_bytes = request.files['file'].read()
+
+    try:
+        # STEP 1: Expert ML Model Prediction
+        image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+        img_tensor = data_transforms(image).unsqueeze(0)
+        
+        with torch.no_grad():
+            outputs = model(img_tensor)
+            probs = F.softmax(outputs.logits, dim=-1)
+            idx = torch.argmax(probs, dim=-1).item()
+            conf = probs[0][idx].item()
+
+        accuracy = round(conf * 100, 2)
+        
+        # STEP 2: Logic for Leaf Validation (Bypass if high confidence)
+        if conf >= 0.85:
+            is_leaf = True
+            plant_identity = "Detected Plant"
+        else:
+            is_leaf, plant_identity = validate_leaf_gate(file_bytes)
+
+        if not is_leaf:
+            return jsonify({"status": "rejected", "disease": "Not a plant leaf.", "confidence": accuracy}), 200
+
+        if conf < 0.70:
+            return jsonify({"status": "low_confidence", "disease": "Unclear scan. Try again.", "confidence": accuracy}), 200
+
+        # --- SUPER SMART MATCHING LOGIC START ---
+        labels = getattr(model.config, "id2label", {})
+        full_label = str(labels.get(idx, labels.get(str(idx), "Unknown")))
+
+        # Terminal mein dekhein model ne asli naam kya bheja (Mismatch pakadne ke liye)
+        print(f"🔍 Model Label: {full_label}")
+
+        # 1. Pehle exact match try karein
+        extra_info = DISEASE_DB.get(full_label)
+
+        # 2. Agar nahi mila, toh "Fuzzy Match" karein (Words match logic)
+        if not extra_info:
+            model_words = set(full_label.lower().replace("_", " ").replace("with", "").split())
+            for key, val in DISEASE_DB.items():
+                json_key_words = set(key.lower().replace("_", " ").replace("with", "").split())
+                
+                # Agar JSON key ke words model ke label mein hain, toh utha lo!
+                if json_key_words.issubset(model_words) or model_words.issubset(json_key_words):
+                    extra_info = val
+                    print(f"✅ Smart Match Found: {key}")
+                    break
+
+        # 3. Agar phir bhi kuch na mile (Fallback)
+        if not extra_info:
+            print(f"⚠️ Warning: No match for '{full_label}'")
+            display_title = full_label.split("___")[-1].replace("_", " ").title() if "___" in full_label else full_label
+            extra_info = {
+                "title": display_title,
+                "info": "Specific details for this disease are being prepared.",
+                "steps": ["Observe the plant closely", "Check nearby plants for similar symptoms"],
+                "products": ["Consult a nursery expert"]
+            }
+        # --- SUPER SMART MATCHING LOGIC END ---
+
+        return jsonify({
+            "status": "success",
+            "plant": plant_identity,
+            "confidence": accuracy,
+            "disease": extra_info.get('title'),
+            "brief_info": extra_info.get('info'),
+            "what_to_do": extra_info.get('steps'),
+            "recommended_products": extra_info.get('products')
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Server Error: {traceback.format_exc()}")
+        return jsonify({"error": "Internal server error."}), 500
+
+# ==========================================
+# RESET PASSWORD & AUTH ROUTES (UNCHANGED)
+# ==========================================
 RESET_FORM_HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -153,41 +259,30 @@ RESET_FORM_HTML = """
 </html>
 """
 
-# --- ROUTES ---
-
-@app.route('/predict', methods=['POST'])
-def predict():
-    if model is None: return jsonify({"error": "Model not loaded"}), 500
-    if 'file' not in request.files: return jsonify({"error": "No file"}), 400
-    file_bytes = request.files['file'].read()
-    if not validate_leaf_gate(file_bytes):
-        return jsonify({"disease": "This image is not a plant leaf.", "confidence": 0.0, "status": "rejected"}), 200
-    try:
-        image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
-        img_tensor = data_transforms(image).unsqueeze(0)
-        with torch.no_grad():
-            outputs = model(img_tensor)
-            probs = F.softmax(outputs.logits, dim=-1)
-            idx = torch.argmax(probs, dim=-1).item()
-            conf = probs[0][idx].item()
-        labels = getattr(model.config, "id2label", {})
-        label = labels.get(idx, labels.get(str(idx), "Unknown"))
-        return jsonify({"disease": label, "confidence": round(conf * 100, 2), "status": "success"}), 200
-    except Exception as e: return jsonify({"error": str(e)}), 500
-
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     if request.method == 'OPTIONS': return jsonify({"status": "ok"}), 200
     try:
         data = request.get_json()
         msg = data.get('message', '')
-        uid = data.get('userId', 'test_user')
-        if not msg: return jsonify({"reply": "Message empty"}), 400
+        uid = data.get('userId')
+
+        if not uid or uid == "null": 
+            return jsonify({"reply": "Error: Unauthorized access. Please login again."}), 401
+
         reply = call_groq_ai(msg)
         clean_reply = reply.replace("**", "").replace("*", "").strip()
-        chat_history_collection.insert_one({"user_id": uid, "user_message": msg, "ai_reply": clean_reply, "timestamp": datetime.utcnow()})
+        
+        chat_history_collection.insert_one({
+            "user_id": uid, 
+            "user_message": msg, 
+            "ai_reply": clean_reply, 
+            "timestamp": datetime.utcnow()
+        })
         return jsonify({"reply": clean_reply}), 200
-    except Exception as e: return jsonify({"reply": f"AI Error: {str(e)}"}), 500
+    except Exception as e:
+        print(f"❌ Chat Error: {str(e)}")
+        return jsonify({"reply": "Sorry, server side error occurred."}), 500
 
 @app.route('/api/chat-history/<user_id>', methods=['GET'])
 def get_chat_history(user_id):
@@ -242,7 +337,6 @@ def forgot_password():
         url = "https://api.brevo.com/v3/smtp/email"
         headers = {"api-key": api_key, "content-type": "application/json"}
 
-        # High-End Professional Template
         html_body = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; background: #ffffff; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
             <div style="background: #5B8E55; padding: 30px; text-align: center;">
@@ -290,10 +384,9 @@ def web_reset_password(token):
         return "Password Updated!"
     return RESET_FORM_HTML
 
-# ==========================================================
-# ✅ UPDATED: HIGH-END PROFESSIONAL UI/UX EMAIL (EXACT TEMPLATE)
-# ==========================================================
-
+# ==========================================
+# BREVO CONTACT INQUIRY (UNCHANGED)
+# ==========================================
 @app.route('/api/contact-inquiry', methods=['POST', 'OPTIONS'])
 def contact_inquiry():
     if request.method == 'OPTIONS': 
@@ -310,7 +403,6 @@ def contact_inquiry():
         url = "https://api.brevo.com/v3/smtp/email"
         headers = {"accept": "application/json", "api-key": api_key, "content-type": "application/json"}
 
-        # Professional High-End Template
         html_body = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; background: #ffffff; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
             <div style="background: #5B8E55; padding: 30px; text-align: center;">

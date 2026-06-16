@@ -50,6 +50,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   google_generative_ai: ^0.4.7
+  printing: ^5.14.3
   image_picker: ^1.2.2
   cloud_firestore: ^6.1.2
   firebase_storage: ^13.0.6
@@ -59,7 +60,7 @@ dependencies:
   image: ^4.8.0
   permission_handler: ^12.0.3
   percent_indicator: ^4.2.2
-  
+  pdf: ^3.12.0
 
 dev_dependencies:
   flutter_test:
@@ -117,6 +118,14 @@ flutter:
     - assets/images/haseeb.jpeg
     - assets/images/beelal.jpeg
     - assets/icons/user.png
+    - assets/images/splash_screen.jpg
+    - assets/images/welcome.png
+    - assets/images/banner.png
+    - assets/images/uzair.jpeg
+    - assets/images/nabeel.jpeg
+    - assets/images/faheem.jpeg
+    - assets/images/wasif.jpeg
+    - assets/images/talal.jpeg
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

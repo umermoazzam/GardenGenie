@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
-// ✅ ADDED IMPORTS
+// ✅ MAINTAINED IMPORTS
 import 'contact_us_screen.dart';
 import 'admin_screen.dart'; 
 import 'history_screen.dart'; 
@@ -61,18 +61,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             content: Text(
               'Are you sure you want to logout?',
-              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500),
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500), // Updated to Poppins
               textAlign: TextAlign.center,
             ),
             actionsAlignment: MainAxisAlignment.spaceEvenly,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
+                child: Text('No', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)), // Updated to Poppins
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
+                child: Text('Yes', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)), // Updated to Poppins
               ),
             ],
           ),
@@ -121,18 +121,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Color(0xFF5B8E55)),
-                title: Text('Choose from library', style: GoogleFonts.inter()),
+                title: Text('Choose from library', style: GoogleFonts.poppins()), // Updated to Poppins
                 onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF5B8E55)),
-                title: Text('Take photo', style: GoogleFonts.inter()),
+                title: Text('Take photo', style: GoogleFonts.poppins()), // Updated to Poppins
                 onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
               ),
               if (_profileImagePath != null)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
-                  title: Text('Remove current picture', style: GoogleFonts.inter(color: Colors.red)),
+                  title: Text('Remove current picture', style: GoogleFonts.poppins(color: Colors.red)), // Updated to Poppins
                   onTap: () { Navigator.pop(context); _removeImage(); },
                 ),
             ],
@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('My Profile', style: GoogleFonts.inter(color: textBlack, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('My Profile', style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.w700)), // Updated to Poppins
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -178,13 +178,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.transparent, // Background transparent kar diya
+                      color: Colors.transparent,
                       shape: BoxShape.circle,
-                      // ✅ UPDATED LOGIC: DecorationImage hi pura handle karega
                       image: DecorationImage(
                         image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
                             ? FileImage(File(_profileImagePath!)) as ImageProvider
-                            : const AssetImage('assets/icons/user.png'), // Default icon path
+                            : const AssetImage('assets/icons/user.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -205,9 +204,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(_userName, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: textBlack)),
+            Text(_userName, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: textBlack)), // Updated to Poppins
             const SizedBox(height: 4),
-            Text(_userEmail, style: GoogleFonts.inter(fontSize: 14, color: textGrey)),
+            Text(_userEmail, style: GoogleFonts.poppins(fontSize: 14, color: textGrey)), // Updated to Poppins
             const SizedBox(height: 30),
 
             if (isAdmin) 
@@ -230,8 +229,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(Icons.admin_panel_settings, color: primaryGreen, size: 26),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Text("Admin Control Panel",
-                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: primaryGreen),
+                          child: Text("Admin Dashboard",
+                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: primaryGreen), // Updated to Poppins
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios, size: 16, color: primaryGreen),
@@ -269,7 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const Icon(Icons.logout, color: Colors.white),
                     const SizedBox(width: 10),
-                    Text('Log Out', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Log Out', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)), // Updated to Poppins
                   ],
                 ),
               ),
@@ -293,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Icon(icon, color: primaryGreen, size: 24),
               const SizedBox(width: 16),
-              Expanded(child: Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: textBlack))),
+              Expanded(child: Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500, color: textBlack))), // Updated to Poppins
               const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),

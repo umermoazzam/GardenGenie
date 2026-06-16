@@ -1,0 +1,189 @@
+{
+  "Pepper__bell___Bacterial_spot": {
+    "title": "Pepper Bacterial Spot",
+    "info": "This disease is caused by Xanthomonas bacteria, which creates small black spots on leaves.",
+    "steps": [
+      "Remove and destroy infected leaves immediately",
+      "Maintain proper spacing between plants for better airflow",
+      "Avoid working with plants when leaves are wet"
+    ],
+    "products": [
+      "Copper-based Fungicides",
+      "Streptomycin Sulfate"
+    ]
+  },
+  "Pepper__bell___healthy": {
+    "title": "Healthy Pepper Plant",
+    "info": "Your plant is completely healthy! Continue maintaining it this way.",
+    "steps": [
+      "Water regularly",
+      "Ensure adequate sunlight",
+      "Use organic fertilizer (compost)"
+    ],
+    "products": [
+      "No chemicals needed",
+      "Liquid Seaweed Fertilizer (for growth)"
+    ]
+  },
+  "Potato___Early_blight": {
+    "title": "Potato Early Blight",
+    "info": "This is a fungal disease that starts on older leaves and creates circular target-like lesions.",
+    "steps": [
+      "Remove lower infected leaves",
+      "Avoid wetting leaves during irrigation (drip irrigation is best)",
+      "Practice crop rotation"
+    ],
+    "products": [
+      "Mancozeb",
+      "Chlorothalonil",
+      "Neem Oil (Organic)"
+    ]
+  },
+  "Potato___Late_blight": {
+    "title": "Potato Late Blight",
+    "info": "This is a highly destructive disease that can devastate an entire field, especially in cool and wet conditions.",
+    "steps": [
+      "Remove infected plants and bury them in the soil",
+      "Improve air circulation around plants"
+    ],
+    "products": [
+      "Ridomil Gold",
+      "Copper Fungicides",
+      "Infinito"
+    ]
+  },
+  "Potato___healthy": {
+    "title": "Healthy Potato Plant",
+    "info": "The potato plant is healthy and growing well. A good harvest is expected!",
+    "steps": [
+      "Keep the soil moist but not waterlogged",
+      "Hill up soil around developing potatoes to protect them from sunlight"
+    ],
+    "products": [
+      "General Balanced Fertilizer (10-10-10)"
+    ]
+  },
+  "Tomato___Bacterial_spot": {
+    "title": "Tomato Bacterial Spot",
+    "info": "Small raised spots appear on leaves and fruits.",
+    "steps": [
+      "Avoid overhead watering",
+      "Keep gardening tools clean and sanitized"
+    ],
+    "products": [
+      "Copper Spray",
+      "Serenade Garden (Organic)"
+    ]
+  },
+  "Tomato___Early_blight": {
+    "title": "Tomato Early Blight",
+    "info": "A fungal disease that causes brown spots on leaves, leading to yellowing and leaf drop.",
+    "steps": [
+      "Prune plants regularly",
+      "Use mulch to prevent soil from splashing onto leaves"
+    ],
+    "products": [
+      "Daconil",
+      "Mancozeb",
+      "Copper Soap"
+    ]
+  },
+  "Tomato___Late_blight": {
+    "title": "Tomato Late Blight",
+    "info": "This disease spreads rapidly in cool weather and can cause stems to turn black.",
+    "steps": [
+      "Avoid excessive humidity",
+      "Remove infected plants immediately"
+    ],
+    "products": [
+      "Revus",
+      "Curzate",
+      "Copper Fungicide"
+    ]
+  },
+  "Tomato___Leaf_Mold": {
+    "title": "Tomato Leaf Mold",
+    "info": "Common in greenhouse-grown tomatoes, appearing as a velvety fungus on the underside of leaves.",
+    "steps": [
+      "Reduce humidity by improving ventilation",
+      "Maintain proper spacing between plants"
+    ],
+    "products": [
+      "Calcium Silicate",
+      "Sulfur-based Fungicides"
+    ]
+  },
+  "Tomato___Septoria_leaf_spot": {
+    "title": "Tomato Septoria Leaf Spot",
+    "info": "Small circular spots with gray centers. This disease affects leaves but not fruits.",
+    "steps": [
+      "Remove old and infected leaves",
+      "Rotate tomato planting locations each year"
+    ],
+    "products": [
+      "Chlorothalonil",
+      "Copper Fungicides"
+    ]
+  },
+  "Tomato___Spider_mites_Two_spotted_spider_mite": {
+    "title": "Tomato Spider Mites",
+    "info": "Tiny pests that suck sap from leaves, causing yellowing and white speckling.",
+    "steps": [
+      "Spray a strong stream of water under leaves",
+      "Encourage beneficial insects like ladybugs in the garden"
+    ],
+    "products": [
+      "Neem Oil",
+      "Insecticidal Soap",
+      "Abamectin"
+    ]
+  },
+  "Tomato___Target_Spot": {
+    "title": "Tomato Target Spot",
+    "info": "Large brown lesions develop on leaves, resembling a target pattern.",
+    "steps": [
+      "Ensure good air circulation",
+      "Grow tomatoes in raised beds or well-drained locations"
+    ],
+    "products": [
+      "Scala",
+      "Bravo Weather Stik"
+    ]
+  },
+  "Tomato___Tomato_mosaic_virus": {
+    "title": "Tomato Mosaic Virus",
+    "info": "Leaves become small, distorted, and develop a light and dark green mosaic pattern.",
+    "steps": [
+      "Remove infected plants immediately",
+      "Avoid smoking near tomato plants as the virus can spread through tobacco products"
+    ],
+    "products": [
+      "No chemical cure available (viral disease)",
+      "Protect plants from aphids and other insect vectors"
+    ]
+  },
+  "Tomato___Tomato_YellowLeaf_Curl_Virus": {
+    "title": "Tomato Yellow Leaf Curl Virus",
+    "info": "Spread by whiteflies. Leaves curl upward and plant growth becomes stunted.",
+    "steps": [
+      "Control whitefly populations",
+      "Install yellow sticky traps"
+    ],
+    "products": [
+      "Imidacloprid (for Whiteflies)",
+      "Neem Oil Spray"
+    ]
+  },
+  "Tomato___healthy": {
+    "title": "Healthy Tomato Plant",
+    "info": "Congratulations! Your tomato plant is healthy and thriving.",
+    "steps": [
+      "Apply organic fertilizer every 15 days",
+      "Water at the root zone"
+    ],
+    "products": [
+      "Epsom Salt (for Magnesium)",
+      "Fish Emulsion"
+    ]
+  }
+}
