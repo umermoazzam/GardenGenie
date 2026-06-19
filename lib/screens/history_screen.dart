@@ -12,14 +12,15 @@ class HistoryScreen extends StatelessWidget {
     final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFBFBFB), // Slightly off-white for contrast
       appBar: AppBar(
         title: Text(
           'Activity History', 
-          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18), // Updated to Poppins
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -46,14 +47,14 @@ class HistoryScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.history_toggle_off, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  Text("No history yet", style: GoogleFonts.poppins(color: Colors.grey)), // Updated to Poppins
+                  Text("No history yet", style: GoogleFonts.poppins(color: Colors.grey)),
                 ],
               ),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             itemCount: docs.length,
             itemBuilder: (context, index) {
               var data = docs[index].data() as Map<String, dynamic>;
@@ -75,21 +76,29 @@ class HistoryScreen extends StatelessWidget {
                       );
                     }
                   },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
+                    // White bolded + shaded effect apply kiya gaya hai
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9F9F9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade100),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade50),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 60, height: 60,
+                          width: 65, height: 65,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(12),
                             image: (data['imageUrl'] != null && data['imageUrl'] != "")
                                 ? DecorationImage(image: NetworkImage(data['imageUrl']), fit: BoxFit.cover)
                                 : null,
@@ -98,6 +107,7 @@ class HistoryScreen extends StatelessWidget {
                               ? const Icon(
                                   Icons.eco_outlined, 
                                   color: Color(0xFF5B8E55),
+                                  size: 28,
                                 )
                               : null,
                         ),
@@ -108,17 +118,27 @@ class HistoryScreen extends StatelessWidget {
                             children: [
                               Text(
                                 data['title'] ?? "Activity", 
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), // Updated to Poppins
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold, // Bolded
+                                  fontSize: 16, 
+                                  color: const Color(0xFF1A1A1A)
+                                ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 5),
                               Text(
                                 "Result: ${data['result'] ?? 'Completed'}", 
-                                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600), // Updated to Poppins
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13, 
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade600
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                        const Icon(Icons.chevron_right_rounded, color: Color(0xFFCCCCCC), size: 22),
                       ],
                     ),
                   ),
@@ -157,7 +177,7 @@ class LeafScanDetailScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Diagnosis Result', 
-          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18), // Updated to Poppins
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
@@ -171,7 +191,6 @@ class LeafScanDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
-            
             Center(
               child: Container(
                 width: 180,
@@ -207,7 +226,6 @@ class LeafScanDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 36),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -228,12 +246,11 @@ class LeafScanDetailScreen extends StatelessWidget {
                 children: [
                   Text(
                     "Summary", 
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black), // Updated to Poppins
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black),
                   ),
                   const SizedBox(height: 16),
                   const Divider(height: 1, color: Color(0xFFF1F1F1)),
                   const SizedBox(height: 20),
-                  
                   _infoTile("Title", data['title'] ?? "Analysis"),
                   _infoTile("Status", data['result'] ?? "Unknown", isResult: true),
                   _infoTile("Analyzed on", scanDate),
@@ -241,7 +258,6 @@ class LeafScanDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -259,14 +275,14 @@ class LeafScanDetailScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Text(
                         "Expert Tip", 
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor), // Updated to Poppins
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
                     "Keep monitoring your plants regularly. You can always ask Garden Genie for further advice based on this diagnosis.",
-                    style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87, height: 1.5), // Updated to Poppins
+                    style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87, height: 1.5),
                   ),
                 ],
               ),
@@ -286,7 +302,7 @@ class LeafScanDetailScreen extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(), 
-            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2), // Updated to Poppins
+            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
           ),
           const SizedBox(height: 6),
           Text(
@@ -295,7 +311,7 @@ class LeafScanDetailScreen extends StatelessWidget {
               fontSize: 16, 
               fontWeight: FontWeight.w600, 
               color: isResult ? const Color(0xFF5B8E55) : Colors.black87,
-            ), // Updated to Poppins
+            ),
           ),
         ],
       ),

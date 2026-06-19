@@ -46,29 +46,58 @@ class _ShopScreenState extends State<ShopScreen> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Select Category", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
+              ),
+              Text("Select Category", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const SizedBox(height: 25),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 12,
+                runSpacing: 12,
                 children: categories.map((category) {
+                  bool isSelected = selectedCategory == category;
                   return ChoiceChip(
                     label: Text(category),
-                    selected: selectedCategory == category,
+                    selected: isSelected,
                     onSelected: (selected) {
                       setState(() => selectedCategory = category);
                       Navigator.pop(context);
                     },
                     selectedColor: primaryGreen,
-                    backgroundColor: Colors.grey.shade200,
-                    labelStyle: TextStyle(color: selectedCategory == category ? Colors.white : Colors.black),
+                    backgroundColor: Colors.white,
+                    elevation: isSelected ? 4 : 0,
+                    pressElevation: 2,
+                    shadowColor: Colors.black.withOpacity(0.2),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    // Yahan White Bold effect apply kiya gaya hai
+                    labelStyle: GoogleFonts.poppins(
+                      color: isSelected ? Colors.white : Colors.grey.shade700,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isSelected ? primaryGreen : Colors.grey.shade200,
+                        width: 1.5,
+                      ),
+                    ),
+                    showCheckmark: false,
                   );
                 }).toList(),
               ),
+              const SizedBox(height: 10),
             ],
           ),
         );

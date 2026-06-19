@@ -28,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color textBlack = const Color(0xFF1A1A1A);
   final Color textGrey = const Color(0xFF666666);
-  final Color bgGrey = const Color(0xFFF5F5F5);
+  final Color bgWhiteShade = const Color(0xFFF9F9F9); // Slightly off-white for depth
 
   final ImagePicker _picker = ImagePicker();
 
@@ -58,21 +58,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context: context,
           builder: (context) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
             contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             content: Text(
               'Are you sure you want to logout?',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500), // Updated to Poppins
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
             actionsAlignment: MainAxisAlignment.spaceEvenly,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)), // Updated to Poppins
+                child: Text('No', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: textGrey)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)), // Updated to Poppins
+                child: Text('Yes', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.redAccent)),
               ),
             ],
           ),
@@ -114,25 +115,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showImagePickerOptions() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (BuildContext context) {
         return SafeArea(
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF5B8E55)),
-                title: Text('Choose from library', style: GoogleFonts.poppins()), // Updated to Poppins
+                leading: Icon(Icons.photo_library, color: primaryGreen),
+                title: Text('Choose from library', style: GoogleFonts.poppins()),
                 onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Color(0xFF5B8E55)),
-                title: Text('Take photo', style: GoogleFonts.poppins()), // Updated to Poppins
+                leading: Icon(Icons.camera_alt, color: primaryGreen),
+                title: Text('Take photo', style: GoogleFonts.poppins()),
                 onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
               ),
               if (_profileImagePath != null)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
-                  title: Text('Remove current picture', style: GoogleFonts.poppins(color: Colors.red)), // Updated to Poppins
+                  title: Text('Remove current picture', style: GoogleFonts.poppins(color: Colors.red)),
                   onTap: () { Navigator.pop(context); _removeImage(); },
                 ),
             ],
@@ -163,51 +165,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('My Profile', style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.w700)), // Updated to Poppins
+        title: Text('My Profile', style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: _showImagePickerOptions,
-              child: Stack(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
+            // Profile Picture with Shaded Effect
+            Center(
+              child: GestureDetector(
+                onTap: _showImagePickerOptions,
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: bgWhiteShade,
+                        backgroundImage: (_profileImagePath != null && File(_profileImagePath!).existsSync())
                             ? FileImage(File(_profileImagePath!)) as ImageProvider
                             : const AssetImage('assets/icons/user.png'),
-                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 0, right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: primaryGreen, 
-                        shape: BoxShape.circle, 
-                        border: Border.all(color: Colors.white, width: 2)
+                    Positioned(
+                      bottom: 4, right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: primaryGreen, 
+                          shape: BoxShape.circle, 
+                          border: Border.all(color: Colors.white, width: 2)
+                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
                       ),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(_userName, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: textBlack)), // Updated to Poppins
+            Text(_userName, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 4),
-            Text(_userEmail, style: GoogleFonts.poppins(fontSize: 14, color: textGrey)), // Updated to Poppins
-            const SizedBox(height: 30),
+            Text(_userEmail, style: GoogleFonts.poppins(fontSize: 14, color: textGrey)),
+            const SizedBox(height: 35),
 
             if (isAdmin) 
               Padding(
@@ -216,21 +229,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboardScreen()));
                   },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(15),
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: primaryGreen.withOpacity(0.3), width: 1.5),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: primaryGreen.withOpacity(0.2), width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryGreen.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.admin_panel_settings, color: primaryGreen, size: 26),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                          child: Icon(Icons.admin_panel_settings, color: primaryGreen, size: 24),
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text("Admin Dashboard",
-                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: primaryGreen), // Updated to Poppins
+                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: primaryGreen),
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios, size: 16, color: primaryGreen),
@@ -255,20 +279,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 30),
 
-            SizedBox(
-              width: double.infinity, height: 50,
+            // Log Out Button with logic maintained
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryGreen.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              ),
               child: ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen, elevation: 0,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  backgroundColor: primaryGreen, 
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.logout, color: Colors.white),
+                    const Icon(Icons.logout, color: Colors.white, size: 20),
                     const SizedBox(width: 10),
-                    Text('Log Out', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)), // Updated to Poppins
+                    Text('Log Out', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -281,19 +317,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileOption(IconData icon, String title, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 18.0),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Row(
             children: [
-              Icon(icon, color: primaryGreen, size: 24),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: bgWhiteShade,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: primaryGreen, size: 22),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500, color: textBlack))), // Updated to Poppins
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              Expanded(child: Text(title, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: textBlack))),
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
             ],
           ),
         ),

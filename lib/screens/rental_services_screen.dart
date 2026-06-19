@@ -77,7 +77,6 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     if (index == 0) {
       Navigator.popUntil(context, (route) => route.isFirst);
     } else if (index == 1) {
-      // ENABLED: Now navigates to Shop Screen
       Navigator.pushReplacement(
         context, 
         MaterialPageRoute(builder: (context) => const ShopScreen())
@@ -532,20 +531,34 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Padding(
             padding: const EdgeInsets.only(top: 10, bottom: 25),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600),
-              decoration: InputDecoration(
-                hintText: 'Search tools or gardeners...',
-                hintStyle: GoogleFonts.poppins(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
-                prefixIcon: const Icon(Icons.search, color: primaryGreen, size: 24),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                border: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
-                enabledBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
-                focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: primaryGreen, width: 2.5)),
+            // White Shaded Search Bar (Square Radius)
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.zero,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) => setState(() => _searchQuery = val),
+                style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  hintText: 'Search tools or gardeners...',
+                  hintStyle: GoogleFonts.poppins(color: Colors.black.withOpacity(0.2), fontWeight: FontWeight.w500),
+                  prefixIcon: const Icon(Icons.search, color: primaryGreen, size: 24),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                  border: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
+                  enabledBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
+                  focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: primaryGreen, width: 2.5)),
+                ),
               ),
             ),
           ),
@@ -631,7 +644,19 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     return Container(
       width: 220,
       margin: const EdgeInsets.only(right: 18, bottom: 10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero, border: Border.all(color: Colors.grey[100]!)),
+      // White Shaded Tool Card (Square Radius)
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.zero, 
+        border: Border.all(color: Colors.grey[100]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -677,7 +702,19 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero, border: Border.all(color: Colors.grey[200]!)),
+        // White Shaded Gardener Row (Square Radius)
+        decoration: BoxDecoration(
+          color: Colors.white, 
+          borderRadius: BorderRadius.zero, 
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             Hero(
@@ -716,7 +753,6 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
   }
 }
 
-// ... GardenerProfileScreen and _buildInfoSection logic continues below as before ...
 class GardenerProfileScreen extends StatefulWidget {
   final Map<String, dynamic> gardener;
   final Color primaryGreen;
@@ -862,7 +898,18 @@ class _GardenerProfileScreenState extends State<GardenerProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(12)),
+          // White Shaded Info Tile (Square Radius respect for consistent theme)
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(12), 
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Container(

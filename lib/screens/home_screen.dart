@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Stack(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(top: 55.0, right: 50.0),
+                                padding: const EdgeInsets.only(top: 55.0, right: 60.0), // Increased right padding for shaded icon
                                 child: RichText(
                                   text: TextSpan(
                                     style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w600, letterSpacing: -0.5),
@@ -169,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
+                              // ✅ Profile Icon with White Shaded Effect
                               Positioned(
                                 top: 0,
                                 right: 0,
@@ -177,16 +178,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())).then((_) => _loadProfileImage());
                                   },
                                   child: Container(
-                                    width: 43,
-                                    height: 43,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.transparent,
-                                      image: DecorationImage(
-                                        image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
-                                            ? FileImage(File(_profileImagePath!)) as ImageProvider
-                                            : const AssetImage('assets/icons/user.png'),
-                                        fit: BoxFit.cover,
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(2), // White border effect
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        image: DecorationImage(
+                                          image: (_profileImagePath != null && File(_profileImagePath!).existsSync())
+                                              ? FileImage(File(_profileImagePath!)) as ImageProvider
+                                              : const AssetImage('assets/icons/user.png'),
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -323,16 +338,28 @@ class _HomeScreenState extends State<HomeScreen> {
         child: GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen())),
           child: Container(
-            width: 60, height: 60,
+            width: 65, height: 65,
             decoration: BoxDecoration(
               color: primaryGreen,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(-2, -2)),
-                BoxShadow(color: const Color(0xFF000000).withOpacity(0.18), blurRadius: 15, offset: const Offset(4, 6)),
+                BoxShadow(
+                  color: primaryGreen.withOpacity(0.45),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.18),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
               ],
             ),
-            child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
+            child: const Icon(
+              Icons.crop_free, 
+              color: Colors.white, 
+              size: 30, 
+            ),
           ),
         ),
       ),

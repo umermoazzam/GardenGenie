@@ -41,13 +41,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       'status': newStatus,
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Request $newStatus!", style: GoogleFonts.poppins()))
+      SnackBar(
+        content: Text(
+          "Request $newStatus!", 
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(),
+        ),
+      ),
     );
   }
 
   Future<void> _publishProduct() async {
     if (_nameController.text.isEmpty || _priceController.text.isEmpty || _selectedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields!", textAlign: TextAlign.center)),
+      );
       return;
     }
     setState(() => _isUploading = true);
@@ -74,10 +82,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       _nameController.clear(); _descController.clear(); _categoryController.clear(); _priceController.clear();
       setState(() { _selectedImage = null; _isUploading = false; _currentView = "Dashboard"; });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Product Added Successfully!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Product Added Successfully!", textAlign: TextAlign.center)),
+      );
     } catch (e) {
       setState(() => _isUploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e", textAlign: TextAlign.center)),
+      );
     }
   }
 
@@ -158,7 +170,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // NEW SERVICE REQUESTS LIST (GARDENER DASHBOARD STYLE)
   Widget _buildServiceRequestsList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -174,7 +185,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           return Center(child: Text("No Tool Requests Found", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)));
         }
         
-        // Manual sorting: Latest requests first
         List<QueryDocumentSnapshot> sortedDocs = List.from(docs);
         sortedDocs.sort((a, b) {
           Timestamp t1 = (a.data() as Map<String, dynamic>)['requestDate'] ?? Timestamp.now();
@@ -266,7 +276,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const Divider(height: 30, thickness: 1),
                     
-                    // Buttons exactly like Gardener Dashboard
                     if (data['status'] == 'Pending')
                       Row(
                         children: [
@@ -323,7 +332,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // --- HELPER COMPONENTS (GARDENER DASHBOARD STYLE) ---
   Widget _actionButton(String title, Color color, VoidCallback onPressed, {required bool isOutlined}) {
     return SizedBox(
       height: 46,
@@ -379,7 +387,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // --- EXISTING UI COMPONENTS (UNCHANGED LOGIC) ---
   Widget _buildOrdersList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('orders').snapshots(),
@@ -399,6 +406,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           itemBuilder: (context, index) {
             var data = sortedDocs[index].data() as Map<String, dynamic>;
             var addr = data['shippingAddress'] as Map<String, dynamic>? ?? {};
+            String orderId = sortedDocs[index].id.substring(0,6).toUpperCase();
+
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
               padding: const EdgeInsets.all(18),
@@ -407,7 +416,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text("ORDER: #${sortedDocs[index].id.substring(0,6).toUpperCase()}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.grey)),
+                    Text("ORDER: #$orderId", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.grey)),
                     Text(data['status'] ?? 'Pending', style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.bold)),
                   ]),
                   const Divider(height: 30),
@@ -427,7 +436,67 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Text("Address: ${addr['address'] ?? ''}, ${addr['city'] ?? ''}", style: GoogleFonts.poppins(fontSize: 12)),
                     ]),
                   ),
-                  Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => sortedDocs[index].reference.delete(), child: Text("Delete Order", style: GoogleFonts.poppins(color: Colors.red)))),
+                  Align(
+                    alignment: Alignment.centerRight, 
+                    child: TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              title: Text(
+                                "Confirm Deletion", 
+                                textAlign: TextAlign.center, 
+                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 17)
+                              ),
+                              content: Text(
+                                "Are you sure you want to delete Order #$orderId?", 
+                                textAlign: TextAlign.center, 
+                                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF4A4A4A))
+                              ),
+                              actionsAlignment: MainAxisAlignment.center, 
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(
+                                    "Cancel", 
+                                    style: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.w500)
+                                  ),
+                                ),
+                                const SizedBox(width: 8), 
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.pop(context); 
+                                    await sortedDocs[index].reference.delete(); 
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            "Order #$orderId has been successfully deleted.", 
+                                            textAlign: TextAlign.center, 
+                                            style: GoogleFonts.poppins(fontWeight: FontWeight.w500)
+                                          ),
+                                          backgroundColor: const Color(0xFFF4F4F9), 
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    "Delete", 
+                                    style: GoogleFonts.poppins(color: Colors.redAccent, fontWeight: FontWeight.bold)
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }, 
+                      child: Text("Delete Order", style: GoogleFonts.poppins(color: Colors.red))
+                    )
+                  ),
                 ],
               ),
             );
@@ -466,39 +535,134 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildTextField(String label, String hint, TextEditingController controller, {int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextField(
-        controller: controller, maxLines: maxLines,
-        style: GoogleFonts.poppins(),
-        decoration: InputDecoration(
-          labelText: label, hintText: hint, labelStyle: GoogleFonts.poppins(),
-          filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+            labelStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13),
+            hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 13),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.grey.shade100, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: primaryGreen.withOpacity(0.6), width: 1.8),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildAddProductForm() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(children: [
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: double.infinity, height: 150, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
-            child: _selectedImage != null ? Image.file(_selectedImage!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: _pickImage,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: double.infinity,
+              height: 170,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _selectedImage != null ? primaryGreen.withOpacity(0.3) : Colors.grey.shade200, 
+                  width: 1.5
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _selectedImage != null 
+                    ? Image.file(_selectedImage!, fit: BoxFit.cover) 
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: primaryGreen.withOpacity(0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.add_a_photo_outlined, size: 32, color: primaryGreen),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Upload Product Image", 
+                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey[600])
+                          ),
+                        ],
+                      ),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        _buildTextField("Product Name", "Title", _nameController),
-        _buildTextField("Description", "Details", _descController, maxLines: 3),
-        Row(children: [
-          Expanded(child: _buildTextField("Category", "Seeds", _categoryController)),
-          const SizedBox(width: 10),
-          Expanded(child: _buildTextField("Price", "0", _priceController)),
-        ]),
-        const SizedBox(height: 20),
-        ElevatedButton(onPressed: _publishProduct, style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, minimumSize: const Size(double.infinity, 50)), child: Text("PUBLISH", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold))),
-      ]),
+          const SizedBox(height: 24),
+          _buildTextField("Product Name", "Enter title", _nameController),
+          _buildTextField("Description", "Enter product details", _descController, maxLines: 3),
+          Row(
+            children: [
+              Expanded(child: _buildTextField("Category", "e.g. Seeds, Plants", _categoryController)),
+              const SizedBox(width: 14),
+              Expanded(child: _buildTextField("Price", "Rs. 0", _priceController)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryGreen.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _publishProduct, 
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen, 
+                minimumSize: const Size(double.infinity, 52),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ), 
+              child: Text(
+                "PUBLISH PRODUCT", 
+                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15, letterSpacing: 0.5)
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -506,16 +670,159 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('products').snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Colors.green));
+        
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return Center(
+            child: Text("No Products Available", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
+          );
+        }
+
         return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-            return ListTile(
-              leading: Image.network(data['image'] ?? '', width: 50, height: 50, fit: BoxFit.cover),
-              title: Text(data['title'] ?? 'N/A', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              subtitle: Text("Rs. ${data['price'] ?? 0}", style: GoogleFonts.poppins()),
-              trailing: IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => snapshot.data!.docs[index].reference.delete()),
+            var data = docs[index].data() as Map<String, dynamic>;
+            String productTitle = data['title'] ?? 'this product';
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: data['image'] != null && data['image'].toString().isNotEmpty
+                            ? Image.network(
+                                data['image'],
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[100],
+                                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                ),
+                              )
+                            : Container(
+                                width: 70,
+                                height: 70,
+                                color: Colors.grey[100],
+                                child: const Icon(Icons.image, color: Colors.grey),
+                              ),
+                      ),
+                      const SizedBox(width: 16),
+                      
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              productTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: const Color(0xFF2D2D2D),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Rs. ${data['price'] ?? 0}",
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: primaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 24),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Text(
+                                  "Confirm Deletion", 
+                                  textAlign: TextAlign.center, 
+                                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 17)
+                                ),
+                                content: Text(
+                                  "Are you sure you want to delete \"$productTitle\"?", 
+                                  textAlign: TextAlign.center, 
+                                  style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF4A4A4A))
+                                ),
+                                actionsAlignment: MainAxisAlignment.center, 
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      "Cancel", 
+                                      style: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.w500)
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8), 
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context); 
+                                      await docs[index].reference.delete(); 
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "\"$productTitle\" has been successfully deleted.", 
+                                              textAlign: TextAlign.center, 
+                                              style: GoogleFonts.poppins(color: const Color(0xFF2D2D2D), fontWeight: FontWeight.w500)
+                                            ),
+                                            backgroundColor: const Color(0xFFF4F4F9), 
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Text(
+                                      "Delete", 
+                                      style: GoogleFonts.poppins(color: Colors.redAccent, fontWeight: FontWeight.bold)
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );  
           },
         );

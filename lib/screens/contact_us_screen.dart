@@ -18,7 +18,6 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color textBlack = const Color(0xFF1A1A1A);
   final Color textGrey = const Color(0xFF666666);
-  final Color cardBg = const Color(0xFFF9F9F9);
 
   // Fixed Asset Mapping for Team Members
   final Map<String, String> _memberAssets = {
@@ -42,7 +41,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFBFBFB), // Premium off-white
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -53,7 +52,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         ),
         title: Text(
           "Contact Us",
-          style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(color: textBlack, fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -61,23 +60,39 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Get in Touch", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: textBlack)),
+            Text("Get in Touch", style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 8),
-            Text("Our team is here to help you with any questions or concerns about your plants.", style: GoogleFonts.poppins(fontSize: 14, color: textGrey, height: 1.5)),
+            Text("Our team is here to help you with any questions or concerns about your plants.", 
+              style: GoogleFonts.poppins(fontSize: 14, color: textGrey, height: 1.5)),
             const SizedBox(height: 30),
+            
             _buildSupportSection(Icons.headset_mic_outlined, "Customer Support", "support@plantio.com"),
-            const SizedBox(height: 30),
-            Text("Our Team", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: textBlack)),
+            
+            const SizedBox(height: 35),
+            Text("Our Team", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: textBlack)),
             const SizedBox(height: 16),
+            
             _buildContactCard(context, "Umer Moazzam", "umermoazzam2@gmail.com", "+923326582650"),
             _buildContactCard(context, "Muhammad Haseeb Shahid", "m.haseebntu@gmail.com", "+923166415699"),
             _buildContactCard(context, "Muhammad Bilal Afzal", "beelalchaudhary@gmail.com", "+923424882223"),
+            
             const SizedBox(height: 30),
+            // Hours Container with White Shaded Style
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.withOpacity(0.1))),
-              child: Row(children: [Icon(Icons.access_time, color: primaryGreen, size: 20), const SizedBox(width: 12), Text("Mon - Fri: 9:00 AM to 6:00 PM", style: GoogleFonts.poppins(fontSize: 14, color: textGrey))]),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white, 
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                border: Border.all(color: Colors.grey.shade50)
+              ),
+              child: Row(children: [
+                Icon(Icons.access_time_filled, color: primaryGreen, size: 22), 
+                const SizedBox(width: 12), 
+                Text("Mon - Fri: 9:00 AM to 6:00 PM", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: textGrey))
+              ]),
             ),
+            
             const SizedBox(height: 40),
             Center(
               child: Column(
@@ -104,17 +119,39 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   }
 
   Widget _buildSupportSection(IconData icon, String title, String subtitle) {
-    return Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 24)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)), Text(subtitle, style: GoogleFonts.poppins(fontSize: 14, color: textGrey))])]);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+        border: Border.all(color: Colors.grey.shade50)
+      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(12), 
+          decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), 
+          child: Icon(icon, color: primaryGreen, size: 26)
+        ), 
+        const SizedBox(width: 16), 
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)), 
+          Text(subtitle, style: GoogleFonts.poppins(fontSize: 14, color: textGrey))
+        ])
+      ]),
+    );
   }
 
   Widget _buildSocialIcon(String assetPath) {
     return Container(
-      padding: const EdgeInsets.all(10), 
+      padding: const EdgeInsets.all(12), 
       decoration: BoxDecoration(
+        color: Colors.white,
         shape: BoxShape.circle, 
-        border: Border.all(color: Colors.grey.withOpacity(0.2))
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+        border: Border.all(color: Colors.grey.shade100)
       ), 
-      child: Image.asset(assetPath, width: 22, height: 22),
+      child: Image.asset(assetPath, width: 24, height: 24),
     );
   }
 
@@ -128,30 +165,40 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           context, 
           MaterialPageRoute(builder: (context) => TeamMemberProfileScreen(name: name, email: email, phone: phone, assetPath: assetPath))
         ), 
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12)),
+          // White bolded + shaded effect
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+            border: Border.all(color: Colors.grey.shade50)
+          ),
           child: Row(
             children: [
               Container(
-                width: 50, height: 50,
+                width: 55, height: 55,
                 decoration: BoxDecoration(
                   color: Colors.white, 
                   shape: BoxShape.circle, 
-                  border: Border.all(color: primaryGreen.withOpacity(0.2)),
+                  border: Border.all(color: primaryGreen.withOpacity(0.2), width: 2),
                 ),
                 child: ClipOval(
                   child: Image.asset(
                     assetPath ?? "",
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryGreen, size: 28),
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryGreen, size: 30),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: textBlack)), const SizedBox(height: 4), Text(email, style: GoogleFonts.poppins(fontSize: 12, color: textGrey))])),
-              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: textBlack)), 
+                const SizedBox(height: 4), 
+                Text(email, style: GoogleFonts.poppins(fontSize: 13, color: textGrey))
+              ])),
+              const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCCCCCC)),
             ],
           ),
         ),
@@ -260,38 +307,43 @@ class TeamMemberProfileScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white, 
         elevation: 0, 
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black), 
           onPressed: () => Navigator.pop(context)
         ), 
-        title: Text('Member Profile', style: GoogleFonts.poppins(fontSize: 20, color: Colors.black, fontWeight: FontWeight.w600))
+        title: Text('Member Profile', style: GoogleFonts.poppins(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold))
       ),
       body: Column(
         children: [
-          const SizedBox(height: 30),
+          const SizedBox(height: 35),
           Center(
-            child: CircleAvatar(
-              radius: 60,
-              backgroundColor: const Color(0xFFF5F5F5),
-              child: ClipOval(
-                child: Image.asset(
-                  assetPath ?? "",
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 60, color: Colors.grey),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20)]),
+              child: CircleAvatar(
+                radius: 65,
+                backgroundColor: const Color(0xFFF5F5F5),
+                child: ClipOval(
+                  child: Image.asset(
+                    assetPath ?? "",
+                    width: 130,
+                    height: 130,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 70, color: Colors.grey),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(name, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text("Team Member", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey)),
+          const SizedBox(height: 20),
+          Text(name, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text("Team Member • Plantio", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: primaryGreen)),
           const SizedBox(height: 40),
           _buildDetailTile(Icons.email_outlined, "Email Address", email, onTap: () => _sendOfficialEmail(context)),
           _buildDetailTile(Icons.phone_outlined, "Phone Number", phone, onTap: () => _makePhoneCall(phone)),
-          _buildDetailTile(Icons.work_outline, "Department", "Plant Care Specialist"),
+          _buildDetailTile(Icons.verified_user_outlined, "Expertise", "Plant Care Specialist"),
         ],
       ),
     );
@@ -299,19 +351,33 @@ class TeamMemberProfileScreen extends StatelessWidget {
 
   Widget _buildDetailTile(IconData icon, String label, String value, {VoidCallback? onTap}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(12)),
+          // White shaded effect for detail tiles
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+            border: Border.all(color: Colors.grey.shade50)
+          ),
           child: Row(
             children: [
-              Icon(icon, color: primaryGreen, size: 24),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: primaryGreen.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: primaryGreen, size: 24)
+              ),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)), const SizedBox(height: 2), Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500))])),
-              if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 0.5)), 
+                const SizedBox(height: 4), 
+                Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87))
+              ])),
+              if (onTap != null) const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCCCCCC)),
             ],
           ),
         ),
