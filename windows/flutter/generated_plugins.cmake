@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_inappwebview_windows
   permission_handler_windows
   printing
+  speech_to_text_windows
   url_launcher_windows
 )
 

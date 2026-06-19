@@ -14,7 +14,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
-  final Color lightGreenBg = const Color(0xFFE8F5E9);
+  final Color bgColor = const Color(0xFFF9F9F9); // Premium white shaded background
 
   bool isAddressSaved = false;
 
@@ -36,11 +36,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double shippingFee = 150.0;
   double get totalAmount => subtotal + shippingFee;
 
-  // Premium Custom Order Success Dialog matching Product Details Screen perfectly
   void _showOrderSuccessDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // User ko OK click karna lazmi hai
+      barrierDismissible: false, 
       builder: (BuildContext dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -56,8 +55,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   color: primaryGreen.withOpacity(0.1), 
                   shape: BoxShape.circle
                 ),
-                // Icon changed from check_circle to local_shipping_outline to differentiate from Add to Cart
-                child: const Icon(Icons.local_shipping, color: Color(0xFF5B8E55), size: 40),              ),
+                child: const Icon(Icons.local_shipping, color: Color(0xFF5B8E55), size: 40),              
+              ),
               const SizedBox(height: 20),
               Text(
                 'Order Placed!', 
@@ -75,13 +74,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
-                    // 1. Pehle success dialog ko pop karein
                     Navigator.pop(dialogContext); 
-                    
-                    // 2. Phir primary application state structure ke mutabiq first route par jayein
                     Navigator.of(context).popUntil((route) => route.isFirst);
-
-                    // 3. Popping ke baad secure background delay ke sath cart array clean karein
                     Future.delayed(const Duration(milliseconds: 500), () {
                       if (CartScreen.cartItems.length > widget.selectedIndex) {
                         CartScreen.cartItems.removeAt(widget.selectedIndex);
@@ -98,12 +92,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // Real-time Place Order logic
   Future<void> _placeOrder() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       String currentUserId = user?.uid ?? "Guest_User_ID"; 
-
       var orderItem = CartScreen.cartItems[widget.selectedIndex];
 
       await FirebaseFirestore.instance.collection('orders').add({
@@ -113,7 +105,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'itemName': orderItem['name'],
         'itemImage': orderItem['image'],
         'itemQty': orderItem['qty'],
-        'totalAmount': totalAmount, // Double value
+        'totalAmount': totalAmount, 
         'paymentMethod': selectedPaymentMethod,
         'status': 'Pending',
         'orderDate': FieldValue.serverTimestamp(),
@@ -126,16 +118,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'state': _stateController.text,
         }
       });
-
-      // Shifting from standard SnackBar abstraction to structural native UI element
       _showOrderSuccessDialog();
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
-  // Helper validation dialog matching the Cart Screen UI style precisely
   void _showValidationErrorDialog() {
     showDialog(
       context: context,
@@ -167,7 +155,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFCFB),
+      backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -182,7 +170,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           },
         ),
         title: Text(isAddressSaved ? 'Order Summary' : 'Shipping Address', 
-          style: GoogleFonts.poppins(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600)
+          style: GoogleFonts.poppins(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)
         ),
         centerTitle: true,
       ),
@@ -192,6 +180,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+        color: Colors.white,
         child: GestureDetector(
           onTap: () {
             if (!isAddressSaved) {
@@ -208,7 +197,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             height: 55,
             decoration: BoxDecoration(
               color: primaryGreen, 
-              borderRadius: BorderRadius.circular(0),
+              borderRadius: BorderRadius.zero,
               boxShadow: [
                 BoxShadow(color: primaryGreen.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
               ]
@@ -227,11 +216,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Where should we deliver?", 
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 22, color: Colors.black)
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black)
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text("Please enter your precise delivery location", 
-          style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600])
         ),
         const SizedBox(height: 30),
         _buildTextField("Full Name", _nameController, icon: Icons.person_outline),
@@ -252,16 +241,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         Text("Delivery Details", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(color: Colors.grey.withOpacity(0.2)), 
-            borderRadius: BorderRadius.circular(12)
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))]
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.location_on, color: primaryGreen, size: 20),
+              Icon(Icons.location_on, color: primaryGreen, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -270,7 +259,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Text(_nameController.text, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 4),
                     Text("${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_pinController.text}", 
-                      style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700], height: 1.4)),
+                      style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700], height: 1.5)),
                     Text("Phone: ${_phoneController.text}", style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700])),
                   ],
                 ),
@@ -300,28 +289,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, IconData? icon}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87), 
-        decoration: InputDecoration(
-          prefixIcon: icon != null ? Icon(icon, color: primaryGreen, size: 20) : null,
-          labelText: label,
-          labelStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: primaryGreen, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87), 
+          decoration: InputDecoration(
+            prefixIcon: icon != null ? Icon(icon, color: primaryGreen, size: 20) : null,
+            labelText: label,
+            labelStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.grey.withOpacity(0.05)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: primaryGreen.withOpacity(0.5), width: 1.5),
+            ),
           ),
         ),
       ),
@@ -331,16 +323,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildItemTile(Map item) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]
+      ),
       child: Row(
         children: [
-          ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(item['image'], width: 50, height: 50, fit: BoxFit.cover)),
+          ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.network(item['image'], width: 55, height: 55, fit: BoxFit.cover)),
           const SizedBox(width: 15),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(item['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
             Text("Quantity: ${item['qty']}", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
           ])),
-          Text("Rs. ${subtotal.toStringAsFixed(0)}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          Text("Rs. ${subtotal.toStringAsFixed(0)}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15)),
         ],
       ),
     );
@@ -351,20 +347,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return GestureDetector(
       onTap: () => setState(() => selectedPaymentMethod = title),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? primaryGreen : Colors.grey.withOpacity(0.2)),
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected ? primaryGreen.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.white,
+          border: Border.all(color: isSelected ? primaryGreen : Colors.transparent, width: 1.5),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)]
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? primaryGreen : Colors.black54),
+            Icon(icon, color: isSelected ? primaryGreen : Colors.black54, size: 22),
             const SizedBox(width: 15),
-            Text(title, style: GoogleFonts.poppins(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+            Text(title, style: GoogleFonts.poppins(fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, fontSize: 14)),
             const Spacer(),
-            Icon(isSelected ? Icons.check_circle : Icons.radio_button_off, color: isSelected ? primaryGreen : Colors.grey),
+            Icon(isSelected ? Icons.check_circle : Icons.radio_button_off, color: isSelected ? primaryGreen : Colors.grey[300]),
           ],
         ),
       ),
@@ -374,13 +371,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildFinalBill() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: lightGreenBg.withOpacity(0.5), borderRadius: BorderRadius.circular(16), border: Border.all(color: primaryGreen.withOpacity(0.1))),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16), 
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)]
+      ),
       child: Column(
         children: [
           _buildPriceRow("Subtotal", "Rs. ${subtotal.toStringAsFixed(0)}"),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           _buildPriceRow("Shipping Fee", "Rs. ${shippingFee.toStringAsFixed(0)}"),
-          const Divider(height: 25),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(thickness: 1),
+          ),
           _buildPriceRow("Total Amount", "Rs. ${totalAmount.toStringAsFixed(0)}", isTotal: true),
         ],
       ),
@@ -391,7 +395,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
+        Text(label, style: GoogleFonts.poppins(fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.bold : FontWeight.w500, color: isTotal ? Colors.black : Colors.grey[700])),
         Text(value, style: GoogleFonts.poppins(fontSize: isTotal ? 18 : 14, fontWeight: FontWeight.bold, color: isTotal ? primaryGreen : Colors.black)),
       ],
     );

@@ -100,7 +100,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: AppBar(
         elevation: 0, backgroundColor: Colors.white, centerTitle: true,
         title: Text(_currentView == "Dashboard" ? "Admin Control Panel" : _currentView,
-          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18)),
         leading: IconButton(
           icon: Icon(_currentView == "Dashboard" ? Icons.arrow_back_ios : Icons.close, color: Colors.black),
           onPressed: () {

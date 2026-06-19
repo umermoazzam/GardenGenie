@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Stack(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(top: 55.0, right: 60.0), // Increased right padding for shaded icon
+                                padding: const EdgeInsets.only(top: 55.0, right: 60.0), 
                                 child: RichText(
                                   text: TextSpan(
                                     style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w600, letterSpacing: -0.5),
@@ -169,7 +169,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              // ✅ Profile Icon with White Shaded Effect
                               Positioned(
                                 top: 0,
                                 right: 0,
@@ -190,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ],
                                     ),
-                                    padding: const EdgeInsets.all(2), // White border effect
+                                    padding: const EdgeInsets.all(2), 
                                     child: Container(
                                       width: 44,
                                       height: 44,
@@ -472,16 +471,16 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context, backgroundColor: Colors.transparent, isScrollControlled: true,
       builder: (context) => SafeArea(
         child: Container(
-          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 24),
-              Text('AI Features', style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('AI Features', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 24),
-              _buildAIOption(icon: Icons.chat_bubble_outline, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () async { 
+              _buildAIOption(icon: Icons.chat_bubble_outline_rounded, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () async { 
                 Navigator.pop(context);
                 final prefs = await SharedPreferences.getInstance();
                 final String? uid = prefs.getString('userId'); 
@@ -497,6 +496,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const BlogsVideosScreen()));
               }),
+              const SizedBox(height: 15),
             ],
           ),
         ),
@@ -504,28 +504,52 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ✅ AI Option Widget with White Shaded Effect
   Widget _buildAIOption({required IconData icon, required String title, required String description, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap, borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
-        child: Row(
-          children: [
-            Container(width: 50, height: 50, decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primaryGreen, size: 28)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(description, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF666666))),
-                ],
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap, 
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 50, height: 50, 
+                  decoration: BoxDecoration(
+                    color: primaryGreen.withOpacity(0.08), 
+                    borderRadius: BorderRadius.circular(12)
+                  ), 
+                  child: Icon(icon, color: primaryGreen, size: 26)
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                      const SizedBox(height: 2),
+                      Text(description, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF888888), fontWeight: FontWeight.w400)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFFBBBBBB)),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios, size: 18, color: Color(0xFF999999)),
-          ],
+          ),
         ),
       ),
     );

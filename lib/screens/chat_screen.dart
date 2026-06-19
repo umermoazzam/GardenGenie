@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:speech_to_text/speech_to_text.dart' as stt; // New Import for Voice
 import 'home_screen.dart';
 import 'api_service.dart'; 
 import 'cart_screen.dart'; 
@@ -25,7 +26,6 @@ class PlantChatApp extends StatelessWidget {
   }
 }
 
-// Screen 1: Individual Chat Screen (Plantio AI)
 class IndividualChatScreen extends StatefulWidget {
   final String userId;
   const IndividualChatScreen({Key? key, required this.userId}) : super(key: key);
@@ -39,13 +39,44 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
 
-  // Colors for Themes
-  Color get _bgColor => _isDarkMode ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
+  // Voice Functionality Variables
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+  }
+
+  // Colors for "White Shaded" Theme Effect
+  Color get _bgColor => _isDarkMode ? const Color(0xFF121212) : const Color(0xFFF6F8F7);
   Color get _appBarColor => _isDarkMode ? const Color(0xFF1F1F1F) : Colors.white;
   Color get _textColor => _isDarkMode ? Colors.white : const Color(0xFF1B1E28);
-  Color get _aiBubbleColor => _isDarkMode ? const Color(0xFF2C2C2E) : const Color(0xFFF7F7F9);
-  Color get _userBubbleColor => _isDarkMode ? const Color(0xFF2D4B2D) : const Color(0xFFECFFEA);
-  Color get _inputBgColor => _isDarkMode ? const Color(0xFF1F1F1F) : const Color(0xFFF5F5F5);
+  Color get _aiBubbleColor => _isDarkMode ? const Color(0xFF2C2C2E) : Colors.white;
+  Color get _userBubbleColor => _isDarkMode ? const Color(0xFF2D4B2D) : const Color(0xFFE8F5E9);
+  Color get _inputBgColor => _isDarkMode ? const Color(0xFF1F1F1F) : Colors.white;
+
+  // Voice Listening Logic
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _messageController.text = val.recognizedWords;
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
 
   Future<void> _showClearChatDialog() async {
     return showDialog<void>(
@@ -100,7 +131,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Future<void> _handleSend() async {
     if (_messageController.text.trim().isEmpty) return;
     
-    // ✅ FirebaseAuth use karne ke bajaye widget se aane wali ID use karein
     final String currentUid = widget.userId; 
     
     if (currentUid == "guest_user" || currentUid.isEmpty) {
@@ -116,7 +146,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
     _messageController.clear();
 
     try {
-      // History document logic for keeping track of conversations
       var historyCheck = await FirebaseFirestore.instance
           .collection('history')
           .where('userId', isEqualTo: currentUid)
@@ -135,7 +164,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         });
       }
 
-      // Message save karte waqt User ID lazmi bhej rahe hain
       await FirebaseFirestore.instance.collection('chats').add({
         'userId': currentUid, 
         'role': 'user',
@@ -144,7 +172,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         'timestamp': timestamp,
       });
 
-      // API call mein bhi currentUid bhej rahe hain jo backend check karega
       final data = await ApiService.sendMessage(message: userMessage, userId: currentUid);
       String aiReply = (data['reply'] ?? "No response from AI.").trim();
 
@@ -174,7 +201,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: _isDarkMode ? Colors.white12 : Colors.grey.withOpacity(0.1),
+            color: _isDarkMode ? Colors.white12 : Colors.grey.withOpacity(0.05),
             height: 1.0,
           ),
         ),
@@ -197,8 +224,8 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Plantio AI', style: GoogleFonts.inter(color: _textColor, fontSize: 16, fontWeight: FontWeight.w600)),
-                Text('Always active', style: GoogleFonts.inter(color: const Color(0xFF5B8C51), fontSize: 12)),
+                Text('Plantio AI', style: GoogleFonts.inter(color: _textColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('Always active', style: GoogleFonts.inter(color: const Color(0xFF5B8C51), fontSize: 11, fontWeight: FontWeight.w500)),
               ],
             ),
           ],
@@ -211,11 +238,8 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               color: _appBarColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
-                if (value == 'clear') {
-                  _showClearChatDialog(); 
-                } else if (value == 'theme') {
-                  setState(() => _isDarkMode = !_isDarkMode);
-                }
+                if (value == 'clear') _showClearChatDialog(); 
+                else if (value == 'theme') setState(() => _isDarkMode = !_isDarkMode);
               },
               itemBuilder: (BuildContext context) => [
                 _buildPopupItem(_isDarkMode ? Icons.light_mode : Icons.dark_mode, _isDarkMode ? "Light Theme" : "Dark Theme", "theme"),
@@ -235,26 +259,16 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
                   .orderBy('timestamp', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8C51)));
-                }
-                
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8C51)));
                 var docs = snapshot.data!.docs;
-
                 return ListView.builder(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 32, bottom: 16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 16),
                   itemCount: docs.length + 1, 
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildReceivedMessage('Hello! I am Garden Genie. How can I help you today?', 'Just now');
-                    }
-                    
+                    if (index == 0) return _buildReceivedMessage('Hello! I am Garden Genie. How can I help you today?', 'Just now');
                     var chat = docs[index - 1].data() as Map<String, dynamic>;
-                    if (chat['role'] == 'ai') {
-                      return _buildReceivedMessage(chat['message']!, chat['time']!);
-                    } else {
-                      return _buildSentMessage(chat['message']!, chat['time']!);
-                    }
+                    if (chat['role'] == 'ai') return _buildReceivedMessage(chat['message']!, chat['time']!);
+                    else return _buildSentMessage(chat['message']!, chat['time']!);
                   },
                 );
               },
@@ -285,23 +299,27 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
 
   Widget _buildReceivedMessage(String message, String time) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const CircleAvatar(radius: 16, backgroundColor: Color(0xFF5B8C51), child: Icon(Icons.psychology, color: Colors.white, size: 16)),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: _aiBubbleColor, borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _aiBubbleColor, 
+                borderRadius: const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                boxShadow: _isDarkMode ? [] : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))]
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: _textColor)),
-                  const SizedBox(height: 4),
+                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: _textColor, height: 1.4)),
+                  const SizedBox(height: 6),
                   Row(mainAxisSize: MainAxisSize.min, children: [
-                    Text(time, style: GoogleFonts.inter(fontSize: 11, color: _isDarkMode ? Colors.white54 : const Color(0xFF9E9E9E))),
+                    Text(time, style: GoogleFonts.inter(fontSize: 10, color: Colors.grey)),
                     const SizedBox(width: 4),
                     const Icon(Icons.done_all, size: 14, color: Color(0xFF5B8C51)),
                   ]),
@@ -316,21 +334,25 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
 
   Widget _buildSentMessage(String message, String time) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: _userBubbleColor, borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _userBubbleColor, 
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                boxShadow: _isDarkMode ? [] : [BoxShadow(color: const Color(0xFF5B8C51).withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))]
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: _textColor)),
-                  const SizedBox(height: 4),
+                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: _textColor, height: 1.4)),
+                  const SizedBox(height: 6),
                   Row(mainAxisSize: MainAxisSize.min, children: [
-                    Text(time, style: GoogleFonts.inter(fontSize: 11, color: _isDarkMode ? Colors.white70 : const Color(0xFF5B8C51))),
+                    Text(time, style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5B8C51))),
                     const SizedBox(width: 4),
                     const Icon(Icons.done_all, size: 14, color: Color(0xFF5B8C51)),
                   ]),
@@ -344,34 +366,44 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   }
 
   Widget _buildMessageInput() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 35, left: 16, right: 16, top: 8),
+    return Container(
+      color: Colors.transparent,
+      padding: const EdgeInsets.only(bottom: 30, left: 16, right: 16, top: 10),
+      child: SafeArea(
         child: Row(
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(color: _inputBgColor, borderRadius: BorderRadius.circular(30)),
+                decoration: BoxDecoration(
+                  color: _inputBgColor, 
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: _isDarkMode ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))]
+                ),
                 child: TextField(
                   controller: _messageController,
-                  style: GoogleFonts.inter(color: _textColor),
+                  style: GoogleFonts.inter(color: _textColor, fontSize: 14),
                   onSubmitted: (_) => _handleSend(),
                   decoration: InputDecoration(
-                    hintText: 'Type your message', 
+                    hintText: 'Type your message...', 
                     border: InputBorder.none, 
-                    hintStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14)
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    hintStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+                    // Mic Icon inside TextField
+                    suffixIcon: IconButton(
+                      icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : const Color(0xFF5B8C51)),
+                      onPressed: _listen,
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             GestureDetector(
               onTap: _handleSend,
               child: Container(
-                width: 48, height: 48, 
+                width: 50, height: 50, 
                 decoration: const BoxDecoration(color: Color(0xFF5B8C51), shape: BoxShape.circle), 
-                child: const Icon(Icons.send, color: Colors.white, size: 22)
+                child: const Icon(Icons.send_rounded, color: Colors.white, size: 22)
               ),
             ),
           ],
@@ -393,62 +425,49 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   void _onNavBarTapped(int index) {
     if (index == 0) {
-      Navigator.pushReplacement(
-        context, 
-        MaterialPageRoute(builder: (context) => const HomeScreen())
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
     } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shop Screen is currently disabled')));
     } else if (index == 2) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
     } else if (index == 3) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
     }
-    
     setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF6F8F7),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        toolbarHeight: 120,
+        toolbarHeight: 110,
         automaticallyImplyLeading: false,
         title: Padding(
-          padding: const EdgeInsets.only(left: 24),
+          padding: const EdgeInsets.only(left: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Your', style: GoogleFonts.inter(color: darkTextColor, fontSize: 22, fontWeight: FontWeight.w400)),
-              Text('Messages!', style: GoogleFonts.inter(color: darkTextColor, fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('Your', style: GoogleFonts.inter(color: darkTextColor, fontSize: 20, fontWeight: FontWeight.w400)),
+              Text('Messages!', style: GoogleFonts.inter(color: darkTextColor, fontSize: 26, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Container(
-                width: 45, height: 45,
-                decoration: const BoxDecoration(color: Color(0xFFF7F7F9), shape: BoxShape.circle),
-                child: IconButton(
-                  icon: Icon(Icons.chevron_left, color: darkTextColor, size: 28),
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen())),
-                ),
-              ),
+            padding: const EdgeInsets.only(right: 20),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new, color: darkTextColor, size: 20),
+              onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen())),
             ),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         children: [
-          const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
               final String currentUid = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -467,7 +486,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         unselectedItemColor: const Color(0xFF999999),
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        elevation: 0,
+        elevation: 10,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
@@ -480,10 +499,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Widget _buildChatItem({required String name, required String message, required String time, bool isAI = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))]
+      ),
       child: Row(
         children: [
-          CircleAvatar(radius: 28, backgroundColor: const Color(0xFF5B8C51), child: Icon(isAI ? Icons.psychology : Icons.person, color: Colors.white, size: 30)),
+          CircleAvatar(radius: 26, backgroundColor: const Color(0xFF5B8C51), child: Icon(isAI ? Icons.psychology : Icons.person, color: Colors.white, size: 26)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -491,11 +515,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
               children: [
                 Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: darkTextColor)),
                 const SizedBox(height: 4),
-                Text(message, style: GoogleFonts.inter(color: Colors.grey, fontSize: 14), overflow: TextOverflow.ellipsis),
+                Text(message, style: GoogleFonts.inter(color: Colors.grey, fontSize: 13), overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          Text(time, style: GoogleFonts.inter(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500)),
         ],
       ),
     );
