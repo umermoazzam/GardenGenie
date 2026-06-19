@@ -37,18 +37,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   // Status update logic
   void _updateRequestStatus(String docId, String newStatus) async {
-    await FirebaseFirestore.instance.collection('hiring_requests').doc(docId).update({
-      'status': newStatus,
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Request $newStatus!", 
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(),
-        ),
-      ),
-    );
+    try {
+      await FirebaseFirestore.instance.collection('hiring_requests').doc(docId).update({
+        'status': newStatus,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Request $newStatus!", 
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    }
   }
 
   Future<void> _publishProduct() async {
@@ -406,7 +414,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           itemBuilder: (context, index) {
             var data = sortedDocs[index].data() as Map<String, dynamic>;
             var addr = data['shippingAddress'] as Map<String, dynamic>? ?? {};
-            String orderId = sortedDocs[index].id.substring(0,6).toUpperCase();
+            String rawId = sortedDocs[index].id;
+            String orderId = rawId.length > 6 ? rawId.substring(0,6).toUpperCase() : rawId.toUpperCase();
 
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
@@ -442,7 +451,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (BuildContext context) {
+                          builder: (BuildContext dialogContext) {
                             return AlertDialog(
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               title: Text(
@@ -458,7 +467,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               actionsAlignment: MainAxisAlignment.center, 
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => Navigator.pop(dialogContext),
                                   child: Text(
                                     "Cancel", 
                                     style: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.w500)
@@ -467,10 +476,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 const SizedBox(width: 8), 
                                 TextButton(
                                   onPressed: () async {
-                                    Navigator.pop(context); 
-                                    await sortedDocs[index].reference.delete(); 
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                    // Step 1: Navigator.pop Dialog ko band karta hai.
+                                    Navigator.pop(dialogContext); 
+                                    
+                                    // Step 2: Pehle messenger save karein taake async gap ke baad safe rahe.
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    
+                                    try {
+                                      // Step 3: Firebase operation
+                                      await sortedDocs[index].reference.delete(); 
+                                      
+                                      // Step 4: Success Message
+                                      messenger.showSnackBar(
                                         SnackBar(
                                           content: Text(
                                             "Order #$orderId has been successfully deleted.", 
@@ -481,6 +498,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                         ),
+                                      );
+                                    } catch (e) {
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text("Error deleting order: $e"))
                                       );
                                     }
                                   },
@@ -766,7 +787,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (BuildContext context) {
+                            builder: (BuildContext dialogContext) {
                               return AlertDialog(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 title: Text(
@@ -782,7 +803,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 actionsAlignment: MainAxisAlignment.center, 
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () => Navigator.pop(dialogContext),
                                     child: Text(
                                       "Cancel", 
                                       style: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.w500)
@@ -791,10 +812,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   const SizedBox(width: 8), 
                                   TextButton(
                                     onPressed: () async {
-                                      Navigator.pop(context); 
-                                      await docs[index].reference.delete(); 
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                      Navigator.pop(dialogContext); 
+                                      final messenger = ScaffoldMessenger.of(context);
+                                      try {
+                                        await docs[index].reference.delete(); 
+                                        messenger.showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               "\"$productTitle\" has been successfully deleted.", 
@@ -806,6 +828,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
                                         );
+                                      } catch (e) {
+                                        messenger.showSnackBar(SnackBar(content: Text("Error: $e")));
                                       }
                                     },
                                     child: Text(

@@ -30,10 +30,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         // ✅ Replaced 'Roboto' with a unified global Poppins text theme.
         // This ensures all screens inherit Poppins without forcing structural mutations elsewhere.
-        textTheme: GoogleFonts.
-        poppinsTextTheme(
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       home: const SplashScreen(),
     );
