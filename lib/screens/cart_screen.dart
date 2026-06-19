@@ -4,7 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'rental_services_screen.dart';
-import 'checkout_screen.dart'; // Ensure import is present
+import 'checkout_screen.dart'; 
+import 'shop_screen.dart'; // Added this import
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -28,7 +29,15 @@ class _CartScreenState extends State<CartScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color lightGreenBg = const Color(0xFFE8F5E9);
   
-  Set<int> selectedIndices = {0}; 
+  Set<int> selectedIndices = {}; 
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < CartScreen.cartItems.length; i++) {
+      selectedIndices.add(i);
+    }
+  }
 
   List<Map<String, dynamic>> get items => CartScreen.cartItems;
 
@@ -137,7 +146,6 @@ class _CartScreenState extends State<CartScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select at least one item")));
                             return;
                           }
-                          // Navigate to Checkout Screen
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -168,8 +176,14 @@ class _CartScreenState extends State<CartScreen> {
           showSelectedLabels: false, 
           showUnselectedLabels: false,
           onTap: (index) {
-            if (index == 0) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
-            else if (index == 2) Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
+            if (index == 0) {
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
+            } else if (index == 1) {
+              // Smoothly Navigate to Shop Screen
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+            } else if (index == 2) {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
+            }
           },
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), label: 'Home'),

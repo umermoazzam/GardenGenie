@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
-
 import 'chat_screen.dart';
 import 'blogs_videos_screen.dart';
 import 'rental_services_screen.dart';
@@ -13,7 +12,7 @@ import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_details_screen.dart';
 import 'detection_screen.dart'; 
-import 'shop_screen.dart'; // Naya Import
+import 'shop_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -65,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavBarTapped(int index) {
     if (index == _currentIndex) return;
     if (index == 1) {
-      // SnackBar hata kar navigation enable kar di gayi hai
       Navigator.push(
         context, 
         MaterialPageRoute(builder: (context) => const ShopScreen())
@@ -401,26 +399,38 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFFF0F0F0),
-                    image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                if (showNewBadge)
-                  Positioned(
-                    top: 10, right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(6)),
-                      child: Text('New', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFFF0F0F0),
+                      image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
                     ),
                   ),
-              ],
+                  if (showNewBadge)
+                    Positioned(
+                      top: 10, right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(6)),
+                        child: Text('New', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -445,10 +455,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Text('AI Features', style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               _buildAIOption(icon: Icons.chat_bubble_outline, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () async { 
-                  Navigator.pop(context);
-                  final prefs = await SharedPreferences.getInstance();
-                  final String? uid = prefs.getString('userId'); 
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => IndividualChatScreen(userId: uid ?? "guest_user")));
+                Navigator.pop(context);
+                final prefs = await SharedPreferences.getInstance();
+                final String? uid = prefs.getString('userId'); 
+                Navigator.push(context, MaterialPageRoute(builder: (_) => IndividualChatScreen(userId: uid ?? "guest_user")));
               }),
               const SizedBox(height: 16),
               _buildAIOption(icon: Icons.camera_alt_outlined, title: 'Leaf Disease Detector', description: 'Scan and identify leaf diseases', onTap: () {

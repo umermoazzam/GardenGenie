@@ -1,8 +1,11 @@
+// shop_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'product_details_screen.dart';
 import 'cart_screen.dart';
+import 'wishlist_screen.dart';
+import 'rental_services_screen.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({Key? key}) : super(key: key);
@@ -13,11 +16,29 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
+  final int _currentIndex = 1; // Shop screen is index 1
   String selectedCategory = "All";
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> categories = ["All", "Indoor", "Outdoor", "Succulents", "Flowering", "Pots", "Seeds"];
+
+  void _onNavBarTapped(int index) {
+    if (index == _currentIndex) return;
+    if (index == 0) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+    } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const RentalServicesScreen()),
+      );
+    } else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CartScreen()),
+      );
+    }
+  }
 
   void _showFilterModal() {
     showModalBottomSheet(
@@ -55,14 +76,23 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // Real-time Cart Addition Logic
   Future<void> _addToCart(Map<String, dynamic> data) async {
     try {
       await FirebaseFirestore.instance.collection('cart').add({
         ...data,
         'addedAt': Timestamp.now(),
       });
+
+      CartScreen.addToCart({
+        "name": data['title'] ?? 'No Title',
+        "price": data['price']?.toString() ?? '0',
+        "image": data['image'] ?? '',
+        "qty": 1,
+      });
+
       if (!mounted) return;
+      setState(() {});
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("${data['title']} added to cart!", style: GoogleFonts.poppins()),
@@ -113,7 +143,10 @@ class _ShopScreenState extends State<ShopScreen> {
         title: Text('Plant Shop', style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontWeight: FontWeight.w600, fontSize: 18)),
         centerTitle: true,
         actions: [
-          // REAL-TIME CART COUNTER Logic
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Colors.black),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WishlistScreen())),
+          ),
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('cart').snapshots(),
             builder: (context, snapshot) {
@@ -161,14 +194,22 @@ class _ShopScreenState extends State<ShopScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) => setState(() => searchQuery = value.toLowerCase()),
-                      decoration: InputDecoration(hintText: 'Find your perfect plant...', hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14), prefixIcon: Icon(Icons.search, color: primaryGreen), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 15)),
+                      decoration: InputDecoration(
+                          hintText: 'Find your perfect plant...',
+                          hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14),
+                          prefixIcon: Icon(Icons.search, color: primaryGreen),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15)),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
                   onTap: _showFilterModal,
-                  child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.tune, color: Colors.white, size: 24)),
+                  child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(15)),
+                      child: const Icon(Icons.tune, color: Colors.white, size: 24)),
                 )
               ],
             ),
@@ -187,8 +228,16 @@ class _ShopScreenState extends State<ShopScreen> {
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 22),
-                    decoration: BoxDecoration(color: isSelected ? primaryGreen : Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: Colors.black.withOpacity(isSelected ? 0.1 : 0.03), blurRadius: 5, offset: const Offset(0, 2))]),
-                    child: Center(child: Text(categories[index], style: GoogleFonts.poppins(color: isSelected ? Colors.white : Colors.grey.shade600, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500, fontSize: 13))),
+                    decoration: BoxDecoration(
+                        color: isSelected ? primaryGreen : Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isSelected ? 0.1 : 0.03), blurRadius: 5, offset: const Offset(0, 2))]),
+                    child: Center(
+                        child: Text(categories[index],
+                            style: GoogleFonts.poppins(
+                                color: isSelected ? Colors.white : Colors.grey.shade600,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                fontSize: 13))),
                   ),
                 );
               },
@@ -205,11 +254,10 @@ class _ShopScreenState extends State<ShopScreen> {
                   final data = doc.data() as Map<String, dynamic>;
                   final title = (data['title'] ?? '').toString().toLowerCase();
                   final category = (data['category'] ?? 'All').toString().trim();
-                  
+
                   final matchesSearch = title.contains(searchQuery);
-                  final matchesCategory = selectedCategory == "All" || 
-                                          category.toLowerCase() == selectedCategory.toLowerCase();
-                  
+                  final matchesCategory = selectedCategory == "All" || category.toLowerCase() == selectedCategory.toLowerCase();
+
                   return matchesSearch && matchesCategory;
                 }).toList();
 
@@ -226,12 +274,50 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ],
       ),
+
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, -4)),
+            BoxShadow(color: const Color(0xFF000000).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -6)),
+          ],
+        ),
+        child: Theme(
+          data: ThemeData(splashColor: Colors.transparent, highlightColor: Colors.transparent),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onNavBarTapped,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: primaryGreen,
+            unselectedItemColor: const Color(0xFF999999),
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            elevation: 0,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+              BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+              BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildPremiumShopCard(String productId, Map<String, dynamic> data) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailsScreen(title: data['title'] ?? 'Plant', imageUrl: data['image'] ?? '', price: data['price']?.toString() ?? '0', description: data['description'] ?? 'No description', subtitle: data['subtitle'] ?? 'Gardening Expert'))),
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ProductDetailsScreen(
+                  title: data['title'] ?? 'Plant',
+                  imageUrl: data['image'] ?? '',
+                  price: data['price']?.toString() ?? '0',
+                  description: data['description'] ?? 'No description',
+                  subtitle: data['subtitle'] ?? 'Gardening Expert'))),
       child: Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))]),
         child: Column(
@@ -242,17 +328,17 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: [
                   Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), image: DecorationImage(image: NetworkImage(data['image'] ?? ''), fit: BoxFit.cover))),
                   Positioned(
-                    top: 15, right: 15,
+                    top: 15,
+                    right: 15,
                     child: StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance.collection('wishlist').doc(productId).snapshots(),
-                      builder: (context, snapshot) {
-                        bool isFavorite = snapshot.hasData && snapshot.data!.exists;
-                        return GestureDetector(
-                          onTap: () => _toggleFavorite(productId, data),
-                          child: Container(padding: const EdgeInsets.all(5), decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle), child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red, size: 18)),
-                        );
-                      }
-                    ),
+                        stream: FirebaseFirestore.instance.collection('wishlist').doc(productId).snapshots(),
+                        builder: (context, snapshot) {
+                          bool isFavorite = snapshot.hasData && snapshot.data!.exists;
+                          return GestureDetector(
+                            onTap: () => _toggleFavorite(productId, data),
+                            child: Container(padding: const EdgeInsets.all(5), decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle), child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red, size: 18)),
+                          );
+                        }),
                   ),
                 ],
               ),
@@ -269,7 +355,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     children: [
                       Text("\$${data['price'] ?? '0'}", style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 17)),
                       GestureDetector(
-                        onTap: () => _addToCart(data), // Triggers real-time update
+                        onTap: () => _addToCart(data),
                         child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle), child: const Icon(Icons.add, color: Colors.white, size: 18)),
                       )
                     ],

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'cart_screen.dart'; 
 import 'my_bookings_screen.dart'; 
+import 'shop_screen.dart'; // Imported ShopScreen
 
 class RentalServicesScreen extends StatefulWidget {
   const RentalServicesScreen({Key? key}) : super(key: key);
@@ -76,11 +77,16 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     if (index == 0) {
       Navigator.popUntil(context, (route) => route.isFirst);
     } else if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Categories / Shop Screen is currently disabled')),
+      // ENABLED: Now navigates to Shop Screen
+      Navigator.pushReplacement(
+        context, 
+        MaterialPageRoute(builder: (context) => const ShopScreen())
       );
     } else if (index == 3) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
+      Navigator.pushReplacement(
+        context, 
+        MaterialPageRoute(builder: (context) => const CartScreen())
+      );
     }
   }
 
@@ -225,26 +231,24 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     );
   }
 
-  // UPDATED: Now saving to 'hiring_requests' with a type tag so it can be managed from a central dashboard
   Future<void> _finalSubmitToolRental(String tool, int days, DateTime startDate, String address, int total) async {
     final user = FirebaseAuth.instance.currentUser;
     final prefs = await SharedPreferences.getInstance();
     String finalUserId = user?.uid ?? prefs.getString('userId') ?? 'anonymous';
     String finalEmail = user?.email ?? prefs.getString('userEmail') ?? 'no-email';
 
-    // We use the same collection as gardeners so the dashboard logic can handle it
     await FirebaseFirestore.instance.collection('hiring_requests').add({
       'userId': finalUserId,
       'userEmail': finalEmail,
       'userName': prefs.getString('userName') ?? 'Customer',
       'userPhone': prefs.getString('userPhone') ?? 'No Phone',
-      'gardenerName': "Rental Duration: $days Days", // This maps to the gardener name field in dashboard
-      'serviceType': "Tool Rental: $tool",           // This maps to service type in dashboard
-      'scheduledDateTime': startDate,                // Rental start date
+      'gardenerName': "Rental Duration: $days Days", 
+      'serviceType': "Tool Rental: $tool",           
+      'scheduledDateTime': startDate,                
       'address': address,
       'estimatedPrice': total,
-      'status': 'Pending',                           // Default status
-      'requestType': 'tool',                         // Identifier for dashboard logic
+      'status': 'Pending',                           
+      'requestType': 'tool',                         
       'requestDate': FieldValue.serverTimestamp(),
     });
   }
@@ -712,6 +716,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
   }
 }
 
+// ... GardenerProfileScreen and _buildInfoSection logic continues below as before ...
 class GardenerProfileScreen extends StatefulWidget {
   final Map<String, dynamic> gardener;
   final Color primaryGreen;
