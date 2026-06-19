@@ -1,8 +1,14 @@
+// rental_services_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'cart_screen.dart'; // Import for navigation
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'cart_screen.dart'; 
+import 'my_bookings_screen.dart'; 
 
 class RentalServicesScreen extends StatefulWidget {
   const RentalServicesScreen({Key? key}) : super(key: key);
@@ -15,14 +21,15 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
   final int _currentIndex = 2; 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
+  static const Color primaryGreen = Color(0xFF5B8E55);
 
   final List<Map<String, dynamic>> manualGardeners = const [
     {
       'name': 'Uzair Asif',
       'skill': 'Lawn & Landscape Specialist',
       'rating': '4.8',
-      'email': 'uzairasif@gmail.com',
-      'phone': '+923424882223',
+      'email': 'uzairasiff1227@gmail.com',
+      'phone': '+923127845820',
       'image': 'assets/images/uzair.jpeg',
       'bio': 'Expert in landscape architecture and seasonal lawn maintenance with over 5 years of experience.'
     },
@@ -30,8 +37,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       'name': 'Faheem Raza',
       'skill': 'Organic Kitchen Gardening',
       'rating': '4.9',
-      'email': 'faheemraza@gmail.com',
-      'phone': '+923218409358',
+      'email': 'razafaheem001@gmail.com',
+      'phone': '+923126994387',
       'image': 'assets/images/faheem.jpeg',
       'bio': 'Specialized in setting up organic vegetable patches and soil nutrient management.'
     },
@@ -39,8 +46,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       'name': 'Nabeel Sheikh',
       'skill': 'Plant Healthcare & Pruning',
       'rating': '4.7',
-      'email': 'nabeel.sheikh@gmail.com',
-      'phone': '+923166415699',
+      'email': 'nb.freelancer786@gmail.com',
+      'phone': '+923236147042',
       'image': 'assets/images/nabeel.jpeg',
       'bio': 'Focuses on plant surgery, pruning, and protecting plants from common local pests.'
     },
@@ -48,8 +55,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       'name': 'Wasif Ali',
       'skill': 'Terrace Garden Designer',
       'rating': '5.0',
-      'email': 'wasifali@gmail.com',
-      'phone': '+923326582650',
+      'email': 'showbizz951@gmail.com',
+      'phone': '+923218409358',
       'image': 'assets/images/wasif.jpeg',
       'bio': 'Creative designer for small spaces, transforming terraces into lush green escapes.'
     },
@@ -57,8 +64,8 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       'name': 'Talal Amin',
       'skill': 'Full Garden Restoration',
       'rating': '4.6',
-      'email': 'talalamin@gmail.com',
-      'phone': '+923335556677',
+      'email': 'talalamin39@gmail.com',
+      'phone': '+923166459074',
       'image': 'assets/images/talal.jpeg',
       'bio': 'Hardworking specialist in restoring neglected gardens to their former glory.'
     },
@@ -77,18 +84,191 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     }
   }
 
+  // --- TOOL BOOKING LOGIC WITH CALENDAR ---
+  void _showToolBookingSheet(BuildContext context, String toolName, String pricePerDayStr, String toolImg) {
+    int days = 1;
+    DateTime? selectedStartDate;
+    bool isLoading = false;
+    final TextEditingController addressController = TextEditingController();
+    
+    int pricePerDay = int.tryParse(pricePerDayStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            top: 20, left: 25, right: 25,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 50, height: 5, decoration: const BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.zero))),
+              const SizedBox(height: 20),
+              Text("Rent $toolName", style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+              const SizedBox(height: 5),
+              Text("Rate: Rs. $pricePerDay / day", style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 25),
+              
+              Text("Select Start Date", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () async {
+                  DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 60)),
+                    builder: (context, child) => Theme(
+                      data: ThemeData.light().copyWith(
+                        colorScheme: const ColorScheme.light(primary: primaryGreen),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) setSheetState(() => selectedStartDate = picked);
+                },
+                child: _customPickerBox(selectedStartDate == null 
+                    ? "Pick Rental Date" 
+                    : "${selectedStartDate!.day}/${selectedStartDate!.month}/${selectedStartDate!.year}"),
+              ),
+              
+              const SizedBox(height: 20),
+              Text("Duration (Days)", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _qtyBtn(Icons.remove, () => setSheetState(() { if(days > 1) days--; })),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text("$days Days", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  _qtyBtn(Icons.add, () => setSheetState(() => days++)),
+                  const Spacer(),
+                  Text("Total: Rs. ${pricePerDay * days}", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                ],
+              ),
+              
+              const SizedBox(height: 25),
+              Text("Delivery Address", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.grey[700])),
+              const SizedBox(height: 10),
+              TextField(
+                controller: addressController,
+                style: GoogleFonts.poppins(color: Colors.black),
+                decoration: InputDecoration(
+                  hintText: "Enter complete address for tool delivery",
+                  hintStyle: GoogleFonts.poppins(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFE0E0E0))),
+                  enabledBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFE0E0E0))),
+                  focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: primaryGreen)),
+                ),
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    elevation: 0,
+                  ),
+                  onPressed: isLoading ? null : () async {
+                    if (selectedStartDate == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select a rental start date")));
+                      return;
+                    }
+                    if (addressController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter delivery address")));
+                      return;
+                    }
+                    setSheetState(() => isLoading = true);
+                    try {
+                      await _finalSubmitToolRental(toolName, days, selectedStartDate!, addressController.text, pricePerDay * days);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        _showSuccessDialog(context, "Rental request for $toolName submitted! Status will be updated by admin shortly.");
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+                    } finally {
+                      if (mounted) setSheetState(() => isLoading = false);
+                    }
+                  },
+                  child: isLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text("Confirm Rental", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _qtyBtn(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.zero),
+        child: Icon(icon, size: 20, color: Colors.black),
+      ),
+    );
+  }
+
+  // UPDATED: Now saving to 'hiring_requests' with a type tag so it can be managed from a central dashboard
+  Future<void> _finalSubmitToolRental(String tool, int days, DateTime startDate, String address, int total) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final prefs = await SharedPreferences.getInstance();
+    String finalUserId = user?.uid ?? prefs.getString('userId') ?? 'anonymous';
+    String finalEmail = user?.email ?? prefs.getString('userEmail') ?? 'no-email';
+
+    // We use the same collection as gardeners so the dashboard logic can handle it
+    await FirebaseFirestore.instance.collection('hiring_requests').add({
+      'userId': finalUserId,
+      'userEmail': finalEmail,
+      'userName': prefs.getString('userName') ?? 'Customer',
+      'userPhone': prefs.getString('userPhone') ?? 'No Phone',
+      'gardenerName': "Rental Duration: $days Days", // This maps to the gardener name field in dashboard
+      'serviceType': "Tool Rental: $tool",           // This maps to service type in dashboard
+      'scheduledDateTime': startDate,                // Rental start date
+      'address': address,
+      'estimatedPrice': total,
+      'status': 'Pending',                           // Default status
+      'requestType': 'tool',                         // Identifier for dashboard logic
+      'requestDate': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // --- GARDENER BOOKING LOGIC ---
   void _showBookingSheet(BuildContext context, String gardenerName) {
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
     bool isLoading = false;
     final TextEditingController addressController = TextEditingController();
-    const primaryGreen = Color(0xFF5B8E55);
 
     final Map<String, int> servicePrices = {
-      'Lawn Mowing': 500,
-      'Planting': 300,
-      'Garden Cleanup': 800,
-      'Full Maintenance': 1200,
+      'Lawn Mowing': 1499,
+      'Garden Cleaning': 2000,
+      'Plant Watering': 499,
+      'Indoor Plant Care': 3000,
+      'Plant Pruning & Trimming': 1499,
+      'Pest & Disease Treatment': 2499,
+      'New Plant Installation': 1000,
+      'Garden Designing': 4000,
+      'Weeding': 1000,
+      'Tree Plantation': 3000,
+      'Vegetable Garden Setup': 8000,
+      'Monthly Maintenance Package': 12000,
     };
 
     String selectedService = servicePrices.keys.first;
@@ -97,7 +277,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
+      builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => Container(
           decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.zero),
           padding: EdgeInsets.only(
@@ -144,13 +324,6 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                               initialDate: DateTime.now().add(const Duration(days: 1)),
                               firstDate: DateTime.now(),
                               lastDate: DateTime.now().add(const Duration(days: 30)),
-                              builder: (context, child) => Theme(
-                                data: ThemeData.light().copyWith(
-                                  colorScheme: const ColorScheme.light(primary: primaryGreen, onPrimary: Colors.white, surface: Colors.white, onSurface: Colors.black),
-                                  dialogBackgroundColor: Colors.white,
-                                ),
-                                child: child!,
-                              ),
                             );
                             if (picked != null) setSheetState(() => selectedDate = picked);
                           },
@@ -214,13 +387,21 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                     }
                     setSheetState(() => isLoading = true);
                     final bookingDateTime = DateTime(selectedDate!.year, selectedDate!.month, selectedDate!.day, selectedTime!.hour, selectedTime!.minute);
-                    await _finalSubmitBooking(context, gardenerName, selectedService, bookingDateTime, addressController.text, servicePrices[selectedService]!);
-                    setSheetState(() => isLoading = false);
-                    Navigator.pop(context);
+                    try {
+                      await _finalSubmitBooking(gardenerName, selectedService, bookingDateTime, addressController.text, servicePrices[selectedService]!);
+                      if (mounted) {
+                        Navigator.pop(context); 
+                        _showSuccessDialog(context, "Booking request for $selectedService submitted.");
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+                    } finally {
+                      if (mounted) setSheetState(() => isLoading = false);
+                    }
                   },
                   child: isLoading 
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text("Confirm Booking", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    : Text("Confirm Booking", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
                 ),
               ),
             ],
@@ -244,26 +425,26 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     );
   }
 
-  Future<void> _finalSubmitBooking(BuildContext context, String gardener, String service, DateTime dateTime, String address, int price) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection('hiring_requests').add({
-        'userId': user?.uid ?? 'anonymous',
-        'userEmail': user?.email ?? 'no-email',
-        'gardenerName': gardener,
-        'serviceType': service,
-        'scheduledDateTime': dateTime,
-        'address': address,
-        'estimatedPrice': price,
-        'status': 'Pending',
-        'requestDate': FieldValue.serverTimestamp(),
-      });
-      if (context.mounted) {
-        _showSuccessDialog(context, "Request sent for $service on ${dateTime.day}/${dateTime.month}.");
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
-    }
+  Future<void> _finalSubmitBooking(String gardener, String service, DateTime dateTime, String address, int price) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final prefs = await SharedPreferences.getInstance();
+    String finalUserId = user?.uid ?? prefs.getString('userId') ?? 'anonymous';
+    String finalEmail = user?.email ?? prefs.getString('userEmail') ?? 'no-email';
+
+    await FirebaseFirestore.instance.collection('hiring_requests').add({
+      'userId': finalUserId,
+      'userEmail': finalEmail,
+      'userName': prefs.getString('userName') ?? 'Customer',          
+      'userPhone': prefs.getString('userPhone') ?? 'No Phone Found',  
+      'gardenerName': gardener,
+      'serviceType': service,
+      'scheduledDateTime': dateTime,
+      'address': address,
+      'estimatedPrice': price,
+      'status': 'Pending',
+      'requestType': 'gardener',
+      'requestDate': FieldValue.serverTimestamp(),
+    });
   }
 
   void _showSuccessDialog(BuildContext context, String message) {
@@ -273,25 +454,38 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(padding: const EdgeInsets.all(15), decoration: const BoxDecoration(color: Color(0xFFE8F5E9), shape: BoxShape.rectangle), child: const Icon(Icons.check_circle, color: Color(0xFF5B8E55), size: 50)),
-            const SizedBox(height: 20),
-            Text('Request Sent!', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14)),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5B8E55), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero), padding: const EdgeInsets.symmetric(vertical: 12)),
-                child: Text('Great!', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), 
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(15), 
+                decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), shape: BoxShape.circle), 
+                child: const Icon(Icons.event_available_outlined, color: primaryGreen, size: 40) 
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Text('Request Sent!', 
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              const SizedBox(height: 12),
+              Text(message, textAlign: TextAlign.center, style: GoogleFonts.poppins(color: const Color(0xFF666666), fontSize: 15, height: 1.4)),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFF5F5F5),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('OK', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: primaryGreen, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -299,8 +493,6 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5B8E55);
-
     final filteredGardeners = manualGardeners.where((g) {
       final name = g['name'].toString().toLowerCase();
       final skill = g['skill'].toString().toLowerCase();
@@ -319,9 +511,17 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('Services & Rentals', 
-          style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.w600)
+          style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontSize: 18, fontWeight: FontWeight.bold)
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.black),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const MyBookingsScreen()));
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -363,23 +563,20 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                 stream: FirebaseFirestore.instance.collection('rentals').snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: primaryGreen));
-                  
                   final toolDocs = snapshot.data!.docs.where((doc) {
                     final data = doc.data() as Map<String, dynamic>;
                     final name = (data['name'] ?? '').toString().toLowerCase();
                     return name.contains(_searchQuery.toLowerCase());
                   }).toList();
 
-                  if (toolDocs.isEmpty) {
-                    return Center(child: Text("No tools found", style: GoogleFonts.poppins(color: Colors.grey)));
-                  }
+                  if (toolDocs.isEmpty) return Center(child: Text("No tools found", style: GoogleFonts.poppins(color: Colors.grey)));
 
                   return ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: toolDocs.length,
                     itemBuilder: (context, index) {
                       var data = toolDocs[index].data() as Map<String, dynamic>;
-                      return _buildToolCard(context, data['name'] ?? 'Tool', data['price'] ?? '0/day', data['image'] ?? '', primaryGreen);
+                      return _buildToolCard(context, data['name'] ?? 'Tool', data['price'] ?? '0/day', data['image'] ?? '');
                     },
                   );
                 },
@@ -394,19 +591,13 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             child: filteredGardeners.isEmpty 
-            ? Center(child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Text("No gardeners found", style: GoogleFonts.poppins(color: Colors.grey)),
-              ))
+            ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text("No gardeners found", style: GoogleFonts.poppins(color: Colors.grey))))
             : ListView.builder(
                 key: ValueKey('garden_list_$_searchQuery'),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: filteredGardeners.length,
-                itemBuilder: (context, index) {
-                  final g = filteredGardeners[index];
-                  return _buildGardenerRow(context, g, primaryGreen);
-                },
+                itemBuilder: (context, index) => _buildGardenerRow(context, filteredGardeners[index]),
               ),
           ),
           const SizedBox(height: 100), 
@@ -417,7 +608,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
         onTap: _onNavBarTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B8E55),
+        selectedItemColor: primaryGreen,
         unselectedItemColor: const Color(0xFF999999),
         showSelectedLabels: false,
         showUnselectedLabels: false,
@@ -432,7 +623,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     );
   }
 
-  Widget _buildToolCard(BuildContext context, String name, String price, String img, Color color) {
+  Widget _buildToolCard(BuildContext context, String name, String price, String img) {
     return Container(
       width: 220,
       margin: const EdgeInsets.only(right: 18, bottom: 10),
@@ -447,13 +638,13 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black)),
-                Text(price, style: GoogleFonts.poppins(color: color, fontWeight: FontWeight.w600)),
+                Text(price, style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {}, 
-                    style: ElevatedButton.styleFrom(backgroundColor: color, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero), elevation: 0),
+                    onPressed: () => _showToolBookingSheet(context, name, price, img), 
+                    style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero), elevation: 0),
                     child: const Text("Rent Now", style: TextStyle(color: Colors.white)),
                   ),
                 )
@@ -465,8 +656,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
     );
   }
 
-  // ✅ UPDATED: Gardener row with circular image
-  Widget _buildGardenerRow(BuildContext context, Map<String, dynamic> g, Color color) {
+  Widget _buildGardenerRow(BuildContext context, Map<String, dynamic> g) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -474,12 +664,10 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
           transitionDuration: const Duration(milliseconds: 400),
           pageBuilder: (context, animation, secondaryAnimation) => GardenerProfileScreen(
             gardener: g, 
-            primaryGreen: color, 
+            primaryGreen: primaryGreen, 
             onHire: () => _showBookingSheet(context, g['name'])
           ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
         ),
       ),
       child: Container(
@@ -491,15 +679,10 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
             Hero(
               tag: 'gardener_img_${g['name']}',
               child: Container(
-                width: 60, 
-                height: 60, 
+                width: 60, height: 60, 
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle, // Circular shape applied here
-                  border: Border.all(color: color.withOpacity(0.1), width: 1),
-                  image: DecorationImage(
-                    image: AssetImage(g['image']), 
-                    fit: BoxFit.cover
-                  )
+                  shape: BoxShape.circle, border: Border.all(color: primaryGreen.withOpacity(0.1), width: 1),
+                  image: DecorationImage(image: AssetImage(g['image']), fit: BoxFit.cover)
                 )
               ),
             ),
@@ -517,7 +700,7 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () => _showBookingSheet(context, g['name']),
-                  style: ElevatedButton.styleFrom(backgroundColor: color, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
                   child: const Text('Hire', style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -529,26 +712,87 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
   }
 }
 
-class GardenerProfileScreen extends StatelessWidget {
+class GardenerProfileScreen extends StatefulWidget {
   final Map<String, dynamic> gardener;
   final Color primaryGreen;
   final VoidCallback onHire;
-
   const GardenerProfileScreen({Key? key, required this.gardener, required this.primaryGreen, required this.onHire}) : super(key: key);
+
+  @override
+  State<GardenerProfileScreen> createState() => _GardenerProfileScreenState();
+}
+
+class _GardenerProfileScreenState extends State<GardenerProfileScreen> {
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(launchUri)) await launchUrl(launchUri);
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: widget.primaryGreen.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(Icons.mark_email_read_outlined, color: widget.primaryGreen, size: 40),
+              ),
+              const SizedBox(height: 20),
+              Text('Inquiry Sent!', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              const SizedBox(height: 12),
+              Text('The gardener has been notified about your interest.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF666666), height: 1.4)),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFF5F5F5),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('OK', style: GoogleFonts.poppins(color: widget.primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendOfficialEmail(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String cName = prefs.getString('userName') ?? "A Plantio User";
+    final String cEmail = prefs.getString('userEmail') ?? "No Email Available";
+    const String apiUrl = "https://umermoazzam-plantio-backend.hf.space/api/contact-inquiry";
+    try {
+      final response = await http.post(Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": widget.gardener['email'], "name": widget.gardener['name'], "customer_name": cName, "customer_email": cEmail}),
+      );
+      if (response.statusCode == 200 && context.mounted) _showSuccessDialog(context);
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Connection error: $e"), backgroundColor: Colors.redAccent));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: Colors.white, elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20), onPressed: () => Navigator.pop(context)),
         title: Text("Gardener Profile", style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
       ),
@@ -556,44 +800,35 @@ class GardenerProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // ✅ UPDATED: Circular image in Profile Screen
             Hero(
-              tag: 'gardener_img_${gardener['name']}',
+              tag: 'gardener_img_${widget.gardener['name']}',
               child: Container(
-                width: 140, 
-                height: 140, 
+                width: 140, height: 140, 
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle, // Circular shape applied here
-                  border: Border.all(color: primaryGreen.withOpacity(0.1), width: 3),
-                  image: DecorationImage(
-                    image: AssetImage(gardener['image']), 
-                    fit: BoxFit.cover
-                  )
+                  shape: BoxShape.circle, border: Border.all(color: widget.primaryGreen.withOpacity(0.1), width: 3),
+                  image: DecorationImage(image: AssetImage(widget.gardener['image']), fit: BoxFit.cover)
                 )
               ),
             ),
             const SizedBox(height: 20),
-            Text(gardener['name'], style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
-            Text(gardener['skill'], style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600])),
+            Text(widget.gardener['name'], style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(widget.gardener['skill'], style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600])),
             const SizedBox(height: 10),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Icon(Icons.star, color: Colors.orange, size: 20),
               const SizedBox(width: 5),
-              Text(gardener['rating'], style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(widget.gardener['rating'], style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             ]),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20), child: Divider()),
-            _buildInfoSection(Icons.email, "Email", gardener['email']),
-            _buildInfoSection(Icons.phone, "Phone", gardener['phone']),
+            _buildInfoSection(Icons.email_outlined, "Email Address", widget.gardener['email'], onTap: () => _sendOfficialEmail(context)),
+            _buildInfoSection(Icons.phone_outlined, "Phone Number", widget.gardener['phone'], onTap: () => _makePhoneCall(widget.gardener['phone'])),
             Padding(
               padding: const EdgeInsets.all(25),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("About", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                  const SizedBox(height: 10),
-                  Text(gardener['bio'], style: GoogleFonts.poppins(color: Colors.grey[700], height: 1.5, fontSize: 15)),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text("About", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                const SizedBox(height: 10),
+                Text(widget.gardener['bio'], style: GoogleFonts.poppins(color: Colors.grey[700], height: 1.5, fontSize: 15)),
+              ]),
             ),
             const SizedBox(height: 20),
             Padding(
@@ -601,12 +836,9 @@ class GardenerProfileScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onHire();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, padding: const EdgeInsets.symmetric(vertical: 18), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
-                  child: Text("Hire Now", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  onPressed: () { Navigator.pop(context); widget.onHire(); },
+                  style: ElevatedButton.styleFrom(backgroundColor: widget.primaryGreen, padding: const EdgeInsets.symmetric(vertical: 18), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+                  child: Text("Hire Now", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               ),
             ),
@@ -617,25 +849,34 @@ class GardenerProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(IconData icon, String label, String value) {
+  Widget _buildInfoSection(IconData icon, String label, String value, {VoidCallback? onTap}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.zero),
-            child: Icon(icon, color: primaryGreen, size: 20),
-          ),
-          const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(12)),
+          child: Row(
             children: [
-              Text(label, style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
-              Text(value, style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: widget.primaryGreen.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(icon, color: widget.primaryGreen, size: 20),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(label, style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
+                  const SizedBox(height: 2),
+                  Text(value, style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+                ]),
+              ),
+              if (onTap != null) Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withOpacity(0.5)),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

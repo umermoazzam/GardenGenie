@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold, // BOLD
                   color: Colors.black,
@@ -67,7 +67,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   child: Text(
                     'OK',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                       color: const Color(0xFF5B8E55),
                       fontWeight: FontWeight.bold, // BOLD
                       fontSize: 16,
@@ -142,30 +142,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio', 
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                       fontSize: 24, 
-                      fontWeight: FontWeight.bold // BOLD
+                      fontWeight: FontWeight.w600 // BOLD
                     )
                   ),
                 ],
               ),
               const SizedBox(height: 40),
               Text(
-                'Forgot Password?',
-                style: GoogleFonts.inter(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold, // BOLD
+                'Forgot Password',
+                style: GoogleFonts.poppins(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w600, // BOLD
                   color: const Color(0xFF1A1A1A),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Don\'t worry! It happens. Please enter the email address associated with your account.',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: const Color(0xFF666666),
                   height: 1.5,
-                  fontWeight: FontWeight.bold // BOLD
+                  fontWeight: FontWeight.w600 // BOLD
                 ),
               ),
               const SizedBox(height: 40),
@@ -195,10 +195,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         )
                       : Text(
                           'SEND RESET LINK',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.poppins(
                             fontSize: 16, 
                             color: Colors.white, 
-                            fontWeight: FontWeight.bold // BOLD
+                            fontWeight: FontWeight.w500 // BOLD
                           ),
                         ),
                 ),
@@ -209,10 +209,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 children: [
                   Text(
                     'Remember password? ', 
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                       fontSize: 14, 
                       color: const Color(0xFF666666),
-                      fontWeight: FontWeight.bold // BOLD
+                      fontWeight: FontWeight.w600 // BOLD
                     )
                   ),
                   GestureDetector(
@@ -224,7 +224,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     },
                     child: Text(
                       'Login',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.poppins(
                         color: primaryGreen,
                         fontWeight: FontWeight.bold, // BOLD
                         fontSize: 14,
@@ -255,7 +255,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         obscureText: obscureText,
         keyboardType: keyboardType,
         // ✅ Typed text is Normal (Simple)
-        style: GoogleFonts.inter(
+        style: GoogleFonts.poppins(
           fontWeight: FontWeight.normal,
           color: const Color(0xFF1A1A1A),
           fontSize: 16,
@@ -263,9 +263,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         decoration: InputDecoration(
           hintText: hint,
           // ✅ Placeholder (Hint) text is BOLD
-          hintStyle: GoogleFonts.inter(
+          hintStyle: GoogleFonts.poppins(
             color: Colors.grey[400],
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
           prefixIcon: Icon(icon, color: primaryGreen, size: 22),
           border: InputBorder.none,
@@ -289,7 +289,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/images/sent_mail.png', // Corrected path to match typical structure
+                'assets/images/sent_mail.png',
                 width: 50,
                 height: 50,
                 errorBuilder: (context, error, stackTrace) => const Icon(
@@ -302,7 +302,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text(
                 'Check your Email!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold, // BOLD
                   color: Colors.black,
@@ -312,7 +312,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text(
                 'Password recovery link sent to your email.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: const Color(0xFF666666),
                   height: 1.4,
@@ -335,7 +335,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   child: Text(
                     'OK',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.poppins(
                       color: const Color(0xFF5B8E55),
                       fontWeight: FontWeight.bold, // BOLD
                       fontSize: 16,

@@ -8,7 +8,7 @@ import 'checkout_screen.dart'; // Ensure import is present
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
-
+  
   static List<Map<String, dynamic>> cartItems = [];
 
   static void addToCart(Map<String, dynamic> item) {

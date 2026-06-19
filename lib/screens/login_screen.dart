@@ -4,6 +4,7 @@ import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_screen.dart';
 import 'api_service.dart';
+import 'gardener_dashboard.dart'; // ✅ Gardener Dashboard import kiya gaya hai
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
@@ -24,6 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   final AuthService _authService = AuthService();
+
+  // ✅ GARDENERS KI LIST CONSTANT
+  static const List<String> _gardenerEmails = [
+    'uzairasiff1227@gmail.com',
+    'razafaheem001@gmail.com',
+    'nb.freelancer786@gmail.com',
+    'showbizz951@gmail.com',
+    'talalamin39@gmail.com',
+  ];
 
   @override
   void dispose() {
@@ -60,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold, 
                     color: Colors.black),
@@ -75,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Text(
                     'OK',
-                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                    style: GoogleFonts.poppins(
                         color: const Color(0xFF5B8E55),
                         fontWeight: FontWeight.bold, 
                         fontSize: 16),
@@ -109,11 +119,27 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('userName', result['user']['name']);
       await prefs.setString('userEmail', result['user']['email']);
       await prefs.setString('userId', result['user']['id']);
+      
+      if(result['user']['phone'] != null) {
+        await prefs.setString('userPhone', result['user']['phone']);
+      }
 
       if (mounted) {
+        String userEmail = _emailController.text.trim().toLowerCase();
+        Widget targetScreen = const HomeScreen();
+
+        // Check if it's a Gardener
+        if (_gardenerEmails.contains(userEmail)) {
+          targetScreen = const GardenerDashboard();
+        } 
+        // Check if it's Admin
+        else if (userEmail == "click.umer50@gmail.com") {
+          targetScreen = const HomeScreen(); 
+        }
+
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => targetScreen),
           (route) => false,
         );
       }
@@ -132,10 +158,25 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userName', user.displayName ?? "User");
         await prefs.setString('userEmail', user.email ?? "");
+        await prefs.setString('userId', user.uid); 
+      
+        await prefs.setString('userPhone', user.phoneNumber ?? "No Phone");
+
+        String userEmail = (user.email ?? "").trim().toLowerCase();
+        Widget targetScreen = const HomeScreen();
+
+        // Check if Google user is a Gardener
+        if (_gardenerEmails.contains(userEmail)) {
+          targetScreen = const GardenerDashboard();
+        }
+        // Check if Google user is Admin
+        else if (userEmail == "click.umer50@gmail.com") {
+          targetScreen = const HomeScreen();
+        }
 
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => targetScreen),
           (route) => false,
         );
       }
@@ -172,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Plantio',
-                    style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                    style: GoogleFonts.poppins(
                         fontSize: 24, 
                         fontWeight: FontWeight.w600 
                     ),
@@ -182,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 50),
               RichText(
                 text: TextSpan(
-                  style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                  style: GoogleFonts.poppins(
                     fontSize: 25,
                     fontWeight: FontWeight.w600, 
                     color: const Color(0xFF1A1A1A),
@@ -196,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               Text(
                 'Login to your account to continue.',
-                style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                style: GoogleFonts.poppins(
                     fontSize: 15, 
                     color: const Color(0xFF666666),
                     fontWeight: FontWeight.w600 
@@ -225,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         activeColor: primaryGreen,
                       ),
                       Text('Remember Me',
-                          style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                          style: GoogleFonts.poppins(
                               fontSize: 14, 
                               color: const Color(0xFF666666),
                               fontWeight: FontWeight.w600 
@@ -240,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text('Forgot Password?',
-                        style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                        style: GoogleFonts.poppins(
                             fontSize: 14, 
                             color: primaryGreen, 
                             fontWeight: FontWeight.w600, 
@@ -266,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : Text('LOGIN', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)), // ✅ Poppins
+                      : Text('LOGIN', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
                 ),
               ),
 
@@ -292,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     label: Text(
                       'Continue with Google',
-                      style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                      style: GoogleFonts.poppins(
                           fontSize: 15, 
                           color: Colors.black87, 
                           fontWeight: FontWeight.w600 
@@ -313,7 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Don\'t have an account? ',
-                      style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                      style: GoogleFonts.poppins(
                           fontSize: 14, 
                           color: const Color(0xFF666666),
                           fontWeight: FontWeight.w600 
@@ -326,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text('Sign up',
-                        style: GoogleFonts.poppins( // ✅ Changed to Poppins
+                        style: GoogleFonts.poppins(
                             color: primaryGreen, 
                             fontWeight: FontWeight.bold 
                         )),
@@ -356,14 +397,14 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.poppins( // ✅ Changed to Poppins (Normal Text)
+        style: GoogleFonts.poppins(
           fontWeight: FontWeight.normal,
           color: const Color(0xFF1A1A1A),
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins( // ✅ Changed to Poppins (Bold Hint)
+          hintStyle: GoogleFonts.poppins(
             color: Colors.grey[400],
             fontWeight: FontWeight.w500,
           ),

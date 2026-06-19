@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // Date formatting ke liye
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -30,10 +31,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      setState(() { _selectedImage = File(pickedFile.path); });
     }
+  }
+
+  // Status update logic
+  void _updateRequestStatus(String docId, String newStatus) async {
+    await FirebaseFirestore.instance.collection('hiring_requests').doc(docId).update({
+      'status': newStatus,
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Request $newStatus!", style: GoogleFonts.poppins()))
+    );
   }
 
   Future<void> _publishProduct() async {
@@ -63,10 +72,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      _nameController.clear();
-      _descController.clear();
-      _categoryController.clear();
-      _priceController.clear();
+      _nameController.clear(); _descController.clear(); _categoryController.clear(); _priceController.clear();
       setState(() { _selectedImage = null; _isUploading = false; _currentView = "Dashboard"; });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Product Added Successfully!")));
     } catch (e) {
@@ -82,7 +88,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: AppBar(
         elevation: 0, backgroundColor: Colors.white, centerTitle: true,
         title: Text(_currentView == "Dashboard" ? "Admin Control Panel" : _currentView,
-          style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         leading: IconButton(
           icon: Icon(_currentView == "Dashboard" ? Icons.arrow_back_ios : Icons.close, color: Colors.black),
           onPressed: () {
@@ -100,6 +106,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case "Add Product": return _buildAddProductForm();
       case "Product List": return _buildProductList();
       case "Orders": return _buildOrdersList();
+      case "Service Requests": return _buildServiceRequestsList();
       default: return _buildMainDashboard();
     }
   }
@@ -110,57 +117,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Platform Overview", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text("Platform Overview", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
           Row(
             children: [
-              // 1. Total Users Card
               StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('users').snapshots(),
+                stream: FirebaseFirestore.instance.collection('hiring_requests').where('requestType', isEqualTo: 'tool').snapshots(),
                 builder: (context, snapshot) {
-                  String count = "...";
-                  if (snapshot.hasError) {
-                    print("Firestore Error: ${snapshot.error}");
-                    count = "Check Rules"; 
-                  } else if (snapshot.hasData) {
-                    count = snapshot.data!.docs.length.toString();
-                  }
-                  return Expanded(child: _buildStatCard("Total Users", count, Icons.people_alt, Colors.blue));
+                  String count = snapshot.hasData ? snapshot.data!.docs.length.toString() : "...";
+                  return Expanded(child: _buildStatCard("Tool Requests", count, Icons.handyman, Colors.blue));
                 },
               ),
               const SizedBox(width: 15),
-              // 2. Total Orders Card
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('orders').snapshots(),
                 builder: (context, snapshot) {
-                  String count = "...";
-                  if (snapshot.hasData) {
-                    count = snapshot.data!.docs.length.toString();
-                  }
+                  String count = snapshot.hasData ? snapshot.data!.docs.length.toString() : "...";
                   return Expanded(child: _buildStatCard("Total Orders", count, Icons.shopping_bag, Colors.orange));
                 },
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          // 3. Revenue Card
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('orders').snapshots(),
-            builder: (context, snapshot) {
-              double totalRevenue = 0;
-              if (snapshot.hasData) {
-                for (var doc in snapshot.data!.docs) {
-                  var data = doc.data() as Map<String, dynamic>;
-                  double val = double.tryParse(data['totalAmount']?.toString() ?? data['totalPrice']?.toString() ?? "0") ?? 0.0;
-                  totalRevenue += val;
-                }
-              }
-              return _buildStatCard("Total Revenue Generated", "Rs. ${totalRevenue.toStringAsFixed(0)}", Icons.account_balance_wallet, Colors.purple);
-            },
-          ),
           const SizedBox(height: 30),
-          Text("Management Modules", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text("Management Modules", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
+          _buildAdminOption(Icons.event_note, "Service Requests", "Manage Tool Rentals Only", () => setState(() => _currentView = "Service Requests")),
           _buildAdminOption(Icons.add_box_outlined, "Add Product", "Upload new plant", () => setState(() => _currentView = "Add Product")),
           _buildAdminOption(Icons.format_list_bulleted, "Product List", "Manage inventory", () => setState(() => _currentView = "Product List")),
           _buildAdminOption(Icons.shopping_cart_checkout, "Orders", "Manage customer orders", () => setState(() => _currentView = "Orders")),
@@ -169,7 +150,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: TextButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.logout, color: Colors.red),
-              label: Text("Logout Admin Session", style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.w600)),
+              label: Text("Logout Admin Session", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -177,18 +158,246 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  // NEW SERVICE REQUESTS LIST (GARDENER DASHBOARD STYLE)
+  Widget _buildServiceRequestsList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('hiring_requests')
+          .where('requestType', isEqualTo: 'tool') 
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return Center(child: Text("Error loading data", style: GoogleFonts.poppins()));
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Colors.green));
+        
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return Center(child: Text("No Tool Requests Found", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)));
+        }
+        
+        // Manual sorting: Latest requests first
+        List<QueryDocumentSnapshot> sortedDocs = List.from(docs);
+        sortedDocs.sort((a, b) {
+          Timestamp t1 = (a.data() as Map<String, dynamic>)['requestDate'] ?? Timestamp.now();
+          Timestamp t2 = (b.data() as Map<String, dynamic>)['requestDate'] ?? Timestamp.now();
+          return t2.compareTo(t1);
+        });
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          itemCount: sortedDocs.length,
+          itemBuilder: (context, index) {
+            var data = sortedDocs[index].data() as Map<String, dynamic>;
+            
+            String formattedDate = "No Date Scheduled";
+            if (data['scheduledDateTime'] != null) {
+              DateTime dt = (data['scheduledDateTime'] as Timestamp).toDate();
+              formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+            }
+            
+            return Card(
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 16),
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: Colors.grey[200]!, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          data['serviceType'] ?? 'Tool Rental', 
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1A1A1A))
+                        ),
+                        _statusBadge(data['status'] ?? 'Pending'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline_rounded, size: 18, color: primaryGreen),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Customer: ${data['userName']}", 
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF555555))
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 18, color: primaryGreen),
+                        const SizedBox(width: 8),
+                        Text(
+                          formattedDate, 
+                          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF555555))
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.location_on_outlined, size: 18, color: primaryGreen),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Address: ${data['address']}", 
+                            style: GoogleFonts.poppins(color: const Color(0xFF777777), fontSize: 13, fontWeight: FontWeight.w400)
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.payments_outlined, size: 18, color: primaryGreen),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Price: Rs. ${data['estimatedPrice']}", 
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: primaryGreen)
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 30, thickness: 1),
+                    
+                    // Buttons exactly like Gardener Dashboard
+                    if (data['status'] == 'Pending')
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _actionButton(
+                              "Confirm", 
+                              primaryGreen, 
+                              () => _updateRequestStatus(sortedDocs[index].id, "Confirmed"),
+                              isOutlined: false
+                            )
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _actionButton(
+                              "Reject", 
+                              Colors.redAccent, 
+                              () => _updateRequestStatus(sortedDocs[index].id, "Cancelled"),
+                              isOutlined: true
+                            )
+                          ),
+                        ],
+                      )
+                    else if (data['status'] == 'Confirmed')
+                      SizedBox(
+                        width: double.infinity, 
+                        child: _actionButton(
+                          "Mark Completed", 
+                          primaryGreen, 
+                          () => _updateRequestStatus(sortedDocs[index].id, "Completed"),
+                          isOutlined: false
+                        )
+                      )
+                    else
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Text(
+                            "Booking Closed", 
+                            style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w600)
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // --- HELPER COMPONENTS (GARDENER DASHBOARD STYLE) ---
+  Widget _actionButton(String title, Color color, VoidCallback onPressed, {required bool isOutlined}) {
+    return SizedBox(
+      height: 46,
+      child: isOutlined
+          ? OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: color, width: 1.5),
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              ),
+              child: Text(
+                title, 
+                style: GoogleFonts.poppins(color: color, fontWeight: FontWeight.bold, fontSize: 14)
+              ),
+            )
+          : ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color, 
+                elevation: 0,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)
+              ),
+              child: Text(
+                title, 
+                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)
+              ),
+            ),
+    );
+  }
+
+  Widget _statusBadge(String status) {
+    Color baseColor;
+    if (status == 'Confirmed') {
+      baseColor = const Color(0xFF2196F3); 
+    } else if (status == 'Completed') {
+      baseColor = const Color(0xFF4CAF50); 
+    } else if (status == 'Cancelled') {
+      baseColor = Colors.redAccent;
+    } else {
+      baseColor = const Color(0xFFFF9800); 
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: baseColor.withOpacity(0.12), 
+        borderRadius: BorderRadius.circular(30), 
+      ),
+      child: Text(
+        status, 
+        style: GoogleFonts.poppins(color: baseColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)
+      ),
+    );
+  }
+
+  // --- EXISTING UI COMPONENTS (UNCHANGED LOGIC) ---
   Widget _buildOrdersList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('orders').orderBy('orderDate', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance.collection('orders').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty) return Center(child: Text("No orders found", style: GoogleFonts.inter()));
+        List<QueryDocumentSnapshot> sortedDocs = List.from(docs);
+        sortedDocs.sort((a, b) {
+          Timestamp t1 = (a.data() as Map<String, dynamic>)['orderDate'] ?? Timestamp.now();
+          Timestamp t2 = (b.data() as Map<String, dynamic>)['orderDate'] ?? Timestamp.now();
+          return t2.compareTo(t1);
+        });
+
         return ListView.builder(
           padding: const EdgeInsets.all(15),
-          itemCount: docs.length,
+          itemCount: sortedDocs.length,
           itemBuilder: (context, index) {
-            var data = docs[index].data() as Map<String, dynamic>;
+            var data = sortedDocs[index].data() as Map<String, dynamic>;
             var addr = data['shippingAddress'] as Map<String, dynamic>? ?? {};
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
@@ -198,27 +407,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text("ORDER: #${docs[index].id.substring(0,6).toUpperCase()}", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.grey)),
-                    Text(data['status'] ?? 'Pending', style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.bold)),
+                    Text("ORDER: #${sortedDocs[index].id.substring(0,6).toUpperCase()}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.grey)),
+                    Text(data['status'] ?? 'Pending', style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.bold)),
                   ]),
                   const Divider(height: 30),
                   Row(children: [
                     ClipRRect(borderRadius: BorderRadius.circular(8), child: data['itemImage'] != null ? Image.network(data['itemImage'], width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (c,e,s)=>const Icon(Icons.image)) : const Icon(Icons.image)),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(data['itemName'] ?? 'Item', style: GoogleFonts.inter(fontWeight: FontWeight.bold))),
-                    Text("Rs. ${data['totalAmount'] ?? 0}", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: primaryGreen)),
+                    Expanded(child: Text(data['itemName'] ?? 'Item', style: GoogleFonts.poppins(fontWeight: FontWeight.bold))),
+                    Text("Rs. ${data['totalAmount'] ?? 0}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: primaryGreen)),
                   ]),
                   const SizedBox(height: 15),
                   Container(
                     width: double.infinity, padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text("Customer: ${data['customerName'] ?? 'Guest'}", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text("Phone: ${data['customerPhone'] ?? 'N/A'}", style: GoogleFonts.inter(fontSize: 12)),
-                      Text("Address: ${addr['address'] ?? ''}, ${addr['city'] ?? ''}", style: GoogleFonts.inter(fontSize: 12)),
+                      Text("Customer: ${data['customerName'] ?? 'Guest'}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text("Phone: ${data['customerPhone'] ?? 'N/A'}", style: GoogleFonts.poppins(fontSize: 12)),
+                      Text("Address: ${addr['address'] ?? ''}, ${addr['city'] ?? ''}", style: GoogleFonts.poppins(fontSize: 12)),
                     ]),
                   ),
-                  Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => docs[index].reference.delete(), child: const Text("Delete Order", style: TextStyle(color: Colors.red)))),
+                  Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => sortedDocs[index].reference.delete(), child: Text("Delete Order", style: GoogleFonts.poppins(color: Colors.red)))),
                 ],
               ),
             );
@@ -235,8 +444,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 12),
-        Text(value, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-        Text(title, style: GoogleFonts.inter(fontSize: 13, color: Colors.grey[600])),
+        Text(value, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(title, style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600])),
       ]),
     );
   }
@@ -247,8 +456,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         leading: Icon(icon, color: primaryGreen),
-        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        subtitle: Text(sub, style: GoogleFonts.inter(fontSize: 12)),
+        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        subtitle: Text(sub, style: GoogleFonts.poppins(fontSize: 12)),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
@@ -260,7 +469,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       padding: const EdgeInsets.only(bottom: 15),
       child: TextField(
         controller: controller, maxLines: maxLines,
-        decoration: InputDecoration(labelText: label, hintText: hint, filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+        style: GoogleFonts.poppins(),
+        decoration: InputDecoration(
+          labelText: label, hintText: hint, labelStyle: GoogleFonts.poppins(),
+          filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
       ),
     );
   }
@@ -285,7 +497,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Expanded(child: _buildTextField("Price", "0", _priceController)),
         ]),
         const SizedBox(height: 20),
-        ElevatedButton(onPressed: _publishProduct, style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, minimumSize: const Size(double.infinity, 50)), child: const Text("PUBLISH", style: TextStyle(color: Colors.white))),
+        ElevatedButton(onPressed: _publishProduct, style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, minimumSize: const Size(double.infinity, 50)), child: Text("PUBLISH", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold))),
       ]),
     );
   }
@@ -301,10 +513,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
             return ListTile(
               leading: Image.network(data['image'] ?? '', width: 50, height: 50, fit: BoxFit.cover),
-              title: Text(data['title'] ?? 'N/A'),
-              subtitle: Text("Rs. ${data['price'] ?? 0}"),
+              title: Text(data['title'] ?? 'N/A', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              subtitle: Text("Rs. ${data['price'] ?? 0}", style: GoogleFonts.poppins()),
               trailing: IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => snapshot.data!.docs[index].reference.delete()),
-            );
+            );  
           },
         );
       },

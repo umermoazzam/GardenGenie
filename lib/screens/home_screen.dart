@@ -13,6 +13,7 @@ import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_details_screen.dart';
 import 'detection_screen.dart'; 
+import 'shop_screen.dart'; // Naya Import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -29,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = "";
   bool _isSearching = false;
 
-  // Constant for Theme Consistency
   final Color primaryGreen = const Color(0xFF5B8E55);
 
   @override
@@ -65,13 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavBarTapped(int index) {
     if (index == _currentIndex) return;
     if (index == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Categories / Shop Screen is currently disabled',
-            style: GoogleFonts.poppins(),
-          ),
-        ),
+      // SnackBar hata kar navigation enable kar di gayi hai
+      Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => const ShopScreen())
       );
     } else if (index == 2) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
@@ -100,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        // Added TweenAnimationBuilder for a decent Fade + Slide entry transition
         child: TweenAnimationBuilder<double>(
           duration: const Duration(milliseconds: 1500),
           tween: Tween(begin: 0.0, end: 1.0),
@@ -152,29 +148,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                              border: const OutlineInputBorder(
-                                borderRadius: BorderRadius.zero, 
-                                borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)
-                              ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderRadius: BorderRadius.zero, 
-                                borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.zero, 
-                                borderSide: BorderSide(color: primaryGreen, width: 0.5) 
-                              ),
+                              border: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
+                              enabledBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: primaryGreen, width: 0.5)),
                             ),
                           ),
                         )
                       : Container(
                           key: const ValueKey('titleBar'),
                           width: double.infinity,
-                          // Hum Stack ka use kar rahe hain taake text top se start ho aur profile fixed side pe rahe
                           child: Stack(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(top: 55.0, right: 50.0), // Padding to avoid overlap with profile icon
+                                padding: const EdgeInsets.only(top: 55.0, right: 50.0),
                                 child: RichText(
                                   text: TextSpan(
                                     style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w600, letterSpacing: -0.5),
@@ -303,7 +289,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         itemBuilder: (context, index) {
                           var data = productDocs[index].data() as Map<String, dynamic>;
-
                           String title = data['title'] ?? 'No Title';
                           String imageUrl = data['image'] ?? '';
                           String price = (data['price'] ?? '0').toString();
@@ -313,9 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           bool showBadge = false;
                           if (data['createdAt'] != null) {
                             Timestamp t = data['createdAt'] as Timestamp;
-                            DateTime date = t.toDate();
-                            DateTime now = DateTime.now();
-                            showBadge = now.difference(date).inMinutes < 60;
+                            showBadge = DateTime.now().difference(t.toDate()).inMinutes < 60;
                           }
 
                           return _buildProductCard(
@@ -328,7 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-
                   const SizedBox(height: 100),
                 ],
               ),
@@ -339,42 +321,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.only(bottom: 10),
         child: GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen())),
           child: Container(
-            width: 58, height: 58,
+            width: 60, height: 60,
             decoration: BoxDecoration(
               color: primaryGreen,
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6))],
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(-2, -2)),
+                BoxShadow(color: const Color(0xFF000000).withOpacity(0.18), blurRadius: 15, offset: const Offset(4, 6)),
+              ],
             ),
             child: const Icon(Icons.crop_free, color: Colors.white, size: 26),
           ),
         ),
       ),
 
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onNavBarTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: primaryGreen,
-          unselectedItemColor: const Color(0xFF999999),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
-            BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, -4)),
+            BoxShadow(color: const Color(0xFF000000).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -6)),
           ],
+        ),
+        child: Theme(
+          data: ThemeData(splashColor: Colors.transparent, highlightColor: Colors.transparent),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onNavBarTapped,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: primaryGreen,
+            unselectedItemColor: const Color(0xFF999999),
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            elevation: 0,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
+              BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
+              BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
+            ],
+          ),
         ),
       ),
     );
@@ -385,7 +376,17 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Container(width: 64, height: 58, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 28)),
+          Container(
+            width: 64, height: 58, 
+            decoration: BoxDecoration(
+              color: Colors.white, shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(-2, -2)),
+                BoxShadow(color: const Color(0xFF000000).withOpacity(0.12), blurRadius: 12, offset: const Offset(4, 5)),
+              ],
+            ), 
+            child: Icon(icon, color: primaryGreen, size: 28),
+          ),
           const SizedBox(height: 10),
           Text(label, style: GoogleFonts.poppins(fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w500)),
         ],
@@ -443,23 +444,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               Text('AI Features', style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
-              
-              // ✅ UPDATED ONTAP TO FETCH USERID AND ROUTE TO INDIVIDUALCHATSCREEN
-              _buildAIOption(
-                icon: Icons.chat_bubble_outline, 
-                title: 'AI Chatbot', 
-                description: 'Get instant gardening assistance', 
-                onTap: () async { 
+              _buildAIOption(icon: Icons.chat_bubble_outline, title: 'AI Chatbot', description: 'Get instant gardening assistance', onTap: () async { 
                   Navigator.pop(context);
                   final prefs = await SharedPreferences.getInstance();
                   final String? uid = prefs.getString('userId'); 
-                  
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (_) => IndividualChatScreen(userId: uid ?? "guest_user")) 
-                  );
-                }
-              ),
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => IndividualChatScreen(userId: uid ?? "guest_user")));
+              }),
               const SizedBox(height: 16),
               _buildAIOption(icon: Icons.camera_alt_outlined, title: 'Leaf Disease Detector', description: 'Scan and identify leaf diseases', onTap: () {
                 Navigator.pop(context);
