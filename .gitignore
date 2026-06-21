@@ -50,3 +50,6 @@ app.*.map.json
 
 # Env file (IMPORTANT FIX)
 backend/.env
+
+# Firebase Admin SDK key (IMPORTANT)
+backend/serviceAccountKey.json

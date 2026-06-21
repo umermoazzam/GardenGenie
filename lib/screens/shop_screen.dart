@@ -1,4 +1,3 @@
-// shop_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +15,7 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
-  final int _currentIndex = 1; // Shop screen is index 1
+  final int _currentIndex = 1;
   String selectedCategory = "All";
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
@@ -80,7 +79,6 @@ class _ShopScreenState extends State<ShopScreen> {
                     pressElevation: 2,
                     shadowColor: Colors.black.withOpacity(0.2),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    // Yahan White Bold effect apply kiya gaya hai
                     labelStyle: GoogleFonts.poppins(
                       color: isSelected ? Colors.white : Colors.grey.shade700,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -107,12 +105,29 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Future<void> _addToCart(Map<String, dynamic> data) async {
     try {
-      await FirebaseFirestore.instance.collection('cart').add({
-        ...data,
-        'addedAt': Timestamp.now(),
-      });
+      final cartRef = FirebaseFirestore.instance.collection('cart');
+      // Check if product already exists in Firestore cart to avoid duplicate docs
+      final existingItems = await cartRef.where('title', isEqualTo: data['title']).limit(1).get();
 
+      String docId;
+      if (existingItems.docs.isNotEmpty) {
+        // If exists, increment qty in Firestore
+        var doc = existingItems.docs.first;
+        docId = doc.id;
+        await doc.reference.update({'qty': FieldValue.increment(1)});
+      } else {
+        // If new, add document with qty 1
+        DocumentReference docRef = await cartRef.add({
+          ...data,
+          'qty': 1,
+          'addedAt': Timestamp.now(),
+        });
+        docId = docRef.id;
+      }
+
+      // Update local cart state
       CartScreen.addToCart({
+        "id": docId,
         "name": data['title'] ?? 'No Title',
         "price": data['price']?.toString() ?? '0',
         "image": data['image'] ?? '',
@@ -122,12 +137,24 @@ class _ShopScreenState extends State<ShopScreen> {
       if (!mounted) return;
       setState(() {});
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("${data['title']} added to cart!", style: GoogleFonts.poppins()),
-          backgroundColor: primaryGreen,
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white,
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          content: Text(
+            "${data['title']} added to cart!",
+            style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: primaryGreen)),
+            ),
+          ],
         ),
       );
     } catch (e) {
@@ -144,12 +171,23 @@ class _ShopScreenState extends State<ShopScreen> {
       } else {
         await wishlistRef.set(data);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${data['title']} added to your wishlist!", style: GoogleFonts.poppins()),
-            backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
+        
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
+            content: Text(
+              "${data['title']} added to your wishlist!",
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.redAccent)),
+              ),
+            ],
           ),
         );
       }
@@ -179,13 +217,20 @@ class _ShopScreenState extends State<ShopScreen> {
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('cart').snapshots(),
             builder: (context, snapshot) {
-              int cartCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+              // Calculate total qty across all items for the badge
+              int totalItems = 0;
+              if (snapshot.hasData) {
+                for (var doc in snapshot.data!.docs) {
+                  final d = doc.data() as Map<String, dynamic>;
+                  totalItems += (d['qty'] as int? ?? 1);
+                }
+              }
               return IconButton(
                 icon: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     const Icon(Icons.shopping_bag_outlined, color: Colors.black),
-                    if (cartCount > 0)
+                    if (totalItems > 0)
                       Positioned(
                         right: -4,
                         top: -4,
@@ -195,7 +240,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                           child: Center(
                             child: Text(
-                              '$cartCount',
+                              '$totalItems',
                               style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
                             ),
@@ -283,11 +328,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   final data = doc.data() as Map<String, dynamic>;
                   final title = (data['title'] ?? '').toString().toLowerCase();
                   final category = (data['category'] ?? 'All').toString().trim();
-
-                  final matchesSearch = title.contains(searchQuery);
-                  final matchesCategory = selectedCategory == "All" || category.toLowerCase() == selectedCategory.toLowerCase();
-
-                  return matchesSearch && matchesCategory;
+                  return title.contains(searchQuery) && (selectedCategory == "All" || category.toLowerCase() == selectedCategory.toLowerCase());
                 }).toList();
 
                 if (docs.isEmpty) return Center(child: Text("No results found in $selectedCategory", style: GoogleFonts.poppins()));
@@ -303,7 +344,6 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ],
       ),
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -312,25 +352,22 @@ class _ShopScreenState extends State<ShopScreen> {
             BoxShadow(color: const Color(0xFF000000).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -6)),
           ],
         ),
-        child: Theme(
-          data: ThemeData(splashColor: Colors.transparent, highlightColor: Colors.transparent),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onNavBarTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: primaryGreen,
-            unselectedItemColor: const Color(0xFF999999),
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), activeIcon: Icon(Icons.home, size: 28), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), activeIcon: Icon(Icons.map, size: 28), label: 'Categories'),
-              BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), activeIcon: Icon(Icons.people, size: 28), label: 'Rentals'),
-              BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), activeIcon: Icon(Icons.shopping_bag, size: 28), label: 'Cart'),
-            ],
-          ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onNavBarTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: primaryGreen,
+          unselectedItemColor: const Color(0xFF999999),
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.map_outlined, size: 28), label: 'Categories'),
+            BottomNavigationBarItem(icon: Icon(Icons.people_outline, size: 28), label: 'Rentals'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined, size: 28), label: 'Cart'),
+          ],
         ),
       ),
     );

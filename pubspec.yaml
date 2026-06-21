@@ -64,6 +64,7 @@ dependencies:
   provider: ^6.1.5+1
   shimmer: ^3.0.0
   percent_indicator: ^4.2.2
+  lottie: ^3.3.3
   pdf: ^3.12.0
   intl: ^0.20.2
   cached_network_image: ^3.4.1
@@ -137,7 +138,8 @@ flutter:
     - assets/icons/garden.png
     - assets/icons/plants.png
     - assets/images/navigation_bar.png
-    
+    - assets/images/background.jpg
+        
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

@@ -6,7 +6,8 @@ import '../models/product_model.dart'; // Import the model
 
 class ApiService {
   // ✅ UPDATED: Ngrok link replaced with permanent Hugging Face Cloud link
-  static const String cloudUrl = 'https://umermoazzam-plantio-backend.hf.space';  
+  static const String cloudUrl = 'https://umermoazzam-plantio-backend.hf.space'; 
+ // static const String cloudUrl = 'http://127.0.0.1:7860';
   static const String baseUrl = '$cloudUrl/api';
   static const String rootUrl = cloudUrl;
 

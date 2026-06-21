@@ -37,6 +37,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double get totalAmount => subtotal + shippingFee;
 
   void _showOrderSuccessDialog() {
+    // Save the target index before popping or changing screens
+    final targetIndex = widget.selectedIndex;
+
     showDialog(
       context: context,
       barrierDismissible: false, 
@@ -74,13 +77,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
+                    // Safe execution flow to prevent async context crashes
+                    if (CartScreen.cartItems.length > targetIndex) {
+                      CartScreen.cartItems.removeAt(targetIndex);
+                    }
                     Navigator.pop(dialogContext); 
                     Navigator.of(context).popUntil((route) => route.isFirst);
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (CartScreen.cartItems.length > widget.selectedIndex) {
-                        CartScreen.cartItems.removeAt(widget.selectedIndex);
-                      }
-                    });
                   },
                   child: Text('OK', style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
@@ -153,6 +155,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _pinController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
@@ -184,7 +197,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: GestureDetector(
           onTap: () {
             if (!isAddressSaved) {
-              if (_nameController.text.isNotEmpty && _addressController.text.isNotEmpty && _phoneController.text.isNotEmpty) {
+              if (_nameController.text.trim().isNotEmpty && 
+                  _addressController.text.trim().isNotEmpty && 
+                  _phoneController.text.trim().isNotEmpty &&
+                  _pinController.text.trim().isNotEmpty &&
+                  _cityController.text.trim().isNotEmpty &&
+                  _stateController.text.trim().isNotEmpty) {
                 setState(() => isAddressSaved = true);
               } else {
                 _showValidationErrorDialog();

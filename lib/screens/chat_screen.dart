@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'package:speech_to_text/speech_to_text.dart' as stt; // New Import for Voice
+import 'package:speech_to_text/speech_to_text.dart' as stt; 
+import 'package:flutter_markdown/flutter_markdown.dart'; // Added Markdown import
 import 'home_screen.dart';
 import 'api_service.dart'; 
 import 'cart_screen.dart'; 
@@ -37,9 +38,10 @@ class IndividualChatScreen extends StatefulWidget {
 class _IndividualChatScreenState extends State<IndividualChatScreen> {
   bool _isDarkMode = false;
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
+  bool _isAiTyping = false; 
 
-  // Voice Functionality Variables
   late stt.SpeechToText _speech;
   bool _isListening = false;
 
@@ -49,7 +51,22 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
     _speech = stt.SpeechToText();
   }
 
-  // Colors for "White Shaded" Theme Effect
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   Color get _bgColor => _isDarkMode ? const Color(0xFF121212) : const Color(0xFFF6F8F7);
   Color get _appBarColor => _isDarkMode ? const Color(0xFF1F1F1F) : Colors.white;
   Color get _textColor => _isDarkMode ? Colors.white : const Color(0xFF1B1E28);
@@ -57,7 +74,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Color get _userBubbleColor => _isDarkMode ? const Color(0xFF2D4B2D) : const Color(0xFFE8F5E9);
   Color get _inputBgColor => _isDarkMode ? const Color(0xFF1F1F1F) : Colors.white;
 
-  // Voice Listening Logic
   void _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize(
@@ -142,8 +158,13 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
     final timestamp = FieldValue.serverTimestamp();
     final timeString = "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}";
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _isAiTyping = true;
+    });
     _messageController.clear();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
     try {
       var historyCheck = await FirebaseFirestore.instance
@@ -182,10 +203,17 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
         'time': timeString,
         'timestamp': timestamp,
       });
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      
     } catch (e) {
       debugPrint("Chat Error: $e");
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _isAiTyping = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
   }
 
@@ -261,11 +289,20 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFF5B8C51)));
                 var docs = snapshot.data!.docs;
+                
+                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
                 return ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 16),
-                  itemCount: docs.length + 1, 
+                  itemCount: docs.length + 1 + (_isAiTyping ? 1 : 0), 
                   itemBuilder: (context, index) {
                     if (index == 0) return _buildReceivedMessage('Hello! I am Garden Genie. How can I help you today?', 'Just now');
+                    
+                    if (_isAiTyping && index == docs.length + 1) {
+                      return _buildTypingIndicator();
+                    }
+
                     var chat = docs[index - 1].data() as Map<String, dynamic>;
                     if (chat['role'] == 'ai') return _buildReceivedMessage(chat['message']!, chat['time']!);
                     else return _buildSentMessage(chat['message']!, chat['time']!);
@@ -274,7 +311,7 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               },
             ),
           ),
-          if (_isLoading) const Padding(
+          if (_isLoading && !_isAiTyping) const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: LinearProgressIndicator(color: Color(0xFF5B8C51), minHeight: 2),
           ),
@@ -292,6 +329,28 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
           Icon(icon, color: _textColor, size: 20),
           const SizedBox(width: 12),
           Text(title, style: GoogleFonts.inter(color: _textColor, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(radius: 16, backgroundColor: Color(0xFF5B8C51), child: Icon(Icons.psychology, color: Colors.white, size: 16)),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: _aiBubbleColor, 
+              borderRadius: const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16)),
+              boxShadow: _isDarkMode ? [] : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))]
+            ),
+            child: Text("Plantio AI is typing...", style: GoogleFonts.inter(fontSize: 13, color: Colors.grey, fontStyle: FontStyle.italic)),
+          ),
         ],
       ),
     );
@@ -316,7 +375,14 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(message, style: GoogleFonts.inter(fontSize: 14, color: _textColor, height: 1.4)),
+                  MarkdownBody(
+                    data: message,
+                    styleSheet: MarkdownStyleSheet(
+                      p: GoogleFonts.inter(fontSize: 14, color: _textColor, height: 1.4),
+                      strong: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: _textColor),
+                      listBullet: GoogleFonts.inter(fontSize: 14, color: _textColor),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Row(mainAxisSize: MainAxisSize.min, children: [
                     Text(time, style: GoogleFonts.inter(fontSize: 10, color: Colors.grey)),
@@ -388,7 +454,6 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
                     border: InputBorder.none, 
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                     hintStyle: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
-                    // Mic Icon inside TextField
                     suffixIcon: IconButton(
                       icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : const Color(0xFF5B8C51)),
                       onPressed: _listen,

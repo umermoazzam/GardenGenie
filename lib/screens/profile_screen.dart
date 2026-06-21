@@ -11,7 +11,9 @@ import 'login_screen.dart';
 import 'contact_us_screen.dart';
 import 'admin_screen.dart'; 
 import 'history_screen.dart'; 
-import 'shipping_address.dart'; 
+import 'shipping_address.dart';
+// Import your Payment Screen here
+import 'payment_methods_screen.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -28,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color textBlack = const Color(0xFF1A1A1A);
   final Color textGrey = const Color(0xFF666666);
-  final Color bgWhiteShade = const Color(0xFFF9F9F9); // Slightly off-white for depth
+  final Color bgWhiteShade = const Color(0xFFF9F9F9);
 
   final ImagePicker _picker = ImagePicker();
 
@@ -172,7 +174,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           children: [
-            // Profile Picture with Shaded Effect
             Center(
               child: GestureDetector(
                 onTap: _showImagePickerOptions,
@@ -272,14 +273,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                Navigator.push(context, MaterialPageRoute(builder: (context) => const ShippingAddressScreen()));
             }),
 
-            _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {}),
+            // ✅ CHANGED: Logic added for Payment Methods navigation
+            _buildProfileOption(Icons.payment_outlined, "Payment Methods", () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()));
+            }),
+            
             _buildProfileOption(Icons.contact_support_outlined, "Contact Us", () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
             }),
 
             const SizedBox(height: 30),
 
-            // Log Out Button with logic maintained
             Container(
               width: double.infinity,
               height: 55,

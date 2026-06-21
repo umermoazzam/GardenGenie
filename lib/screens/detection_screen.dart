@@ -20,7 +20,7 @@ class PlantDetectionScreen extends StatefulWidget {
 }
 
 class _PlantDetectionScreenState extends State<PlantDetectionScreen> {
-  String _detectedDisease = "Ready to Scan";
+  String _detectedDisease = "Ready to Identify";
   String _confidenceText = "Align the leaf within the frame";
   bool _isLoading = false;
 
@@ -159,10 +159,10 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.network(
-              'https://images.unsplash.com/photo-1545241047-6083a3684587?w=1200',
+            child: Image.asset(
+              'assets/images/background.jpg',
               fit: BoxFit.cover,
-            ),
+              ),
           ),
           Positioned.fill(child: Container(color: Colors.black.withOpacity(0.1))),
           Positioned(
@@ -257,8 +257,6 @@ class _PlantDetectionScreenState extends State<PlantDetectionScreen> {
                 _buildCameraButton(Icons.photo_library, () => _pickImage()),
                 const SizedBox(width: 30),
                 _buildCameraButton(Icons.camera_alt, () => _pickImage(), isLarge: true),
-                const SizedBox(width: 30),
-                _buildCameraButton(Icons.flash_on, () {}),
               ],
             ),
           )

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -20,9 +19,8 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
   String selectedCategory = "All";
   final List<String> categories = ["All", "Indoor", "Outdoor", "Fertilizer", "Care Tips"];
 
-  // API Keys (Make sure these are active)
   final String youtubeApiKey = "AIzaSyCwwJsTY7Fc_BIdOq8kZTOQSCtIkcoZvtw"; 
-  final String newsApiKey = "47a2503254924c5383f982705057b293"; 
+  final String newsApiKey = "dc2377e2589d4e28bf1aeb46c72216c7"; 
 
   List<Map<String, dynamic>>? _cachedVideos;
   String _lastFetchedVideoQuery = "";
@@ -41,33 +39,49 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
     super.dispose();
   }
 
-  // --- Live Articles Fetching Logic ---
+  // Refined Live Articles Fetch Logic
   Future<List<Map<String, dynamic>>> fetchLiveArticles() async {
-    const String gardeningNiche = "gardening plants care";
-    String baseQuery = searchQuery.isNotEmpty 
-        ? "$searchQuery $gardeningNiche" 
-        : (selectedCategory == "All" ? gardeningNiche : "$selectedCategory $gardeningNiche");
+    String baseQuery = "";
+    
+    if (searchQuery.isNotEmpty) {
+      baseQuery = "gardening $searchQuery";
+    } else {
+      switch (selectedCategory) {
+        case "Indoor": baseQuery = "houseplants indoor gardening care"; break;
+        case "Outdoor": baseQuery = "backyard gardening outdoor plants"; break;
+        case "Fertilizer": baseQuery = "organic plant fertilizer gardening"; break;
+        case "Care Tips": baseQuery = "gardening tips plant maintenance"; break;
+        default: baseQuery = "gardening plants care"; 
+      }
+    }
 
     if (_cachedArticles != null && _lastFetchedArticleQuery == baseQuery) {
       return _cachedArticles!;
     }
 
     String encodedQuery = Uri.encodeComponent(baseQuery);
-    // NewsAPI 'everything' endpoint sometimes blocks localhost on free tier. 
-    // Trying 'top-headlines' as a fallback or adding category.
-    final String url = "https://newsapi.org/v2/everything?q=$encodedQuery&sortBy=relevancy&language=en&apiKey=$newsApiKey";
+    final String url = "https://newsapi.org/v2/everything?q=$encodedQuery&sortBy=publishedAt&language=en&pageSize=40&apiKey=$newsApiKey";
 
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<Map<String, dynamic>> articles = [];
+        
         for (var item in data['articles']) {
-          if (item['urlToImage'] != null && item['title'] != null) {
+          String title = (item['title'] ?? "").toLowerCase();
+          
+          // STRICT FILTERING: 
+          // 1. Image null nahi honi chahiye (taake placeholder na dikhe)
+          // 2. Title mein garden/plant hona zaroori hai
+          if (item['urlToImage'] != null && 
+              item['urlToImage'].toString().isNotEmpty &&
+              (title.contains("garden") || title.contains("plant") || title.contains("horticulture"))) {
+            
             articles.add({
               'title': item['title'],
               'author': item['source']['name'] ?? 'Gardening Expert',
-              'image': item['urlToImage'],
+              'image': item['urlToImage'], 
               'description': item['description'] ?? item['content'] ?? 'Click to read more.',
               'date': item['publishedAt'],
               'isVideo': false,
@@ -80,29 +94,24 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
         _lastFetchedArticleQuery = baseQuery;
         return articles;
       } else {
-        // Agar NewsAPI block hai toh error message return karein
-        print("NewsAPI Error: ${response.body}");
-        return _getDummyArticles(); // Fallback to dummy data if API fails
+        return _getDummyArticles();
       }
     } catch (e) {
-      print("Article Fetch Exception: $e");
       return _getDummyArticles();
     }
   }
 
-  // Videos fetch karne ki logic
   Future<List<Map<String, dynamic>>> fetchYouTubeVideos() async {
-    const String gardeningNiche = "gardening tips"; 
     String baseQuery = searchQuery.isNotEmpty 
-        ? "$searchQuery gardening" 
-        : (selectedCategory == "All" ? "latest gardening 2024" : "$selectedCategory gardening tips");
+        ? "gardening $searchQuery" 
+        : (selectedCategory == "All" ? "latest gardening tips" : "$selectedCategory gardening tips");
 
     if (_cachedVideos != null && _lastFetchedVideoQuery == baseQuery) {
       return _cachedVideos!;
     }
 
     String encodedQuery = Uri.encodeComponent(baseQuery);
-    final String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=$encodedQuery&type=video&maxResults=10&key=$youtubeApiKey";
+    final String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=$encodedQuery&type=video&maxResults=10&order=date&key=$youtubeApiKey";
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -128,33 +137,22 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
         _lastFetchedVideoQuery = baseQuery;
         return videos;
       } else {
-        print("YouTube API Error: ${response.body}");
         return _getDummyVideos();
       }
     } catch (e) {
-      print("Video Fetch Exception: $e");
       return _getDummyVideos();
     }
   }
 
-  // --- Fallback Dummy Data ---
   List<Map<String, dynamic>> _getDummyArticles() {
     return [
       {
         'title': 'How to Care for Indoor Plants in Summer',
         'author': 'Plantio Care',
         'image': 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=1000&auto=format&fit=crop',
-        'description': 'Keep your indoor plants hydrated and away from direct harsh sunlight during peak summer months...',
+        'description': 'Keep your indoor plants hydrated and away from direct harsh sunlight...',
         'isVideo': false,
         'readTime': '4 min read',
-      },
-      {
-        'title': 'Best Natural Fertilizers for Home Gardening',
-        'author': 'Eco Garden',
-        'image': 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop',
-        'description': 'Using organic compost and banana peels can boost your plant growth significantly...',
-        'isVideo': false,
-        'readTime': '6 min read',
       }
     ];
   }
@@ -164,9 +162,9 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
       {
         'title': '10 Essential Gardening Tips for Beginners',
         'author': 'Garden Master',
-        'image': 'https://img.youtube.com/vi/B0xLjtZunpY/0.jpg',
+        'image': 'https://images.unsplash.com/photo-1589923188900-85dae523342b?q=80&w=1000&auto=format&fit=crop',
         'videoId': 'B0xLjtZunpY',
-        'description': 'Start your gardening journey with these simple yet effective tips...',
+        'description': 'Start your gardening journey...',
         'isVideo': true,
       }
     ];
@@ -197,19 +195,26 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                  _cachedVideos = null; 
-                  _cachedArticles = null;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Search gardening tips...",
-                prefixIcon: Icon(Icons.search, color: primaryGreen),
-                filled: true, fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
+              ),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value.toLowerCase();
+                    _cachedVideos = null; 
+                    _cachedArticles = null;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: "Search gardening tips...",
+                  prefixIcon: Icon(Icons.search, color: primaryGreen),
+                  filled: true, fillColor: Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                ),
               ),
             ),
           ),
@@ -223,8 +228,8 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
               itemBuilder: (context, index) {
                 bool isSelected = selectedCategory == categories[index];
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: FilterChip(
                     label: Text(categories[index]),
                     selected: isSelected,
                     onSelected: (val) {
@@ -234,8 +239,11 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
                         _cachedArticles = null;
                       });
                     },
+                    backgroundColor: Colors.white,
                     selectedColor: primaryGreen,
-                    labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                    checkmarkColor: Colors.white,
+                    labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? primaryGreen : Colors.grey.shade200)),
                   ),
                 );
               },
@@ -265,25 +273,24 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
           return Center(child: CircularProgressIndicator(color: primaryGreen));
         }
         
-        // Debugging Error Message
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text("Error: ${snapshot.error}\nCheck your Internet or API Key.", textAlign: TextAlign.center),
-            ),
-          );
+          return Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text("Error: Check Internet.", textAlign: TextAlign.center)));
         }
 
         var items = snapshot.data ?? [];
-        if (items.isEmpty) {
-          return Center(child: Text("No content found for '$selectedCategory'", style: GoogleFonts.poppins()));
-        }
+        if (items.isEmpty) return Center(child: Text("No relevant content found."));
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(20), 
-          itemCount: items.length, 
-          itemBuilder: (c, i) => _buildModernCard(items[i])
+        return RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              if (isVideoType) _cachedVideos = null; else _cachedArticles = null;
+            });
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20), 
+            itemCount: items.length, 
+            itemBuilder: (c, i) => _buildModernCard(items[i])
+          ),
         );
       },
     );
@@ -297,25 +304,29 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
         decoration: BoxDecoration(
           color: Colors.white, 
           borderRadius: BorderRadius.circular(24), 
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 15, offset: const Offset(0, 8))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(children: [
               Hero(
-                tag: data['videoId'] ?? (data['image'] ?? 'img'),
+                tag: data['videoId'] ?? (data['title'] ?? 'img'),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), 
                   child: Image.network(
-                    data['image'] ?? 'https://via.placeholder.com/200', 
+                    data['image'], 
                     height: 200, width: double.infinity, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(height: 200, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
+                    // Agar browser image block kare, to ye icon dikhayega khali placeholder nahi
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 200, color: Colors.grey[100], 
+                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey))
+                    ),
                   )
                 ),
               ),
               if (data['isVideo'] == true) 
-                const Positioned.fill(child: Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 60))),
+                Positioned.fill(child: Center(child: Icon(Icons.play_circle_fill, color: Colors.white.withOpacity(0.85), size: 70))),
             ]),
             Padding(
               padding: const EdgeInsets.all(20), 
@@ -323,14 +334,14 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
                 crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
                   Text(data['title'] ?? 'Plant Article', maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Icon(Icons.access_time, size: 14, color: Colors.grey.shade400),
                       const SizedBox(width: 5),
-                      Text(data['readTime'] ?? (data['isVideo'] == true ? "Video" : "5 min read"), style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500)),
+                      Text(data['readTime'] ?? "5 min read", style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500)),
                       const Spacer(),
-                      Icon(Icons.arrow_forward_ios, size: 14, color: primaryGreen),
+                      Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.arrow_forward_ios, size: 12, color: primaryGreen)),
                     ],
                   )
                 ]
@@ -343,7 +354,6 @@ class _BlogsVideosScreenState extends State<BlogsVideosScreen> with SingleTicker
   }
 }
 
-// Detail screen remains same but with safety checks
 class BlogsDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
   const BlogsDetailScreen({Key? key, required this.data}) : super(key: key);
@@ -362,7 +372,7 @@ class _BlogsDetailScreenState extends State<BlogsDetailScreen> {
       _controller = YoutubePlayerController.fromVideoId(
         videoId: widget.data['videoId'],
         autoPlay: true,
-        params: const YoutubePlayerParams(showFullscreenButton: true),
+        params: const YoutubePlayerParams(showFullscreenButton: true, showControls: true),
       );
     }
   }
@@ -381,6 +391,11 @@ class _BlogsDetailScreenState extends State<BlogsDetailScreen> {
         slivers: [
           SliverAppBar(
             expandedHeight: 300, pinned: true, elevation: 0,
+            backgroundColor: Colors.white,
+            leading: CircleAvatar(
+              backgroundColor: Colors.white.withOpacity(0.7),
+              child: IconButton(icon: Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: widget.data['isVideo'] == true && _controller != null
                   ? YoutubePlayer(controller: _controller!, aspectRatio: 16 / 9)
@@ -394,8 +409,11 @@ class _BlogsDetailScreenState extends State<BlogsDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(widget.data['title'] ?? '', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Text("By ${widget.data['author'] ?? 'Gardening Expert'}", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14)),
                   const Divider(height: 40),
-                  Text(widget.data['description'] ?? 'Read more about this in our full guide.', style: GoogleFonts.poppins(fontSize: 15, height: 1.8)),
+                  Text(widget.data['description'] ?? 'Read more about this in our full guide.', style: GoogleFonts.poppins(fontSize: 15, height: 1.8, color: Colors.black87)),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),

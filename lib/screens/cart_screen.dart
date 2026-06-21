@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'rental_services_screen.dart';
 import 'checkout_screen.dart'; 
-import 'shop_screen.dart'; // Added this import
+import 'shop_screen.dart'; 
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -53,6 +53,19 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
+  // CHANGE 1: Naya Helper Method Firestore Qty update karne ke liye
+  void _updateFirestoreQty(int index, int newQty) async {
+    try {
+      String? docId = items[index]['id']; 
+      if (docId != null) {
+        await FirebaseFirestore.instance.collection('cart').doc(docId).update({'qty': newQty});
+      }
+    } catch (e) {
+      debugPrint("Error syncing qty to Firestore: $e");
+    }
+  }
+
+  // CHANGE 3: Delete Logic (Already using docId to ensure Firestore is updated)
   void _showDeleteConfirmationDialog(int index) {
     showDialog(
       context: context,
@@ -74,12 +87,23 @@ class _CartScreenState extends State<CartScreen> {
             ),
             const SizedBox(width: 20),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  CartScreen.cartItems.removeAt(index);
-                  selectedIndices.remove(index);
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                try {
+                  String? docId = CartScreen.cartItems[index]['id'];
+                  if (docId != null) {
+                    await FirebaseFirestore.instance.collection('cart').doc(docId).delete();
+                  }
+
+                  setState(() {
+                    CartScreen.cartItems.removeAt(index);
+                    selectedIndices.remove(index);
+                  });
+
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                } catch (e) {
+                  debugPrint("Error deleting from Firestore: $e");
+                }
               },
               child: Text("Yes", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
@@ -179,7 +203,6 @@ class _CartScreenState extends State<CartScreen> {
             if (index == 0) {
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
             } else if (index == 1) {
-              // Smoothly Navigate to Shop Screen
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
             } else if (index == 2) {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
@@ -226,11 +249,27 @@ class _CartScreenState extends State<CartScreen> {
                       const SizedBox(width: 12),
                       Row(
                         children: [
-                          GestureDetector(onTap: () => setState(() { if (item['qty'] > 1) item['qty']--; }), child: Text('-', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14))),
-                          const SizedBox(width: 6),
+                          // CHANGE 2: Minus Button sync logic
+                          GestureDetector(
+                            onTap: () => setState(() { 
+                              if (item['qty'] > 1) {
+                                item['qty']--; 
+                                _updateFirestoreQty(index, item['qty']);
+                              }
+                            }), 
+                            child: Text('-', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 18))
+                          ),
+                          const SizedBox(width: 10),
                           Text('${item['qty']}', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14)),
-                          const SizedBox(width: 6),
-                          GestureDetector(onTap: () => setState(() { item['qty']++; }), child: Text('+', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14))),
+                          const SizedBox(width: 10),
+                          // CHANGE 2: Plus Button sync logic
+                          GestureDetector(
+                            onTap: () => setState(() { 
+                              item['qty']++; 
+                              _updateFirestoreQty(index, item['qty']);
+                            }), 
+                            child: Text('+', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 18))
+                          ),
                         ],
                       ),
                     ],
