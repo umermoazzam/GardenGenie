@@ -79,21 +79,37 @@ class ProductDetailsScreen extends StatelessWidget {
     const primaryGreen = Color(0xFF5B8E55);
     const shadedBackground = Color(0xFFF9F9F9); // White shaded background effect
 
+    final double imageHeight = MediaQuery.of(context).size.height * 0.45;
+
     return Scaffold(
       backgroundColor: shadedBackground,
       body: Stack(
         children: [
-          NestedScrollView(
-            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-              return <Widget>[
-                SliverAppBar(
-                  expandedHeight: MediaQuery.of(context).size.height * 0.45,
-                  floating: false,
-                  pinned: true,
-                  backgroundColor: Colors.white,
-                  elevation: 0,
-                  leading: Padding(
-                    padding: const EdgeInsets.all(8.0),
+          // Layout Structure replacing NestedScrollView to remove scroll
+          Column(
+            children: [
+              // Top Image Area (Fixed Height, non-scrolling replacement for SliverAppBar)
+              Stack(
+                children: [
+                  SizedBox(
+                    height: imageHeight,
+                    width: double.infinity,
+                    child: Image.network(imageUrl, fit: BoxFit.cover),
+                  ),
+                  Container(
+                    height: imageHeight,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.black.withOpacity(0.3), Colors.transparent],
+                      ),
+                    ),
+                  ),
+                  // Back Button Overlay
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 8,
+                    left: 8,
                     child: CircleAvatar(
                       backgroundColor: Colors.black26,
                       child: IconButton(
@@ -102,80 +118,65 @@ class ProductDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    collapseMode: CollapseMode.parallax,
-                    background: Stack(
-                      fit: StackFit.expand,
+                ],
+              ),
+              // Details Content Box (Non-scrollable Container)
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32), 
+                      topRight: Radius.circular(32)
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 20,
+                        offset: Offset(0, -5),
+                      )
+                    ]
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(30, 35, 30, 120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.network(imageUrl, fit: BoxFit.cover),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.black.withOpacity(0.3), Colors.transparent],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(title, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A), letterSpacing: -0.5)),
+                                  const SizedBox(height: 4),
+                                  Text(subtitle, style: GoogleFonts.poppins(fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                        Text('Description', style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A))),
+                        const SizedBox(height: 10),
+                        Text(
+                          description, 
+                          style: GoogleFonts.poppins(
+                            fontSize: 15, 
+                            color: const Color(0xFF666666), 
+                            height: 1.6, 
+                            fontWeight: FontWeight.w400
+                          )
                         ),
                       ],
                     ),
                   ),
                 ),
-              ];
-            },
-            body: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32), 
-                  topRight: Radius.circular(32)
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
-                  )
-                ]
               ),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(30, 35, 30, 120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(title, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A), letterSpacing: -0.5)),
-                              const SizedBox(height: 4),
-                              Text(subtitle, style: GoogleFonts.poppins(fontSize: 14, color: primaryGreen, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    Text('Description', style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A))),
-                    const SizedBox(height: 10),
-                    Text(
-                      description, 
-                      style: GoogleFonts.poppins(
-                        fontSize: 15, 
-                        color: const Color(0xFF666666), 
-                        height: 1.6, 
-                        fontWeight: FontWeight.w400
-                      )
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            ],
           ),
           // Shaded Bottom Action Bar
           Align(

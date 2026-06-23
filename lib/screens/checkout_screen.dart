@@ -6,7 +6,13 @@ import 'cart_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final int selectedIndex;
-  const CheckoutScreen({Key? key, required this.selectedIndex}) : super(key: key);
+  final Map<String, dynamic> selectedAddress; // ✅ Naya Address Map
+
+  const CheckoutScreen({
+    Key? key, 
+    required this.selectedIndex, 
+    required this.selectedAddress
+  }) : super(key: key);
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -27,6 +33,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String selectedPaymentMethod = "Cash on Delivery";
 
+  @override
+  void initState() {
+    super.initState();
+    
+    // ✅ Step A: Form skip karke seedha Summary dikhao
+    isAddressSaved = true; 
+
+    // ✅ Step B: Controllers ko piche se aaye hue address se bhar dein
+    _nameController.text = widget.selectedAddress['fullName'] ?? "";
+    _phoneController.text = widget.selectedAddress['phone'] ?? "";
+    _addressController.text = widget.selectedAddress['fullAddress'] ?? "";
+    _pinController.text = widget.selectedAddress['zipCode'] ?? ""; // Mapping from shipping_address_screen
+    _cityController.text = widget.selectedAddress['city'] ?? "";
+    _stateController.text = widget.selectedAddress['state'] ?? "";
+  }
+
   double get subtotal {
     var item = CartScreen.cartItems[widget.selectedIndex];
     double price = double.tryParse(item['price'].toString()) ?? 0;
@@ -37,7 +59,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double get totalAmount => subtotal + shippingFee;
 
   void _showOrderSuccessDialog() {
-    // Save the target index before popping or changing screens
     final targetIndex = widget.selectedIndex;
 
     showDialog(
@@ -58,7 +79,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   color: primaryGreen.withOpacity(0.1), 
                   shape: BoxShape.circle
                 ),
-                child: const Icon(Icons.local_shipping, color: Color(0xFF5B8E55), size: 40),              
+                child: const Icon(Icons.local_shipping, color: Color(0xFF5B8E55), size: 40),               
               ),
               const SizedBox(height: 20),
               Text(
@@ -77,7 +98,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
-                    // Safe execution flow to prevent async context crashes
                     if (CartScreen.cartItems.length > targetIndex) {
                       CartScreen.cartItems.removeAt(targetIndex);
                     }

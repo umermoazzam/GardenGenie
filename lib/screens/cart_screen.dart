@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'rental_services_screen.dart';
-import 'checkout_screen.dart'; 
+import 'shipping_address.dart'; // Import updated
 import 'shop_screen.dart'; 
 
 class CartScreen extends StatefulWidget {
@@ -53,7 +53,6 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
-  // CHANGE 1: Naya Helper Method Firestore Qty update karne ke liye
   void _updateFirestoreQty(int index, int newQty) async {
     try {
       String? docId = items[index]['id']; 
@@ -65,7 +64,6 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  // CHANGE 3: Delete Logic (Already using docId to ensure Firestore is updated)
   void _showDeleteConfirmationDialog(int index) {
     showDialog(
       context: context,
@@ -167,13 +165,17 @@ class _CartScreenState extends State<CartScreen> {
                       GestureDetector(
                         onTap: () {
                           if (selectedIndices.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select at least one item")));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select an item")));
                             return;
                           }
+                          
+                          // ✅ Updated: Redirecting to ShippingAddressScreen
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CheckoutScreen(selectedIndex: selectedIndices.first),
+                              builder: (context) => ShippingAddressScreen(
+                                cartItemIndex: selectedIndices.first,
+                              ),
                             ),
                           );
                         },
@@ -249,7 +251,6 @@ class _CartScreenState extends State<CartScreen> {
                       const SizedBox(width: 12),
                       Row(
                         children: [
-                          // CHANGE 2: Minus Button sync logic
                           GestureDetector(
                             onTap: () => setState(() { 
                               if (item['qty'] > 1) {
@@ -262,7 +263,6 @@ class _CartScreenState extends State<CartScreen> {
                           const SizedBox(width: 10),
                           Text('${item['qty']}', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 14)),
                           const SizedBox(width: 10),
-                          // CHANGE 2: Plus Button sync logic
                           GestureDetector(
                             onTap: () => setState(() { 
                               item['qty']++; 

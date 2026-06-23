@@ -1,27 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'checkout_screen.dart'; 
 
 class ShippingAddressScreen extends StatefulWidget {
-  const ShippingAddressScreen({Key? key}) : super(key: key);
+  // ✅ CHANGE: cartItemIndex ko optional (?) bana diya taake Profile se aate waqt error na aaye
+  final int? cartItemIndex; 
+  const ShippingAddressScreen({Key? key, this.cartItemIndex}) : super(key: key);
 
   @override
   State<ShippingAddressScreen> createState() => _ShippingAddressScreenState();
 }
 
 class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
-  // Theme Colors (Matching Profile Screen)
+  // Theme Colors
   final Color primaryGreen = const Color(0xFF5B8E55);
   final Color textBlack = const Color(0xFF1A1A1A);
   final Color textGrey = const Color(0xFF666666);
   final Color bgGrey = const Color(0xFFF5F5F5);
 
-  // Controllers for Add Address Form
+  // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _fullAddressController = TextEditingController();
   final TextEditingController _zipController = TextEditingController();
+
+  String? mongoUserId;
+  bool _isInitialLoading = true;
+  
+  // Selection track karne ke liye variables
+  String? selectedAddressId;
+  Map<String, dynamic>? selectedAddressData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  void _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      mongoUserId = prefs.getString('userId');
+      _isInitialLoading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -30,6 +54,79 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     _fullAddressController.dispose();
     _zipController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showSuccessDialog(String message) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actionsAlignment: MainAxisAlignment.center,
+        content: Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: textBlack),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK", 
+              style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(Map<String, dynamic> addr) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actionsAlignment: MainAxisAlignment.center,
+        title: Text(
+          "Delete Address",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          "Are you sure you want to delete this address?",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontSize: 14, color: textGrey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("NO", 
+              style: GoogleFonts.poppins(color: textGrey, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 20),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              if (mongoUserId != null) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(mongoUserId)
+                    .update({
+                  'addresses': FieldValue.arrayRemove([addr])
+                });
+                _showSuccessDialog("Address deleted successfully");
+              }
+            },
+            child: Text("YES", 
+              style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -53,60 +150,64 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<User?>(
-              // 1. Pehle check karo ke user login hai ya nahi (Live Listener)
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, authSnapshot) {
-                if (authSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            child: _isInitialLoading
+                ? const Center(child: CircularProgressIndicator())
+                : (mongoUserId == null)
+                    ? const Center(child: Text("Please Login to see addresses"))
+                    : StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(mongoUserId)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
 
-                final currentUser = authSnapshot.data;
+                          if (!snapshot.hasData || !snapshot.data!.exists) {
+                            return _buildNoAddressFound();
+                          }
 
-                if (currentUser == null) {
-                  return const Center(child: Text("Please Login to see addresses"));
-                }
+                          var userData = snapshot.data!.data() as Map<String, dynamic>?;
+                          List<dynamic> addresses = userData?['addresses'] ?? [];
 
-                // 2. Agar login hai, toh uske addresses fetch karo
-                return StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(currentUser.uid)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                          if (addresses.isEmpty) {
+                            return _buildNoAddressFound();
+                          }
 
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return _buildNoAddressFound();
-                    }
+                          return ListView.builder(
+                            padding: const EdgeInsets.all(24),
+                            itemCount: addresses.length,
+                            itemBuilder: (context, index) {
+                              var addr = addresses[index] as Map<String, dynamic>;
+                              bool isSelected = selectedAddressId == addr['id'];
 
-                    var userData = snapshot.data!.data() as Map<String, dynamic>;
-                    var addressData = userData['address_info'];
-
-                    if (addressData == null) {
-                      return _buildNoAddressFound();
-                    }
-
-                    return ListView(
-                      padding: const EdgeInsets.all(24),
-                      children: [
-                        _buildAddressCard({
-                          "title": addressData['category'] ?? "Home",
-                          "address": addressData['fullAddress'] ?? "",
-                          "city": addressData['zipCode'] ?? "",
-                          "isDefault": addressData['isDefault'] ?? true,
-                          "phone": addressData['phone'] ?? "",
-                        }, 0),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
+                              return GestureDetector(
+                                onTap: () {
+                                  // Selection sirf tab kaam kare jab checkout flow ho
+                                  if (widget.cartItemIndex != null) {
+                                    setState(() {
+                                      selectedAddressId = addr['id'];
+                                      selectedAddressData = addr;
+                                    });
+                                  }
+                                },
+                                child: _buildAddressCard(addr, index, isSelected),
+                              );
+                            },
+                          );
+                        },
+                      ),
           ),
-          _buildAddButton(),
+          
+          if (!_isInitialLoading && mongoUserId != null) 
+            Column(
+              children: [
+                _buildAddButton(),
+                // ✅ CHANGE: Continue button sirf tab dikhega jab cartItemIndex null NAHI hoga
+                if (widget.cartItemIndex != null) _buildContinueButton(),
+              ],
+            ),
         ],
       ),
     );
@@ -121,19 +222,31 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     );
   }
 
-  // Card UI with Icons preserved
-  Widget _buildAddressCard(Map<String, dynamic> addr, int index) {
+  Widget _buildAddressCard(Map<String, dynamic> addr, int index, bool isSelected) {
+    // Agar profile se aaye hain toh selection highlight nahi dikhana
+    bool canSelect = widget.cartItemIndex != null;
+    bool showHighlight = canSelect && (isSelected || (selectedAddressId == null && (addr['isDefault'] ?? false)));
+    
+    if (canSelect && selectedAddressId == null && (addr['isDefault'] ?? false)) {
+      Future.delayed(Duration.zero, () {
+        setState(() {
+          selectedAddressId = addr['id'];
+          selectedAddressData = addr;
+        });
+      });
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: addr['isDefault'] ? Colors.white : const Color(0xFFF9F9F9),
+        color: showHighlight ? Colors.white : const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: addr['isDefault'] ? primaryGreen : Colors.transparent,
-          width: 1.5,
+          color: showHighlight ? primaryGreen : Colors.transparent,
+          width: 2.0, 
         ),
-        boxShadow: addr['isDefault']
+        boxShadow: showHighlight
             ? [
                 BoxShadow(
                     color: primaryGreen.withOpacity(0.1),
@@ -151,34 +264,29 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
               Row(
                 children: [
                   Icon(
-                    addr['title'] == 'Home' ? Icons.home_outlined : Icons.work_outline,
+                    addr['category'] == 'Home' ? Icons.home_outlined : Icons.work_outline,
                     color: primaryGreen,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    addr['title'],
+                    addr['category'] ?? "Address",
                     style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold, fontSize: 16, color: textBlack),
                   ),
                 ],
               ),
-              if (addr['isDefault'])
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: primaryGreen, borderRadius: BorderRadius.circular(4)),
-                  child: Text("DEFAULT",
-                      style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold)),
-                ),
+              if (showHighlight)
+                Icon(Icons.check_circle, color: primaryGreen, size: 20),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            addr['address'],
+            addr['fullName'] ?? "",
+            style: GoogleFonts.poppins(color: textBlack, fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          Text(
+            addr['fullAddress'] ?? "",
             style: GoogleFonts.poppins(color: textGrey, fontSize: 14, height: 1.4),
           ),
           Text(
@@ -188,16 +296,12 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildActionButton(Icons.edit_outlined, "Edit", () {}),
+              _buildActionButton(Icons.edit_outlined, "Edit", () {
+                _showAddAddressSheet(existingAddress: addr);
+              }),
               const SizedBox(width: 20),
-              _buildActionButton(Icons.delete_outline, "Delete", () async {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .update({'address_info': FieldValue.delete()});
-                }
+              _buildActionButton(Icons.delete_outline, "Delete", () {
+                _confirmDelete(addr);
               }),
             ],
           ),
@@ -223,7 +327,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
 
   Widget _buildAddButton() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
       child: SizedBox(
         width: double.infinity,
         height: 50,
@@ -234,7 +338,6 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
             elevation: 0,
             side: BorderSide(color: primaryGreen, width: 0.5),
             shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-            overlayColor: Colors.grey.withOpacity(0.1),
           ),
           child: Text(
             '+ NEW ADDRESS',
@@ -249,9 +352,59 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     );
   }
 
-  void _showAddAddressSheet() {
-    String selectedCategory = "Home";
-    bool isDefaultShipping = false;
+  Widget _buildContinueButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+      child: SizedBox(
+        width: double.infinity,
+        height: 55,
+        child: ElevatedButton(
+          onPressed: selectedAddressData == null ? null : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CheckoutScreen(
+                  selectedIndex: widget.cartItemIndex!,
+                  selectedAddress: selectedAddressData!, 
+                ),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: selectedAddressData != null ? primaryGreen : Colors.grey,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+          child: Text(
+            'CONTINUE TO SUMMARY',
+            style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddAddressSheet({Map<String, dynamic>? existingAddress}) {
+    bool isEdit = existingAddress != null;
+
+    if (isEdit) {
+      _nameController.text = existingAddress['fullName'] ?? "";
+      _phoneController.text = existingAddress['phone'] ?? "";
+      _fullAddressController.text = existingAddress['fullAddress'] ?? "";
+      _zipController.text = existingAddress['zipCode'] ?? "";
+    } else {
+      _nameController.clear();
+      _phoneController.clear();
+      _fullAddressController.clear();
+      _zipController.clear();
+    }
+
+    String selectedCategory = isEdit ? (existingAddress['category'] ?? "Home") : "Home";
+    bool isDefaultShipping = isEdit ? (existingAddress['isDefault'] ?? false) : false;
 
     showModalBottomSheet(
       context: context,
@@ -271,7 +424,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Add New Address",
+                Text(isEdit ? "Update Address" : "Add New Address",
                     style: GoogleFonts.poppins(
                         fontSize: 20, fontWeight: FontWeight.bold, color: textBlack)),
                 const SizedBox(height: 25),
@@ -311,51 +464,45 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () async {
-                      print("--- Save Button Clicked ---"); // Console mein check karein
-                      final user = FirebaseAuth.instance.currentUser;
-                      
-                      if (user == null) {
-                        print("Error: User is NULL. App thinks nobody is logged in.");
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Error: User not found. Try to Log Out and Log In again."))
-                        );
-                        return;
-                      }
-
-                      print("User found: ${user.uid}. Attempting to save...");
+                      if (mongoUserId == null) return;
+                      if (_nameController.text.isEmpty || _fullAddressController.text.isEmpty) return;
 
                       try {
-                        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-                          'address_info': {
-                            'fullName': _nameController.text.trim(),
-                            'phone': _phoneController.text.trim(),
-                            'fullAddress': _fullAddressController.text.trim(),
-                            'zipCode': _zipController.text.trim(),
-                            'category': "Home",
-                            'isDefault': true,
-                          }
-                        }, SetOptions(merge: true));
+                        Map<String, dynamic> newAddress = {
+                          'id': isEdit ? existingAddress['id'] : DateTime.now().millisecondsSinceEpoch.toString(),
+                          'fullName': _nameController.text.trim(),
+                          'phone': _phoneController.text.trim(),
+                          'fullAddress': _fullAddressController.text.trim(),
+                          'zipCode': _zipController.text.trim(),
+                          'category': selectedCategory,
+                          'isDefault': isDefaultShipping,
+                          'createdAt': isEdit ? existingAddress['createdAt'] : Timestamp.now(),
+                        };
 
-                        print("Success: Data saved in Firestore!");
+                        var docRef = FirebaseFirestore.instance.collection('users').doc(mongoUserId);
+
+                        if (isEdit) {
+                          await docRef.update({
+                            'addresses': FieldValue.arrayRemove([existingAddress])
+                          });
+                        }
                         
-                        // Clear fields before closing
-                        _nameController.clear();
-                        _phoneController.clear();
-                        _fullAddressController.clear();
-                        _zipController.clear();
+                        await docRef.update({
+                          'addresses': FieldValue.arrayUnion([newAddress])
+                        });
 
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Address Saved Successfully!")));
+                        Navigator.pop(context); 
+                        _showSuccessDialog(isEdit ? "Address Updated!" : "Address Added!");
+
                       } catch (e) {
-                        print("Firestore Error: $e");
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Firestore Error: $e")));
+                        debugPrint(e.toString());
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryGreen,
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                     ),
-                    child: Text("SAVE ADDRESS",
+                    child: Text(isEdit ? "UPDATE ADDRESS" : "SAVE ADDRESS",
                         style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -387,14 +534,8 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
             color: Colors.grey.shade500, fontSize: 14, fontWeight: FontWeight.w500),
         filled: true,
         fillColor: bgGrey,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: primaryGreen.withOpacity(0.5), width: 1.5),
@@ -415,24 +556,20 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
             height: 22,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                  color: isSelected ? primaryGreen : Colors.grey.shade400, width: 2),
+              border: Border.all(color: isSelected ? primaryGreen : Colors.grey.shade400, width: 2),
             ),
             child: isSelected
                 ? Center(
                     child: Container(
                         width: 11,
                         height: 11,
-                        decoration: BoxDecoration(
-                            color: primaryGreen, shape: BoxShape.circle)))
+                        decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle)))
                 : null,
           ),
           const SizedBox(width: 10),
           Text(title,
               style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: textBlack)),
+                  fontSize: 15, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: textBlack)),
         ],
       ),
     );

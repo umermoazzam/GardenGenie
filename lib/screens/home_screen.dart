@@ -13,6 +13,8 @@ import 'profile_screen.dart';
 import 'product_details_screen.dart';
 import 'detection_screen.dart'; 
 import 'shop_screen.dart'; 
+import 'my_plants_screen.dart';
+import 'my_garden_screen.dart'; // ✅ Imported New Screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -64,10 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavBarTapped(int index) {
     if (index == _currentIndex) return;
     if (index == 1) {
-      Navigator.push(
-        context, 
-        MaterialPageRoute(builder: (context) => const ShopScreen())
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
     } else if (index == 2) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const RentalServicesScreen()));
     } else if (index == 3) {
@@ -217,9 +216,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildQuickActionButton(icon: Icons.water_drop_outlined, label: 'My Garden', onTap: () => Navigator.pushNamed(context, '/my-plants')),
+                        _buildQuickActionButton(
+                          icon: Icons.water_drop_outlined, 
+                          label: 'My Garden', 
+                          onTap: () => Navigator.push(
+                            context, 
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => const MyGardenScreen(),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                return FadeTransition(opacity: animation, child: child);
+                              },
+                            ),
+                          )
+                        ),
                         const SizedBox(width: 20),
-                        _buildQuickActionButton(icon: Icons.local_florist_outlined, label: 'My Plants', onTap: () => Navigator.pushNamed(context, '/my-plants')),
+                        _buildQuickActionButton(
+                          icon: Icons.local_florist_outlined, 
+                          label: 'My Plants', 
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyPlantsScreen()))
+                        ),
                         const SizedBox(width: 20),
                         _buildQuickActionButton(icon: Icons.search, label: 'Search', onTap: () => setState(() => _isSearching = !_isSearching)),
                       ],
@@ -331,34 +346,25 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
+      // ✅ New Floating Action Button (As per your request)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantDetectionScreen())),
-          child: Container(
-            width: 65, height: 65,
-            decoration: BoxDecoration(
-              color: primaryGreen,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: primaryGreen.withOpacity(0.45),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.18),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.crop_free, 
-              color: Colors.white, 
-              size: 30, 
-            ),
+      floatingActionButton: SizedBox(
+        height: 65, 
+        width: 65,
+        child: FloatingActionButton(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PlantDetectionScreen()),
+          ),
+          backgroundColor: const Color(0xFF63935D), 
+          elevation: 10, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), 
+          ),
+          child: const Icon(
+            Icons.filter_center_focus, 
+            color: Colors.white,
+            size: 32,
           ),
         ),
       ),
@@ -395,6 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Same helper widgets from original code...
   Widget _buildQuickActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -504,7 +511,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ AI Option Widget with White Shaded Effect
   Widget _buildAIOption({required IconData icon, required String title, required String description, required VoidCallback onTap}) {
     return Container(
       decoration: BoxDecoration(

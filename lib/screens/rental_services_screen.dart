@@ -131,7 +131,16 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                     lastDate: DateTime.now().add(const Duration(days: 60)),
                     builder: (context, child) => Theme(
                       data: ThemeData.light().copyWith(
-                        colorScheme: const ColorScheme.light(primary: primaryGreen),
+                        colorScheme: const ColorScheme.light(
+                          primary: Colors.white, // Background of circle/header
+                          onPrimary: primaryGreen, // Icons and Header text
+                          surface: Colors.white,
+                          onSurface: Colors.black,
+                        ),
+                        dialogBackgroundColor: Colors.white,
+                        textButtonTheme: TextButtonThemeData(
+                          style: TextButton.styleFrom(foregroundColor: primaryGreen),
+                        ),
                       ),
                       child: child!,
                     ),
@@ -327,6 +336,21 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                               initialDate: DateTime.now().add(const Duration(days: 1)),
                               firstDate: DateTime.now(),
                               lastDate: DateTime.now().add(const Duration(days: 30)),
+                              builder: (context, child) => Theme(
+                                data: ThemeData.light().copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Colors.white, // Circle background #FFFFFF
+                                    onPrimary: primaryGreen, // Selected day text & Header text
+                                    surface: Colors.white, // Calendar surface
+                                    onSurface: Colors.black, // Default text
+                                  ),
+                                  dialogBackgroundColor: Colors.white,
+                                  textButtonTheme: TextButtonThemeData(
+                                    style: TextButton.styleFrom(foregroundColor: primaryGreen),
+                                  ),
+                                ),
+                                child: child!,
+                              ),
                             );
                             if (picked != null) setSheetState(() => selectedDate = picked);
                           },
@@ -347,6 +371,24 @@ class _RentalServicesScreenState extends State<RentalServicesScreen> {
                             TimeOfDay? picked = await showTimePicker(
                               context: context,
                               initialTime: const TimeOfDay(hour: 9, minute: 0),
+                              builder: (context, child) => Theme(
+                                data: ThemeData.light().copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: primaryGreen, // Dial Hand
+                                    onPrimary: Colors.white, // Selected time text on hand
+                                    surface: Colors.white, // Modal background
+                                    onSurface: Colors.black, // Unselected numbers
+                                    secondaryContainer: Colors.white, // Background for AM/PM box
+                                  ),
+                                  timePickerTheme: TimePickerThemeData(
+                                    backgroundColor: Colors.white,
+                                    dialBackgroundColor: Colors.grey[50]!,
+                                    hourMinuteColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? primaryGreen : Colors.white),
+                                    hourMinuteTextColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : Colors.black),
+                                  ),
+                                ),
+                                child: child!,
+                              ),
                             );
                             if (picked != null) setSheetState(() => selectedTime = picked);
                           },
